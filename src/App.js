@@ -117,7 +117,7 @@ const App = () => {
       {/* WhatsApp Group */}
       <div className="mt-6 text-center">
         <a
-          href="https://chat.whatsapp.com/YOUR_WHATSAPP_GROUP_LINK"
+          href="https://whatsapp.com/channel/0029VbBPCHaKAwEkO9zdRl34"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-block bg-green-600 text-white px-6 py-2 rounded-full shadow hover:bg-green-700"

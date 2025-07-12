@@ -127,8 +127,7 @@ const App = () => {
         </table>
       </div>
     </div>
-  );
-};
+ 
  
       {/* Allotment Popup */}
       {showAllotmentPopup && (

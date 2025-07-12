@@ -36,9 +36,10 @@ const App = () => {
   });
 
   const headers = [
-    "Name", "Type", "GMP", "Subscription", "Price", "Est Listing",
-    "IPO Size", "Lot", "Open dt", "Close dt", "BoA Dt", "Listing dt", "Staus"
-  ];
+  "Name", "Type", "GMP", "Subscription", "Price", "Est Listing",
+  "IPO Size", "Lot", "Open dt", "Close dt", "BoA Dt", "Listing dt", "Status"
+];
+
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 pb-32 font-sans">

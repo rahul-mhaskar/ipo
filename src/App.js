@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Papa from "papaparse";
 
-const GOOGLE_SHEET_CSV_URL = "CSV PATH"; // Replace with your actual published CSV link
+const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlsMurbsXT2UBQ2ADbyoiQtLUTznQU4vNzw3nS02_StSrFV9pkrnXOrNAjV_Yj-Byc_zw72z_rM0tQ/pub?output=csv"; // Replace with your actual published CSV link
 
 const App = () => {
   const [ipoData, setIpoData] = useState([]);

@@ -191,23 +191,18 @@ const App = () => {
     const brokers = [
       {
         name: "Zerodha",
-        href: "https://zerodha.com/open-account?ref=YOUR_REF",
+        href: "https://zerodha.com/open-account?c=VCB643",
         logo: "https://zerodha.com/static/images/logo.svg",
       },
       {
         name: "Upstox",
-        href: "https://upstox.com/open-account/?f=YOUR_REF",
-        logo: "https://assets-netstorage.groww.in/brokers/logos/UPSTOX.png",
+        href: "https://upstox.onelink.me/0H1s/4LAYGW",
+        logo: "https://assets.upstox.com/website/images/upstox-new-logo.svg",
       },
       {
-        name: "Groww",
-        href: "https://groww.in/ref/YOUR_REF",
-        logo: "https://groww.in/static/favicon/apple-touch-icon.png",
-      },
-      {
-        name: "Angel One",
-        href: "https://angelone.onelink.me/YOUR_REF",
-        logo: "https://play-lh.googleusercontent.com/angleone-logo",
+        name: "Paytm Money",
+        href: "https://paytmmoney.page.link/DSwSvdhoasovQYLz9",
+        logo: "https://play-lh.googleusercontent.com/nXCY9Did341stoQEhCEH5wJW2FBybZYbpiYl2J-eCajYOXZ_XXXHX1ptjATuA0zayg",
       },
     ];
 

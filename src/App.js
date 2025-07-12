@@ -1,153 +1,120 @@
+import React, { useEffect, useState } from 'react';
+import Papa from 'papaparse';
 
-import React, { useEffect, useState } from "react";
-import Papa from "papaparse";
-
-const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlsMurbsXT2UBQ2ADbyoiQtLUTznQU4vNzw3nS02_StSrFV9pkrnXOrNAjV_Yj-Byc_zw72z_rM0tQ/pub?output=csv"; // Replace with your link
-
-const headers = [
-  "Name", "Subscription", "Price", "Est Listing", "IPO Size", "Lot", 
-  "Open dt", "Close dt", "BoA Dt", "Listing dt", "Type", "GMP", "Allotment Link"
-];
-
-const App = () => {
-  const [ipoData, setIpoData] = useState([]);
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+function App() {
+  const [data, setData] = useState([]);
 
   useEffect(() => {
-    Papa.parse(GOOGLE_SHEET_CSV_URL, {
-      download: true,
-      header: true,
-      complete: (results) => setIpoData(results.data),
-    });
+    Papa.parse(
+      'https://docs.google.com/spreadsheets/d/e/2PACX-1vRlsMurbsXT2UBQ2ADbyoiQtLUTznQU4vNzw3nS02_StSrFV9pkrnXOrNAjV_Yj-Byc_zw72z_rM0tQ/pub?output=csv',
+      {
+        download: true,
+        header: true,
+        complete: (results) => {
+          setData(results.data);
+        },
+      }
+    );
   }, []);
 
-  const sortTable = (key) => {
-    let direction = 'asc';
-    if (sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
-    }
-    setSortConfig({ key, direction });
-  };
-
-  const sortedData = [...ipoData].sort((a, b) => {
-    if (!sortConfig.key) return 0;
-    const aVal = a[sortConfig.key] || "";
-    const bVal = b[sortConfig.key] || "";
-    return sortConfig.direction === 'asc'
-      ? aVal.localeCompare(bVal)
-      : bVal.localeCompare(aVal);
-  });
-
   return (
-    <div className="min-h-screen bg-gray-100 p-4">
+    <div className="min-h-screen bg-gray-50 text-gray-900 p-4">
+      {/* Header */}
       <header className="text-center mb-6">
-        <h1 className="text-3xl font-bold text-indigo-700">IPO Track</h1>
-        <p className="text-gray-600">Track upcoming, ongoing, and past IPOs</p>
+        <h1 className="text-3xl font-bold mb-1">IPO Track</h1>
+        <p className="text-sm text-gray-500">Live IPO Details, GMP, Allotments, and More</p>
       </header>
 
-      <div className="overflow-auto">
-        <table className="min-w-full bg-white shadow-md rounded-xl">
-          <thead className="bg-indigo-100">
+      {/* IPO Table Section */}
+      <div className="max-w-[calc(100%-80px)] mr-auto overflow-x-auto">
+        <table className="min-w-full bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden">
+          <thead className="bg-gray-100 text-sm">
             <tr>
-              {headers.map((key) => (
-                <th key={key} onClick={() => sortTable(key)} className="p-2 cursor-pointer text-sm">
-                  {key} {sortConfig.key === key ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '▲▼'}
-                </th>
-              ))}
+              <th className="p-2">Name</th>
+              <th className="p-2">Type</th>
+              <th className="p-2">GMP</th>
+              <th className="p-2">Subscription</th>
+              <th className="p-2">Price</th>
+              <th className="p-2">Est. Listing</th>
+              <th className="p-2">IPO Size</th>
+              <th className="p-2">Lot</th>
+              <th className="p-2">Open Date</th>
+              <th className="p-2">Close Date</th>
+              <th className="p-2">BoA Date</th>
+              <th className="p-2">Listing Date</th>
+              <th className="p-2">Allotment Link</th>
             </tr>
           </thead>
           <tbody>
-            {sortedData.map((row, idx) => (
-              <tr key={idx} className="even:bg-gray-50 text-sm">
-                {headers.map((key) => (
-                  <td key={key} className="p-2 text-center">
-                    {key === "GMP" ? (
-                      <span className={parseInt(row[key]) >= 0 ? "text-green-600" : "text-red-600"}>{row[key]}</span>
-                    ) : key === "Allotment Link" ? (
-                      <a href={row[key]} target="_blank" rel="noreferrer" className="text-blue-600 underline">Check</a>
-                    ) : (
-                      row[key]
-                    )}
-                  </td>
-                ))}
+            {data.map((ipo, i) => (
+              <tr key={i} className="border-t">
+                <td className="p-2 font-semibold">{ipo.Name}</td>
+                <td className="p-2">{ipo.Type}</td>
+                <td className="p-2">{ipo.GMP}</td>
+                <td className="p-2">{ipo.Subscription}</td>
+                <td className="p-2">{ipo.Price}</td>
+                <td className="p-2">{ipo['Est Listing']}</td>
+                <td className="p-2">{ipo['IPO Size']}</td>
+                <td className="p-2">{ipo.Lot}</td>
+                <td className="p-2">{ipo['Open dt']}</td>
+                <td className="p-2">{ipo['Close dt']}</td>
+                <td className="p-2">{ipo['BoA Dt']}</td>
+                <td className="p-2">{ipo['Listing dt']}</td>
+                <td className="p-2">
+                  <a
+                    href={ipo['Allotment Link']}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline text-sm"
+                  >
+                    Check
+                  </a>
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
 
-      <section className="mt-8 text-center">
-        <h2 className="text-xl font-semibold mb-2">Join Our WhatsApp Group</h2>
+      {/* Broker Referral Sidebar - Fixed Right */}
+      <div className="fixed right-0 top-1/3 z-50 flex flex-col items-center gap-4 p-2 w-[64px] bg-white shadow-lg rounded-l-xl border border-gray-200">
         <a
-          href="https://chat.whatsapp.com/YOUR_LINK_HERE"
+          href="https://zerodha.com/open-account?c=VCB643"
           target="_blank"
-          className="inline-block bg-green-500 text-white px-6 py-2 rounded-xl hover:bg-green-600"
+          rel="noopener noreferrer"
         >
-          Join Now
+          <img
+            src="https://zerodha.com/static/images/logo.svg"
+            alt="Zerodha"
+            className="h-8 w-auto"
+          />
         </a>
-      </section>
-
-      <section className="mt-8">
-  {/* Fixed Right-Side Broker Sidebar */}
-<div className="fixed right-0 top-1/3 z-50 flex flex-col items-center gap-4 p-3 bg-white shadow-lg rounded-l-xl border border-gray-200">
-  <a
-    href="https://zerodha.com/open-account?ref=YOUR_REF"
-    target="_blank"
-    rel="noopener noreferrer"
-    className="hover:scale-105 transition"
-  >
-    <img
-      src="https://zerodha.com/static/images/logo.svg"
-      alt="Zerodha"
-      className="h-10 w-auto"
-    />
-  </a>
-  <a
-    href="https://upstox.onelink.me/0H1s/4LAYGW"
-    target="_blank"
-    rel="noopener noreferrer"
-    className="hover:scale-105 transition"
-  >
-    <img
-      src="https://assets-netstorage.groww.in/brokers/logos/UPSTOX.png"
-      alt="Upstox"
-      className="h-10 w-auto"
-    />
-  </a>
-  <a
-    href="https://groww.in/ref/YOUR_REF"
-    target="_blank"
-    rel="noopener noreferrer"
-    className="hover:scale-105 transition"
-  >
-    <img
-      src="https://groww.in/static/favicon/apple-touch-icon.png"
-      alt="Groww"
-      className="h-10 w-auto"
-    />
-  </a>
-  <a
-    href="https://angelone.onelink.me/YOUR_REF"
-    target="_blank"
-    rel="noopener noreferrer"
-    className="hover:scale-105 transition"
-  >
-    <img
-      src="https://upload.wikimedia.org/wikipedia/commons/6/6b/Angel_One_Logo.svg"
-      alt="Angel One"
-      className="h-10 w-auto"
-    />
-  </a>
-</div>
-
-</section>
-
-
-      <footer className="mt-12 text-center text-gray-400 text-sm">
-        &copy; {new Date().getFullYear()} IPO Track. All rights reserved.
-      </footer>
+        <a
+          href="https://upstox.onelink.me/0H1s/4LAYGW"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <img
+            src="https://assets-netstorage.groww.in/brokers/logos/UPSTOX.png"
+            alt="Upstox"
+            className="h-8 w-auto"
+          />
+        </a>
+        <a
+          href="https://paytmmoney.page.link/DSwSvdhoasovQYLz9"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <img
+            src="https://static.paytmmoney.com/android-chrome-192x192.png"
+            alt="Paytm Money"
+            className="h-8 w-auto"
+          />
+        </a>
+        
+      </div>
     </div>
   );
-};
+}
 
 export default App;

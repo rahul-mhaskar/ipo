@@ -1,206 +1,229 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
-import "./App.css";
+import Papa from "papaparse";
 
-function App() {
-  const [ipos, setIpos] = useState([]);
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: "ascending" });
-  const [selectedIPO, setSelectedIPO] = useState(null);
+const GOOGLE_SHEET_CSV_URL =
+  "https://docs.google.com/spreadsheets/d/e/PASTE_YOUR_LINK_HERE/pub?output=csv";
+
+const App = () => {
+  const [ipoData, setIpoData] = useState([]);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
   const [showBrokerPopup, setShowBrokerPopup] = useState(false);
   const [showAllotmentPopup, setShowAllotmentPopup] = useState(false);
+  const [allotmentLinks, setAllotmentLinks] = useState([]);
 
   useEffect(() => {
-    axios
-      .get(
-        "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlsMurbsXT2UBQ2ADbyoiQtLUTznQU4vNzw3nS02_StSrFV9pkrnXOrNAjV_Yj-Byc_zw72z_rM0tQ/pub?output=csv"
-      )
-      .then((response) => {
-        const rows = response.data.split("\n");
-        const headers = rows[0].split(",");
-        const data = rows.slice(1).map((row) => {
-          const values = row.split(",");
-          const entry = {};
-          headers.forEach((header, index) => {
-            entry[header.trim()] = values[index]?.trim();
-          });
-          return entry;
-        });
-        setIpos(data);
-      });
+    Papa.parse(GOOGLE_SHEET_CSV_URL, {
+      download: true,
+      header: true,
+      complete: (result) => {
+        setIpoData(result.data);
+      },
+    });
   }, []);
 
-  const sortTable = (key) => {
-    let direction = "ascending";
-    if (sortConfig.key === key && sortConfig.direction === "ascending") {
-      direction = "descending";
+  const sortBy = (key) => {
+    let direction = "asc";
+    if (sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
     }
     setSortConfig({ key, direction });
   };
 
-  const sortedIpos = [...ipos].sort((a, b) => {
+  const sortedData = [...ipoData].sort((a, b) => {
     if (!sortConfig.key) return 0;
-    const valA = a[sortConfig.key] || "";
-    const valB = b[sortConfig.key] || "";
-    return sortConfig.direction === "ascending"
-      ? valA.localeCompare(valB)
-      : valB.localeCompare(valA);
+    const aVal = a[sortConfig.key] || "";
+    const bVal = b[sortConfig.key] || "";
+    if (sortConfig.direction === "asc") {
+      return aVal.localeCompare(bVal, undefined, { numeric: true });
+    }
+    return bVal.localeCompare(aVal, undefined, { numeric: true });
   });
 
-  const handleApplyClick = (ipo) => {
-    setSelectedIPO(ipo);
+  const headers = [
+    "Name", "Type", "Status", "GMP", "Subscription", "Price", "Est Listing",
+    "IPO Size", "Lot", "Open dt", "Close dt", "BoA Dt", "Listing dt"
+  ];
+
+  const handleApplyClick = () => {
     setShowBrokerPopup(true);
+    document.getElementById("broker-section").scrollIntoView({ behavior: 'smooth' });
   };
 
   const handleAllotmentClick = (ipo) => {
-    setSelectedIPO(ipo);
+    const links = [ipo.AllotmentLink1, ipo.AllotmentLink2, ipo.AllotmentLink3].filter(Boolean);
+    setAllotmentLinks(links);
     setShowAllotmentPopup(true);
   };
 
-  const closePopup = () => {
-    setShowBrokerPopup(false);
-    setShowAllotmentPopup(false);
-    setSelectedIPO(null);
-  };
-
-  const brokerLinks = [
-    {
-      name: "Zerodha",
-      url: "https://zerodha.com/open-account?referralCode=YOUR_REF",
-      logo: "https://yourcdn.com/logos/zerodha.png",
-    },
-    {
-      name: "Upstox",
-      url: "https://upstox.com/open-account?referralCode=YOUR_REF",
-      logo: "https://yourcdn.com/logos/upstox.png",
-    },
-    {
-      name: "Groww",
-      url: "https://groww.in/open-account?referralCode=YOUR_REF",
-      logo: "https://yourcdn.com/logos/groww.png",
-    },
-    {
-      name: "Angel One",
-      url: "https://angelone.in/open-account?referralCode=YOUR_REF",
-      logo: "https://yourcdn.com/logos/angelone.png",
-    },
-  ];
-
-  const renderStatusIcon = (status) => {
-    if (status.includes("Upcoming")) return "🗓️";
-    if (status.includes("Open")) return "🟢";
-    if (status.includes("Closed")) return "🕒";
-    if (status.includes("Allotted")) return "✅";
-    if (status.includes("Listed")) return "📈";
-    return "❔";
+  const getStatusContent = (status, ipo) => {
+    const cleanStatus = status.toLowerCase();
+    if (cleanStatus.includes("apply")) {
+      return <span className="text-blue-600 cursor-pointer hover:underline" onClick={handleApplyClick}>🚀 {status}</span>;
+    } else if (cleanStatus.includes("pre")) {
+      return <span className="text-purple-600">🛒 {status}</span>;
+    } else if (cleanStatus.includes("pending")) {
+      return <span className="text-yellow-600">🕒 {status}</span>;
+    } else if (cleanStatus.includes("allotted")) {
+      return <span className="text-green-600 hover:underline cursor-pointer" onClick={() => handleAllotmentClick(ipo)}>✅ {status}</span>;
+    } else if (cleanStatus.includes("listed")) {
+      return <span className="text-indigo-700">📈 {status}</span>;
+    } else {
+      return <span className="text-gray-500">📅 {status}</span>;
+    }
   };
 
   return (
-    <div className="App">
-      <h1>📊 IPO Tracker</h1>
-      <div className="table-container">
-        <table className="ipo-table">
-          <thead>
+    <div className="min-h-screen bg-gray-100 p-4 pb-40 font-sans">
+      <h1 className="text-3xl font-bold text-center mb-6">IPO Track</h1>
+
+      <div className="overflow-auto">
+        <table className="w-full text-sm bg-white rounded-lg shadow border">
+          <thead className="bg-gray-200">
             <tr>
-              {["Name", "Subscription", "Price", "Est Listing", "IPO Size", "Lot", "Open dt", "Close dt", "BoA Dt", "Listing dt", "Type", "Status"].map((header) => (
-                <th key={header} onClick={() => sortTable(header)}>
-                  {header} {sortConfig.key === header ? (sortConfig.direction === "ascending" ? "▲" : "▼") : ""}
+              {headers.map((header) => (
+                <th
+                  key={header}
+                  onClick={() => sortBy(header)}
+                  className="px-3 py-2 cursor-pointer text-left border"
+                >
+                  {header}
+                  <span className={sortConfig.key === header ? "text-black" : "text-gray-400"}>
+                    {sortConfig.key === header ? (
+                      sortConfig.direction === "asc" ? " ▲" : " ▼"
+                    ) : " ⬍"}
+                  </span>
                 </th>
               ))}
-              <th>Action</th>
             </tr>
           </thead>
           <tbody>
-            {sortedIpos.map((ipo, index) => (
-              <tr key={index}>
-                <td>{ipo.Name}</td>
-                <td>{ipo.Subscription}</td>
-                <td>{ipo.Price}</td>
-                <td>{ipo["Est Listing"]}</td>
-                <td>{ipo["IPO Size"]}</td>
-                <td>{ipo.Lot}</td>
-                <td>{ipo["Open dt"]}</td>
-                <td>{ipo["Close dt"]}</td>
-                <td>{ipo["BoA Dt"]}</td>
-                <td>{ipo["Listing dt"]}</td>
-                <td>{ipo.Type}</td>
-                <td>{renderStatusIcon(ipo.Status)} {ipo.Status}</td>
-                <td>
-                  {ipo.Status?.includes("Open") || ipo.Status?.includes("Pre") ? (
-                    <button onClick={() => handleApplyClick(ipo)}>Apply Now</button>
-                  ) : ipo.Status?.includes("Allotted") || ipo.Status?.includes("Listed") ? (
-                    <button onClick={() => handleAllotmentClick(ipo)}>Check Allotment</button>
-                  ) : (
-                    "-"
-                  )}
-                </td>
+            {sortedData.map((ipo, index) => (
+              <tr key={index} className="border-t">
+                {headers.map((key) => (
+                  <td key={key} className="px-3 py-2 border">
+                    {key === "Status"
+                      ? getStatusContent(ipo[key], ipo)
+                      : key === "GMP"
+                      ? <span>{ipo[key]}</span>
+                      : ipo[key]}
+                  </td>
+                ))}
               </tr>
             ))}
           </tbody>
         </table>
       </div>
 
-      {showBrokerPopup && selectedIPO && (
-        <div className="popup-overlay" onClick={closePopup}>
-          <div className="popup" onClick={(e) => e.stopPropagation()}>
-            <button className="close-button" onClick={closePopup}>×</button>
-            <h2>🛡️ Apply securely via verified investment brokers</h2>
-            <div className="broker-banner-popup">
-              {brokerLinks.map((broker) => (
-                <a
-                  key={broker.name}
-                  href={broker.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="broker-card"
-                  onClick={() => console.log(`Clicked on ${broker.name}`)}
-                >
-                  <img src={broker.logo} alt={broker.name} />
-                  <span>{broker.name}</span>
-                </a>
+      {/* WhatsApp Group */}
+      <div className="mt-6 text-center">
+        <a
+          href="https://chat.whatsapp.com/YOUR_WHATSAPP_GROUP_LINK"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-block bg-green-600 text-white px-6 py-2 rounded-full shadow hover:bg-green-700"
+        >
+          📱 Join Our WhatsApp Group
+        </a>
+      </div>
+
+      {/* Allotment Popup */}
+      {showAllotmentPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex justify-center items-center">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full relative">
+            <button
+              className="absolute top-2 right-2 text-gray-600 hover:text-black text-lg"
+              onClick={() => setShowAllotmentPopup(false)}
+            >
+              ×
+            </button>
+            <h3 className="text-lg font-semibold mb-3">Check Allotment Links</h3>
+            <ul className="space-y-2">
+              {allotmentLinks.map((link, idx) => (
+                <li key={idx}>
+                  <a
+                    href={link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 underline hover:text-blue-800"
+                  >
+                    🔗 Check allotment link {idx + 1}
+                  </a>
+                </li>
               ))}
+            </ul>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Broker Banner */}
+      {showBrokerPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex justify-center items-center">
+          <div className="bg-white p-4 rounded-lg shadow-lg w-full max-w-3xl relative">
+            <button
+              onClick={() => setShowBrokerPopup(false)}
+              className="absolute top-2 right-2 text-gray-600 hover:text-black text-lg"
+            >×</button>
+            <h2 className="text-md font-semibold mb-4 text-center">
+              🛡️ Open Demat account securely with verified investment brokers.
+            </h2>
+            <div className="flex flex-wrap justify-center gap-4">
+              {renderBrokerLinks(true)}
             </div>
           </div>
         </div>
       )}
 
-      {showAllotmentPopup && selectedIPO && (
-        <div className="popup-overlay" onClick={closePopup}>
-          <div className="popup" onClick={(e) => e.stopPropagation()}>
-            <button className="close-button" onClick={closePopup}>×</button>
-            <h2>Check Allotment</h2>
-            {[selectedIPO.AllotmentLink1, selectedIPO.AllotmentLink2, selectedIPO.AllotmentLink3]
-              .filter(Boolean)
-              .map((link, idx) => (
-                <div key={idx} className="allotment-link">
-                  <a href={link} target="_blank" rel="noopener noreferrer">
-                    Check allotment link {idx + 1} ↗
-                  </a>
-                </div>
-              ))}
+      {/* Broker Referral Section (Sticky) */}
+      <footer id="broker-section" className="fixed bottom-0 left-0 w-full bg-white border-t shadow z-40">
+        <div className="max-w-7xl mx-auto px-4 py-3">
+          <h2 className="text-md font-semibold mb-2 text-center hover:text-blue-600 transition-all">
+            🛡️ Open Demat account securely with verified investment brokers.
+          </h2>
+          <div className="flex flex-wrap justify-center gap-4 overflow-x-auto pb-2">
+            {renderBrokerLinks(false)}
           </div>
-        </div>
-      )}
-
-      <footer className="sticky-footer">
-        <p className="ref-text">🛡️ Open Demat account securely with verified investment brokers.</p>
-        <div className="broker-banner">
-          {brokerLinks.map((broker) => (
-            <a
-              key={broker.name}
-              href={broker.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="broker-card"
-              onClick={() => console.log(`Clicked on ${broker.name}`)}
-            >
-              <img src={broker.logo} alt={broker.name} />
-              <span>{broker.name}</span>
-            </a>
-          ))}
         </div>
       </footer>
     </div>
   );
-}
+
+  function renderBrokerLinks(isPopup) {
+    const brokers = [
+      {
+        name: "Zerodha",
+        href: "https://zerodha.com/open-account?ref=YOUR_REF",
+        logo: "https://zerodha.com/static/images/logo.svg",
+      },
+      {
+        name: "Upstox",
+        href: "https://upstox.com/open-account/?f=YOUR_REF",
+        logo: "https://assets-netstorage.groww.in/brokers/logos/UPSTOX.png",
+      },
+      {
+        name: "Groww",
+        href: "https://groww.in/ref/YOUR_REF",
+        logo: "https://groww.in/static/favicon/apple-touch-icon.png",
+      },
+      {
+        name: "Angel One",
+        href: "https://angelone.onelink.me/YOUR_REF",
+        logo: "https://play-lh.googleusercontent.com/angleone-logo",
+      },
+    ];
+
+    return brokers.map((broker, idx) => (
+      <a
+        key={idx}
+        href={broker.href}
+        target="_blank"
+        onClick={() => console.log(`Clicked ${broker.name}`)}
+        className="flex flex-col items-center w-28 text-center hover:scale-105 hover:shadow-lg transition-all p-2 bg-gray-50 rounded-lg"
+      >
+        <img src={broker.logo} alt={broker.name} className="h-8 mb-1" />
+        <span className="text-xs text-gray-600">{broker.name}</span>
+      </a>
+    ));
+  }
+};
 
 export default App;

@@ -57,10 +57,8 @@ const App = () => {
                 >
                   {header}
                   {sortConfig.key === header ? (
-                    sortConfig.direction === "asc" ? " ▲" : " ▼"
-                  ) : (
-                    ""
-                  )}
+  sortConfig.direction === "asc" ? " ▲" : " ▼"
+) : " ⬍"}
                 </th>
               ))}
             </tr>
@@ -102,25 +100,24 @@ const App = () => {
 
       {/* Broker Referral Section */}
       <section className="mt-12">
-        <h2 className="text-xl font-semibold mb-4 text-center">
-          Open Account via Our Referral Links
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+       <footer className="fixed bottom-0 left-0 w-full bg-white border-t shadow z-50">
+  <div className="max-w-7xl mx-auto px-4 py-3">
+    <h2 className="text-md font-semibold mb-2 text-center">
+      Open Account via Our Referral Links
+    </h2>
+    <div className="flex flex-wrap justify-center gap-4 overflow-x-auto pb-2">
           <a
             href="https://zerodha.com/open-account?c=VCB643"
             target="_blank"
-            className="block bg-white rounded-xl shadow hover:shadow-lg p-4 text-center"
-          >
-            <img
-              src="https://zerodha.com/static/images/logo.svg"
-              alt="Zerodha"
-              className="mx-auto h-12 mb-2"
-            />
-            <p className="text-sm text-gray-600">Zerodha – India's #1 broker</p>
-          </a>
+        className="flex flex-col items-center w-28 text-center hover:opacity-80"
+      >
+        <img src="https://zerodha.com/static/images/logo.svg" alt="Zerodha" className="h-8 mb-1" />
+        <span className="text-xs text-gray-600">Zerodha</span>
+      </a>
 
          
         </div>
+          </footer>
       </section>
     </div>
   );

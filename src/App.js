@@ -99,7 +99,6 @@ const App = () => {
       </div>
 
       {/* Broker Referral Section */}
-      <section className="mt-12">
        <footer className="fixed bottom-0 left-0 w-full bg-white border-t shadow z-50">
   <div className="max-w-7xl mx-auto px-4 py-3">
     <h2 className="text-md font-semibold mb-2 text-center">
@@ -118,7 +117,6 @@ const App = () => {
          
         </div>
           </footer>
-      </section>
     </div>
   );
 };

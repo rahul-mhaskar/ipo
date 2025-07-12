@@ -38,7 +38,7 @@ const App = () => {
 
   const headers = [
     "Name", "Type", "GMP", "Subscription", "Price", "Est Listing",
-    "IPO Size", "Lot", "Open dt", "Close dt", "BoA Dt", "Listing dt"
+    "IPO Size", "Lot", "Open dt", "Close dt", "BoA Dt", "Listing dt","Check Allotment"
   ];
 
   return (

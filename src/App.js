@@ -88,15 +88,32 @@ const App = () => {
       </section>
 
       <section className="mt-8">
-        <h2 className="text-xl font-semibold mb-4 text-center">Download Stock Broker Apps for free</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <a href="https://zerodha.com/open-account" className="bg-white shadow p-4 text-center rounded-xl hover:shadow-lg">Zerodha</a>
-          <a href="https://upstox.com/open-account" className="bg-white shadow p-4 text-center rounded-xl hover:shadow-lg">Upstox</a>
-            <a href="https://paytmmoney.page.link/DSwSvdhoasovQYLz9" className="bg-white shadow p-4 text-center rounded-xl hover:shadow-lg">Paytm Money</a>
-          <a href="https://groww.in" className="bg-white shadow p-4 text-center rounded-xl hover:shadow-lg">Groww</a>
-          <a href="https://angelone.in" className="bg-white shadow p-4 text-center rounded-xl hover:shadow-lg">Angel One</a>
-        </div>
-      </section>
+  <h2 className="text-xl font-semibold mb-4 text-center">Open Account via Our Referral Links</h2>
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    
+    <a href="https://zerodha.com/open-account?ref=YOUR_REF" target="_blank" className="block bg-white rounded-xl shadow hover:shadow-lg p-4 text-center">
+      <img src="https://zerodha.com/static/images/logo.svg" alt="Zerodha" className="mx-auto h-12 mb-2" />
+      <p className="text-sm text-gray-600">Zerodha – India's #1 broker</p>
+    </a>
+
+    <a href="https://upstox.onelink.me/0H1s/4LAYGW" target="_blank" className="block bg-white rounded-xl shadow hover:shadow-lg p-4 text-center">
+      <img src="https://assets-netstorage.groww.in/brokers/logos/UPSTOX.png" alt="Upstox" className="mx-auto h-12 mb-2" />
+      <p className="text-sm text-gray-600">Upstox – Fast & Easy Account</p>
+    </a>
+
+    <a href="https://groww.in/ref/YOUR_REF" target="_blank" className="block bg-white rounded-xl shadow hover:shadow-lg p-4 text-center">
+      <img src="https://groww.in/static/favicon/apple-touch-icon.png" alt="Groww" className="mx-auto h-12 mb-2" />
+      <p className="text-sm text-gray-600">Groww – Invest in Stocks & Mutual Funds</p>
+    </a>
+
+    <a href="https://angelone.onelink.me/YOUR_REF" target="_blank" className="block bg-white rounded-xl shadow hover:shadow-lg p-4 text-center">
+      <img src="https://play-lh.googleusercontent.com/angleone-logo" alt="Angel One" className="mx-auto h-12 mb-2" />
+      <p className="text-sm text-gray-600">Angel One – Full-service broker</p>
+    </a>
+    
+  </div>
+</section>
+
 
       <footer className="mt-12 text-center text-gray-400 text-sm">
         &copy; {new Date().getFullYear()} IPO Track. All rights reserved.

@@ -78,15 +78,18 @@ const App = () => {
   return (
     <div className="min-h-screen bg-gray-100 p-4 pb-40 font-sans">
       {/* Logo Header with Blue Banner */}
-      <header className="bg-blue-700 text-white py-3 px-4 rounded-md shadow mb-6">
-        <div className="max-w-5xl mx-auto flex items-center space-x-4">
-          <img src="/logo.png" alt="IPO Track Logo" className="w-16 h-16" />
-          <div>
-            <h1 className="text-2xl font-bold">IPO Track</h1>
-            <p className="text-sm text-blue-100">Your trusted IPO updates, allotments & referrals</p>
-          </div>
-        </div>
-      </header>
+      <header className="bg-blue-700 text-white py-4 px-4 rounded-md shadow mb-6">
+  <div className="max-w-5xl mx-auto flex items-start space-x-6">
+    <img src="/logo.png" alt="IPO Track Logo" className="w-16 h-16" /> 
+    <div>
+      <h1 className="text-3xl font-bold">IPO Track</h1>
+      <p className="text-sm text-blue-100">
+        Your trusted IPO updates, allotments & Inestment advisery
+      </p>
+    </div>
+  </div>
+</header>
+
 
       {/* Table Content */}
       <div className="overflow-auto">

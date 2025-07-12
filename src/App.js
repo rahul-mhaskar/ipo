@@ -88,30 +88,58 @@ const App = () => {
       </section>
 
       <section className="mt-8">
-  <h2 className="text-xl font-semibold mb-4 text-center">Open Account via Our Referral Links</h2>
-  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-    
-    <a href="https://zerodha.com/open-account?ref=YOUR_REF" target="_blank" className="block bg-white rounded-xl shadow hover:shadow-lg p-4 text-center">
-      <img src="https://zerodha.com/static/images/logo.svg" alt="Zerodha" className="mx-auto h-12 mb-2" />
-      <p className="text-sm text-gray-600">Zerodha – India's #1 broker</p>
-    </a>
+  {/* Fixed Right-Side Broker Sidebar */}
+<div className="fixed right-0 top-1/3 z-50 flex flex-col items-center gap-4 p-3 bg-white shadow-lg rounded-l-xl border border-gray-200">
+  <a
+    href="https://zerodha.com/open-account?ref=YOUR_REF"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="hover:scale-105 transition"
+  >
+    <img
+      src="https://zerodha.com/static/images/logo.svg"
+      alt="Zerodha"
+      className="h-10 w-auto"
+    />
+  </a>
+  <a
+    href="https://upstox.onelink.me/0H1s/4LAYGW"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="hover:scale-105 transition"
+  >
+    <img
+      src="https://assets-netstorage.groww.in/brokers/logos/UPSTOX.png"
+      alt="Upstox"
+      className="h-10 w-auto"
+    />
+  </a>
+  <a
+    href="https://groww.in/ref/YOUR_REF"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="hover:scale-105 transition"
+  >
+    <img
+      src="https://groww.in/static/favicon/apple-touch-icon.png"
+      alt="Groww"
+      className="h-10 w-auto"
+    />
+  </a>
+  <a
+    href="https://angelone.onelink.me/YOUR_REF"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="hover:scale-105 transition"
+  >
+    <img
+      src="https://upload.wikimedia.org/wikipedia/commons/6/6b/Angel_One_Logo.svg"
+      alt="Angel One"
+      className="h-10 w-auto"
+    />
+  </a>
+</div>
 
-    <a href="https://upstox.onelink.me/0H1s/4LAYGW" target="_blank" className="block bg-white rounded-xl shadow hover:shadow-lg p-4 text-center">
-      <img src="https://assets-netstorage.groww.in/brokers/logos/UPSTOX.png" alt="Upstox" className="mx-auto h-12 mb-2" />
-      <p className="text-sm text-gray-600">Upstox – Fast & Easy Account</p>
-    </a>
-
-    <a href="https://groww.in/ref/YOUR_REF" target="_blank" className="block bg-white rounded-xl shadow hover:shadow-lg p-4 text-center">
-      <img src="https://groww.in/static/favicon/apple-touch-icon.png" alt="Groww" className="mx-auto h-12 mb-2" />
-      <p className="text-sm text-gray-600">Groww – Invest in Stocks & Mutual Funds</p>
-    </a>
-
-    <a href="https://angelone.onelink.me/YOUR_REF" target="_blank" className="block bg-white rounded-xl shadow hover:shadow-lg p-4 text-center">
-      <img src="https://play-lh.googleusercontent.com/angleone-logo" alt="Angel One" className="mx-auto h-12 mb-2" />
-      <p className="text-sm text-gray-600">Angel One – Full-service broker</p>
-    </a>
-    
-  </div>
 </section>
 
 

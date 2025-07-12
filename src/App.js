@@ -41,7 +41,7 @@ const App = () => {
 
   const headers = [
     "Name", "Type", "Status", "GMP", "Subscription", "Price", "Est Listing",
-    "IPO Size", "Lot", "Open dt", "Close dt", "BoA Dt", "Listing dt"
+    "IPO Size", "Lot", "Open", "Close", "BoA Dt", "Listing"
   ];
 
   const handleApplyClick = () => {
@@ -50,7 +50,7 @@ const App = () => {
   };
 
   const handleAllotmentClick = (ipo) => {
-    const links = [ipo.AllotmentLink1, ipo.AllotmentLink2, ipo.AllotmentLink3].filter(Boolean);
+    const links = [ipo.AllotmentLink1, ipo.AllotmentLink2, ipo.AllotmentLink3, ipo.AllotmentLink4, ipo.AllotmentLink5].filter(Boolean);
     setAllotmentLinks(links);
     setShowAllotmentPopup(true);
   };

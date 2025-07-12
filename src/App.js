@@ -1,4 +1,3 @@
-// Inside your App.js (replace current content)
 import React, { useEffect, useState } from "react";
 import Papa from "papaparse";
 
@@ -39,8 +38,8 @@ const App = () => {
   });
 
   const headers = [
-    "Name", "Type", "GMP", "Subscription", "Price", "Est Listing",
-    "IPO Size", "Lot", "Open dt", "Close dt", "BoA Dt", "Listing dt", "Status"
+    "Name", "Type", "Status", "GMP", "Subscription", "Price", "Est Listing",
+    "IPO Size", "Lot", "Open dt", "Close dt", "BoA Dt", "Listing dt"
   ];
 
   const getStatusContent = (status) => {
@@ -81,14 +80,14 @@ const App = () => {
       <h1 className="text-3xl font-bold text-center mb-6">IPO Track</h1>
 
       <div className="overflow-auto">
-        <table className="w-full text-sm bg-white rounded-lg shadow">
+        <table className="w-full text-sm bg-white rounded-lg shadow border border-gray-300">
           <thead className="bg-gray-200">
             <tr>
               {headers.map((header) => (
                 <th
                   key={header}
                   onClick={() => sortBy(header)}
-                  className="px-3 py-2 cursor-pointer text-left"
+                  className="px-3 py-2 cursor-pointer text-left border border-gray-300"
                 >
                   {header}
                   <span className={sortConfig.key === header ? "text-black" : "text-gray-400"}>
@@ -104,20 +103,11 @@ const App = () => {
           </thead>
           <tbody>
             {sortedData.map((ipo, index) => (
-              <tr key={index} className="border-t">
+              <tr key={index} className="border-t border-gray-300">
                 {headers.map((key) => (
-                  <td key={key} className="px-3 py-2">
+                  <td key={key} className="px-3 py-2 border border-gray-200">
                     {key === "Status"
                       ? getStatusContent(ipo[key])
-                      : key === "GMP"
-                      ? (
-                        <span className={parseFloat(ipo[key]) > 0
-                          ? "text-green-600 font-semibold"
-                          : "text-red-600 font-semibold"
-                        }>
-                          {ipo[key]}
-                        </span>
-                      )
                       : ipo[key]}
                   </td>
                 ))}
@@ -142,7 +132,7 @@ const App = () => {
       {/* Floating Broker Banner Overlay */}
       {showBanner && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg p-6 max-w-3xl w-full shadow-lg relative animate-bounce">
+          <div className="bg-white rounded-lg p-6 max-w-3xl w-full shadow-lg relative">
             <button
               onClick={() => setShowBanner(false)}
               className="absolute top-2 right-2 text-gray-500 hover:text-black text-xl"
@@ -150,10 +140,9 @@ const App = () => {
               ❌
             </button>
             <h2 className="text-md font-semibold text-center mb-4">
-              👉 Choose Your Broker
+              🛡️ Apply securely by verified investment brokers
             </h2>
             <div className="flex flex-wrap justify-center gap-6">
-              {/* Broker cards */}
               <a href="https://zerodha.com/open-account?ref=YOUR_REF" target="_blank" className="w-28 text-center hover:scale-105 transition">
                 <img src="https://zerodha.com/static/images/logo.svg" alt="Zerodha" className="h-8 mx-auto mb-1" />
                 <p className="text-sm text-gray-600">Zerodha</p>
@@ -175,10 +164,30 @@ const App = () => {
         </div>
       )}
 
-      {/* Sticky Footer */}
+      {/* Sticky Footer Broker Banner */}
       <footer className="fixed bottom-0 left-0 w-full bg-white border-t shadow z-40">
-        <div className="max-w-7xl mx-auto px-4 py-3 text-center text-sm text-gray-500">
-          © 2025 IPO Track. All rights reserved.
+        <div className="max-w-7xl mx-auto px-4 py-3">
+          <h2 className="text-md font-semibold mb-2 text-center">
+            Open Account via Our Referral Links
+          </h2>
+          <div className="flex flex-wrap justify-center gap-4 overflow-x-auto pb-2">
+            <a href="https://zerodha.com/open-account?ref=YOUR_REF" target="_blank" className="flex flex-col items-center w-28 text-center hover:opacity-80">
+              <img src="https://zerodha.com/static/images/logo.svg" alt="Zerodha" className="h-8 mb-1" />
+              <span className="text-xs text-gray-600">Zerodha</span>
+            </a>
+            <a href="https://upstox.com/open-account/?f=YOUR_REF" target="_blank" className="flex flex-col items-center w-28 text-center hover:opacity-80">
+              <img src="https://assets-netstorage.groww.in/brokers/logos/UPSTOX.png" alt="Upstox" className="h-8 mb-1" />
+              <span className="text-xs text-gray-600">Upstox</span>
+            </a>
+            <a href="https://groww.in/ref/YOUR_REF" target="_blank" className="flex flex-col items-center w-28 text-center hover:opacity-80">
+              <img src="https://groww.in/static/favicon/apple-touch-icon.png" alt="Groww" className="h-8 mb-1" />
+              <span className="text-xs text-gray-600">Groww</span>
+            </a>
+            <a href="https://angelone.onelink.me/YOUR_REF" target="_blank" className="flex flex-col items-center w-28 text-center hover:opacity-80">
+              <img src="https://play-lh.googleusercontent.com/angleone-logo" alt="Angel One" className="h-8 mb-1" />
+              <span className="text-xs text-gray-600">Angel One</span>
+            </a>
+          </div>
         </div>
       </footer>
     </div>

@@ -57,8 +57,7 @@ const App = () => {
                 >
                   {header}
                   {sortConfig.key === header ? (
-  sortConfig.direction === "asc" ? " ▲" : " ▼"
-) : " ⬍"}
+  sortConfig.direction === "asc" ? " ▲" : " ▼") : " ⬍"}
                 </th>
               ))}
             </tr>

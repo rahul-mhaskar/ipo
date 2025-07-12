@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Papa from "papaparse";
 
-const GOOGLE_SHEET_CSV_URL =
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlsMurbsXT2UBQ2ADbyoiQtLUTznQU4vNzw3nS02_StSrFV9pkrnXOrNAjV_Yj-Byc_zw72z_rM0tQ/pub?output=csv";
+const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlsMurbsXT2UBQ2ADbyoiQtLUTznQU4vNzw3nS02_StSrFV9pkrnXOrNAjV_Yj-Byc_zw72z_rM0tQ/pub?output=csv";;
 
 const App = () => {
   const [ipoData, setIpoData] = useState([]);
@@ -50,7 +49,11 @@ const App = () => {
   };
 
   const handleAllotmentClick = (ipo) => {
-    const links = [ipo.AllotmentLink1, ipo.AllotmentLink2, ipo.AllotmentLink3, ipo.AllotmentLink4, ipo.AllotmentLink5].filter(Boolean);
+    const links = [
+      ipo.AllotmentLink1,
+      ipo.AllotmentLink2,
+      ipo.AllotmentLink3
+    ].filter(Boolean);
     setAllotmentLinks(links);
     setShowAllotmentPopup(true);
   };
@@ -74,8 +77,18 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 pb-40 font-sans">
-      <h1 className="text-3xl font-bold text-center mb-6">IPO Track</h1>
+      {/* Logo Header with Blue Banner */}
+      <header className="bg-blue-700 text-white py-3 px-4 rounded-md shadow mb-6">
+        <div className="max-w-5xl mx-auto flex items-center space-x-4">
+          <img src="/logo.png" alt="IPO Track Logo" className="w-12 h-12" />
+          <div>
+            <h1 className="text-2xl font-bold">IPO Track</h1>
+            <p className="text-sm text-blue-100">Your trusted IPO updates, allotments & referrals</p>
+          </div>
+        </div>
+      </header>
 
+      {/* Table Content */}
       <div className="overflow-auto">
         <table className="w-full text-sm bg-white rounded-lg shadow border">
           <thead className="bg-gray-200">
@@ -113,7 +126,9 @@ const App = () => {
           </tbody>
         </table>
       </div>
-
+    </div>
+  );
+};
  
       {/* Allotment Popup */}
       {showAllotmentPopup && (

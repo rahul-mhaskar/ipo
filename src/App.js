@@ -80,7 +80,7 @@ const App = () => {
       {/* Logo Header with Blue Banner */}
       <header className="bg-blue-700 text-white py-3 px-4 rounded-md shadow mb-6">
         <div className="max-w-5xl mx-auto flex items-center space-x-4">
-          <img src="/logo.png" alt="IPO Track Logo" className="w-12 h-12" />
+          <img src="/logo.png" alt="IPO Track Logo" className="w-20 h-20" />
           <div>
             <h1 className="text-2xl font-bold">IPO Track</h1>
             <p className="text-sm text-blue-100">Your trusted IPO updates, allotments & referrals</p>

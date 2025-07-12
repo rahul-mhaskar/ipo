@@ -88,10 +88,11 @@ const App = () => {
       </section>
 
       <section className="mt-8">
-        <h2 className="text-xl font-semibold mb-4 text-center">Download Stock Broker Apps</h2>
+        <h2 className="text-xl font-semibold mb-4 text-center">Download Stock Broker Apps for free</h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <a href="https://zerodha.com/open-account" className="bg-white shadow p-4 text-center rounded-xl hover:shadow-lg">Zerodha</a>
           <a href="https://upstox.com/open-account" className="bg-white shadow p-4 text-center rounded-xl hover:shadow-lg">Upstox</a>
+            <a href="https://paytmmoney.page.link/DSwSvdhoasovQYLz9" className="bg-white shadow p-4 text-center rounded-xl hover:shadow-lg">Paytm Money</a>
           <a href="https://groww.in" className="bg-white shadow p-4 text-center rounded-xl hover:shadow-lg">Groww</a>
           <a href="https://angelone.in" className="bg-white shadow p-4 text-center rounded-xl hover:shadow-lg">Angel One</a>
         </div>

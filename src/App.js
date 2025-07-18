@@ -84,7 +84,7 @@ const App = () => {
     <div>
       <h1 className="text-3xl font-bold">Track My IPO</h1>
       <p className="text-sm text-blue-100">
-        Your trusted IPO updates, allotments & Inestment advisery
+        Your trusted IPO updates, allotments & Investment destination
       </p>
     </div>
   </div>

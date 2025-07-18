@@ -82,7 +82,7 @@ const App = () => {
   <div className="max-w-5xl mx-auto flex items-start space-x-6">
     <img src="/logo.png" alt="IPO Track Logo" className="w-16 h-16" /> 
     <div>
-      <h1 className="text-3xl font-bold">IPO Track</h1>
+      <h1 className="text-3xl font-bold">Track My IPO</h1>
       <p className="text-sm text-blue-100">
         Your trusted IPO updates, allotments & Inestment advisery
       </p>

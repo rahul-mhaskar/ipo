@@ -178,7 +178,7 @@ const App = () => {
             <svg className="w-10 h-10 mr-3 text-white" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 2L2 22h20L12 2zm0 17l-5-10h10l-5 10z"/>
             </svg>
-            <h1 className="text-3xl font-bold">Tracker My IPO</h1>
+            <h1 className="text-3xl font-bold">Track My IPO</h1>
           </div>
           <div className="relative w-full sm:w-1/3">
             <input

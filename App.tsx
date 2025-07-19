@@ -1,52 +1,75 @@
-import React, { useEffect, useState } from 'react';
-
+import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "./components/ui/card";
-
 import { Input } from "./components/ui/input";
 import { Switch } from "./components/ui/switch";
+import { Sun, Moon } from "lucide-react";
 
+const SHEET_URL =
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlsMurbsXT2UBQ2ADbyoiQtLUTznQU4vNzw3nS02_StSrFV9pkrnXOrNAjV_Yj-Byc_zw72z_rM0tQ/pub?output=csv"; // Replace with actual CSV URL
 
-import { Sun, Moon } from 'lucide-react';
-
-const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRlsMurbsXT2UBQ2ADbyoiQtLUTznQU4vNzw3nS02_StSrFV9pkrnXOrNAjV_Yj-Byc_zw72z_rM0tQ/pub?output=csv'; // Replace with your CSV link 
+interface IPOData {
+  Name: string;
+  Status: string;
+  Type: string;
+  GMP: string;
+  Price: string;
+  "Est Listing": string;
+  Lot: string;
+  "IPO Size": string;
+  Open: string;
+  Close: string;
+  "BoA Dt": string;
+  Listing: string;
+  AllotmentLink1?: string;
+  Image?: string;
+  [key: string]: string | undefined;
+}
 
 export default function IPODashboard() {
-  const [data, setData] = useState([]);
-  const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState('All');
+  const [data, setData] = useState<IPOData[]>([]);
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState("All");
   const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => {
     fetch(SHEET_URL)
-      .then(res => res.text())
-      .then(text => {
-        const rows = text.split('\n').map(r => r.split(','));
+      .then((res) => res.text())
+      .then((text) => {
+        const rows = text.split("\n").map((r) => r.split(","));
         const headers = rows[0];
-        const entries = rows.slice(1).map(row => Object.fromEntries(row.map((cell, i) => [headers[i], cell])));
-        setData(entries);
+        const entries = rows.slice(1).map((row) =>
+          Object.fromEntries(row.map((cell, i) => [headers[i], cell]))
+        );
+        setData(entries as IPOData[]);
       });
   }, []);
 
-  const filtered = data.filter(item => {
+  const filtered = data.filter((item) => {
     const nameMatch = item.Name?.toLowerCase().includes(search.toLowerCase());
-    const filterMatch = filter === 'All' || item.Status?.includes(filter);
+    const filterMatch = filter === "All" || item.Status?.includes(filter);
     return nameMatch && filterMatch;
   });
 
   return (
-    <div className={darkMode ? "bg-gray-900 text-white min-h-screen" : "bg-gray-50 text-black min-h-screen"}>
+    <div
+      className={
+        darkMode
+          ? "bg-gray-900 text-white min-h-screen"
+          : "bg-gray-50 text-black min-h-screen"
+      }
+    >
       <header className="p-4 shadow bg-white dark:bg-gray-800 flex justify-between items-center">
         <h1 className="text-2xl font-bold">IPO Tracker</h1>
         <div className="flex gap-4 items-center">
           <Input
             placeholder="Search IPOs..."
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={(e) => setSearch(e.target.value)}
             className="w-60"
           />
           <select
             value={filter}
-            onChange={e => setFilter(e.target.value)}
+            onChange={(e) => setFilter(e.target.value)}
             className="rounded px-2 py-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
           >
             <option>All</option>
@@ -55,10 +78,7 @@ export default function IPODashboard() {
             <option>Listed</option>
             <option>Allotted</option>
           </select>
-          <Switch
-            checked={darkMode}
-            onCheckedChange={setDarkMode}
-          />
+          <Switch checked={darkMode} onCheckedChange={setDarkMode} />
           {darkMode ? <Moon /> : <Sun />}
         </div>
       </header>
@@ -76,15 +96,25 @@ export default function IPODashboard() {
             <CardContent className="space-y-1">
               <div className="flex justify-between items-center">
                 <h2 className="font-bold text-lg">{ipo.Name}</h2>
-                <span className="text-sm px-2 py-0.5 bg-blue-100 text-blue-600 rounded-full">{ipo.Type}</span>
+                <span className="text-sm px-2 py-0.5 bg-blue-100 text-blue-600 rounded-full">
+                  {ipo.Type}
+                </span>
               </div>
-              <p className="text-sm text-gray-500 dark:text-gray-300">{ipo.Status}</p>
-              <div className="text-sm">📈 GMP: {ipo.GMP || 'N/A'}</div>
+              <p className="text-sm text-gray-500 dark:text-gray-300">
+                {ipo.Status}
+              </p>
+              <div className="text-sm">📈 GMP: {ipo.GMP || "N/A"}</div>
               <div className="text-sm">💰 Price: {ipo.Price}</div>
-              <div className="text-sm">🧮 Est Listing: {ipo['Est Listing']}</div>
-              <div className="text-sm">📦 Lot: {ipo.Lot} | Size: {ipo['IPO Size']}</div>
-              <div className="text-sm">📅 {ipo.Open} - {ipo.Close}</div>
-              <div className="text-sm">🗓️ BoA: {ipo['BoA Dt']} | 📜 Listing: {ipo.Listing}</div>
+              <div className="text-sm">🧮 Est Listing: {ipo["Est Listing"]}</div>
+              <div className="text-sm">
+                📦 Lot: {ipo.Lot} | Size: {ipo["IPO Size"]}
+              </div>
+              <div className="text-sm">
+                📅 {ipo.Open} - {ipo.Close}
+              </div>
+              <div className="text-sm">
+                🗓️ BoA: {ipo["BoA Dt"]} | 📜 Listing: {ipo.Listing}
+              </div>
               {ipo.AllotmentLink1 && (
                 <a
                   href={ipo.AllotmentLink1}
@@ -101,7 +131,8 @@ export default function IPODashboard() {
       </main>
 
       <footer className="p-4 text-center text-sm text-gray-500 dark:text-gray-400">
-        IPO data auto-updated from Google Sheets. Not financial advice. | © 2025
+        IPO data auto-updated from Google Sheets. Not financial advice. | ©
+        2025
       </footer>
     </div>
   );

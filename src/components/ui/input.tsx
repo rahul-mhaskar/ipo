@@ -1,11 +1,12 @@
 import React from "react";
 
-export function Input({ className = "", ...props }) {
+interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
+
+export function Input({ className = "", ...props }: InputProps) {
   return (
     <input
-      className={`rounded border px-3 py-2 text-sm ${className}`}
+      className={`border rounded px-3 py-2 text-sm dark:bg-gray-700 dark:text-white ${className}`}
       {...props}
     />
   );
 }
-

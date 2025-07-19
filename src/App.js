@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react"; // check
+import React, { useEffect, useState, useMemo } from "react";
 import Papa from "papaparse";
 
 // IMPORTANT: Replace with your actual Google Sheet CSV URL
@@ -95,8 +95,6 @@ const App = () => {
 
   const handleApplyClick = () => {
     setShowBrokerPopup(true);
-    // You might want to scroll to the broker section here if it's visible on the main page
-    // For a popup, scrolling is less critical as the popup itself is central.
   };
 
   const handleAllotmentClick = (ipo) => {
@@ -160,9 +158,9 @@ const App = () => {
         target="_blank"
         rel="noopener noreferrer"
         onClick={() => showMessage(`Opening ${broker.name} account link.`)}
-        className="flex flex-col items-center w-28 text-center hover:scale-105 hover:shadow-lg transition-all p-2 bg-gray-50 rounded-lg"
+        className="flex flex-col items-center w-20 sm:w-24 text-center hover:scale-105 hover:shadow-lg transition-all p-1 sm:p-2 bg-gray-50 rounded-lg"
       >
-        <img src={broker.logo} alt={broker.name} className="h-8 mb-1 object-contain" />
+        <img src={broker.logo} alt={broker.name} className="h-6 sm:h-8 mb-0.5 object-contain" />
         <span className="text-xs text-gray-600">{broker.name}</span>
       </a>
     ));
@@ -178,7 +176,7 @@ const App = () => {
             <svg className="w-10 h-10 mr-3 text-white" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 2L2 22h20L12 2zm0 17l-5-10h10l-5 10z"/>
             </svg>
-            <h1 className="text-3xl font-bold">Track My IPO</h1>
+            <h1 className="text-3xl font-bold">IPO Tracker</h1>
           </div>
           <div className="relative w-full sm:w-1/3">
             <input
@@ -312,29 +310,33 @@ const App = () => {
         </div>
       )}
 
-      {/* Broker Referral Section (Sticky Footer) */}
-      <footer id="broker-section" className="fixed bottom-0 left-0 w-full bg-white border-t shadow z-40 p-4">
-        <div className="max-w-7xl mx-auto px-4 py-3">
-          <div className="whatsapp-section text-center mb-4">
+      {/* Broker Referral Section (Sticky Footer) - Made more compact */}
+      <footer id="broker-section" className="fixed bottom-0 left-0 w-full bg-white border-t shadow z-40 py-2 px-4"> {/* Reduced py-4 to py-2 */}
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-center sm:justify-between gap-2">
+          {/* WhatsApp Channel Section */}
+          <div className="whatsapp-section text-center sm:text-left mb-1 sm:mb-0"> {/* Reduced mb-4 to mb-1 */}
             <a
-              href="https://whatsapp.com/channel/0029VbBPCHaKAwEkO9zdRl34"
+              href="https://whatsapp.com/channel/0029VbBPaggaCHaKAwEkOhhf9zdRl34"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center bg-green-600 text-white px-6 py-2 rounded-full shadow-md hover:bg-green-700 hover:scale-105 transition transform"
+              className="inline-flex items-center bg-green-600 text-white px-4 py-1.5 rounded-full shadow-md hover:bg-green-700 hover:scale-105 transition transform text-sm" /* Reduced px/py, added text-sm */
             >
               <img
                 src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"
                 alt="WhatsApp"
-                className="w-5 h-5 mr-2"
+                className="w-4 h-4 mr-1" /* Smaller icon */
               />
-              Get Updates via WhatsApp Channel
+              WhatsApp Updates
             </a>
           </div>
-          <h2 className="text-md font-semibold mb-2 text-center text-gray-800 hover:text-blue-600 transition-all">
-            🛡️ Open Demat account securely with verified investment brokers.
-          </h2>
-          <div className="flex flex-wrap justify-center gap-4 overflow-x-auto pb-2">
-            {renderBrokerLinks(false)}
+          
+          <div className="flex flex-col items-center sm:items-end">
+            <h2 className="text-sm font-semibold mb-1 text-center text-gray-800 hover:text-blue-600 transition-all"> {/* Reduced text-md to text-sm, mb-2 to mb-1 */}
+              🛡️ Open Demat account securely with verified investment brokers.
+            </h2>
+            <div className="flex flex-wrap justify-center gap-2 overflow-x-auto pb-0.5"> {/* Reduced gap, pb */}
+              {renderBrokerLinks(false)}
+            </div>
           </div>
         </div>
       </footer>

@@ -6,7 +6,7 @@ import Papa from "papaparse";
 // Example of a CORRECT format:
 // "https://docs.google.com/spreadsheets/d/e/2PACX-1vYOUR_SHEET_ID_HERE/pub?gid=0&single=true&output=csv"
 // The 'gid' parameter specifies the sheet (0 is usually the first tab).
-const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlsMurbsXT2UBQ2ADbyoiQtLUTznQU4vNzw3nS02_StSrFV9pkrnXOrNAjV_Yj-Byc_zw72z_rM0tQ/pub?output=csv";
+const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSHEORz3aArzaDTOWYW6FlC1avk1TYKAhDKfyALmqg2HMDWiD60N6WG2wgMlPkvLWC9d7YzwplhCStb/pub?gid=0&single=true&output=csv";
 
 
 const App = () => {
@@ -19,7 +19,6 @@ const App = () => {
   const [message, setMessage] = useState("");
   const [showMessageBox, setShowMessageBox] = useState(false);
   const [layoutMode, setLayoutMode] = useState('card'); // 'card' or 'table'
-  const [isLoading, setIsLoading] = useState(true); // Loading state for data fetch
 
   // State for toggling table sections visibility
   const [showUpcomingSection, setShowUpcomingSection] = useState(false);
@@ -38,7 +37,7 @@ const App = () => {
   };
 
   useEffect(() => {
-    setIsLoading(true); // Set loading state to true when fetching starts
+    // No isLoading state here, as per your working version
     try {
       Papa.parse(GOOGLE_SHEET_CSV_URL, {
         download: true,
@@ -52,18 +51,15 @@ const App = () => {
           } else {
             showMessage("No IPO data found. Please check your Google Sheet CSV for content.");
           }
-          setIsLoading(false); // Set loading to false when complete
         },
         error: (error) => {
           console.error("Error parsing CSV:", error);
           showMessage("Failed to load IPO data. Please check the CSV URL and ensure it's publicly accessible.");
-          setIsLoading(false); // Set loading to false on error
         }
       });
     } catch (e) {
       console.error("Error initiating PapaParse:", e);
       showMessage("An unexpected error occurred while trying to load data. Is PapaParse installed?");
-      setIsLoading(false);
     }
   }, []); // Run only once on component mount
 
@@ -329,19 +325,8 @@ const App = () => {
             </button>
         </div>
 
-        {/* Loading Indicator */}
-        {isLoading && (
-          <div className="text-center text-gray-600 py-8">
-            <svg className="animate-spin h-8 w-8 text-blue-500 mx-auto mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <p>Loading IPO data...</p>
-          </div>
-        )}
-
         {/* Conditional Rendering for Layout */}
-        {!isLoading && (layoutMode === 'card' ? (
+        {layoutMode === 'card' ? (
           <section id="ipo-list" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {ipoData.length > 0 ? ( // Use ipoData directly for card view, filtering handled by search
               displayedIpoData.map((ipo, index) => ( // Use displayedIpoData here for consistency with search/sort
@@ -389,7 +374,7 @@ const App = () => {
               <p className="px-3 py-4 text-center text-gray-600 bg-white rounded-lg shadow-sm">No IPOs found matching your criteria across all categories.</p>
             )}
           </div>
-        ))}
+        )}
 
 
         {/* Message Box for alerts */}

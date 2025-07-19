@@ -2,6 +2,8 @@ import React, { useEffect, useState, useMemo } from "react";
 import Papa from "papaparse"; // Reverted to direct import, assuming npm install is handled
 
 // IMPORTANT: Replace with your actual Google Sheet CSV URL
+// This URL MUST be a "Published to web" CSV link from Google Sheets, NOT an editor link.
+// Example: https://docs.google.com/spreadsheets/d/e/2PACX-1v.../pub?gid=0&single=true&output=csv
 const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlsMurbsXT2UBQ2ADbyoiQtLUTznQU4vNzw3nS02_StSrFV9pkrnXOrNAjV_Yj-Byc_zw72z_rM0tQ/pub?output=csv";
 
 
@@ -26,34 +28,41 @@ const App = () => {
   const showMessage = (msg) => {
     setMessage(msg);
     setShowMessageBox(true);
+    // Auto-hide after 3 seconds, but allow manual close
     setTimeout(() => {
       setShowMessageBox(false);
       setMessage("");
-    }, 3000); // Hide after 3 seconds
+    }, 3000);
   };
 
   useEffect(() => {
     setIsLoading(true); // Set loading state to true when fetching starts
-    Papa.parse(GOOGLE_SHEET_CSV_URL, {
-      download: true,
-      header: true,
-      complete: (result) => {
-        // Filter out empty rows that PapaParse might include
-        const cleanedData = result.data.filter(row => row.Name);
-        setIpoData(cleanedData);
-        if (cleanedData.length > 0) {
-          showMessage("IPO data loaded successfully!");
-        } else {
-          showMessage("No IPO data found. Please check your Google Sheet CSV.");
+    try {
+      Papa.parse(GOOGLE_SHEET_CSV_URL, {
+        download: true,
+        header: true,
+        complete: (result) => {
+          // Filter out empty rows that PapaParse might include
+          const cleanedData = result.data.filter(row => row.Name && row.Name.trim() !== ''); // Ensure Name is not empty
+          setIpoData(cleanedData);
+          if (cleanedData.length > 0) {
+            showMessage("IPO data loaded successfully!");
+          } else {
+            showMessage("No IPO data found. Please check your Google Sheet CSV for content.");
+          }
+          setIsLoading(false); // Set loading to false when complete
+        },
+        error: (error) => {
+          console.error("Error parsing CSV:", error);
+          showMessage("Failed to load IPO data. Please check the CSV URL and ensure it's publicly accessible.");
+          setIsLoading(false); // Set loading to false on error
         }
-        setIsLoading(false); // Set loading to false when complete
-      },
-      error: (error) => {
-        console.error("Error parsing CSV:", error);
-        showMessage("Failed to load IPO data. Please check the CSV URL and ensure it's publicly accessible.");
-        setIsLoading(false); // Set loading to false on error
-      }
-    });
+      });
+    } catch (e) {
+      console.error("Error initiating PapaParse:", e);
+      showMessage("An unexpected error occurred while trying to load data. Is PapaParse installed?");
+      setIsLoading(false);
+    }
   }, []); // Run only once on component mount
 
   const sortBy = (key) => {
@@ -142,7 +151,7 @@ const App = () => {
     if (cleanStatus.includes("apply")) {
       return (
         <span className="text-blue-600 cursor-pointer hover:underline font-semibold" onClick={handleApplyClick}>
-          � {status}
+          🚀 {status}
         </span>
       );
     } else if (cleanStatus.includes("pre")) {
@@ -156,7 +165,7 @@ const App = () => {
         </span>
       );
     } else if (cleanStatus.includes("listed")) {
-      return <span className="text-indigo-700 font-semibold">📈 {status}</span>;
+      return <span className="text-indigo-700 font-semibold">� {status}</span>;
     } else {
       return <span className="text-gray-500 font-semibold">📅 {status}</span>;
     }

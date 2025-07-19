@@ -4,6 +4,7 @@ import Papa from "papaparse"; // Reverted to direct import, assuming npm install
 // IMPORTANT: Replace with your actual Google Sheet CSV URL
 const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlsMurbsXT2UBQ2ADbyoiQtLUTznQU4vNzw3nS02_StSrFV9pkrnXOrNAjV_Yj-Byc_zw72z_rM0tQ/pub?output=csv";
 
+
 const App = () => {
   const [ipoData, setIpoData] = useState([]);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
@@ -141,7 +142,7 @@ const App = () => {
     if (cleanStatus.includes("apply")) {
       return (
         <span className="text-blue-600 cursor-pointer hover:underline font-semibold" onClick={handleApplyClick}>
-          🚀 {status}
+          � {status}
         </span>
       );
     } else if (cleanStatus.includes("pre")) {
@@ -484,3 +485,4 @@ const App = () => {
 };
 
 export default App;
+�

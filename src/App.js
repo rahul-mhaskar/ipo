@@ -1,8 +1,11 @@
 import React, { useEffect, useState, useMemo } from "react";
 import Papa from "papaparse";
 
-// IMPORTANT: Replace with your actual Google Sheet CSV URL
-const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlsMurbsXT2UBQ2ADbyoiQtLUTznQU4vNzw3nS02_StSrFV9pkrnXOrNAjV_Yj-Byc_zw72z_rM0tQ/pub?output=csv";
+// IMPORTANT: Replace with your actual Google Sheet CSV URL.
+// It MUST be a "Published to web" CSV link from Google Sheets, NOT an editor link.
+// Example of a CORRECT format:
+// "https://docs.google.com/spreadsheets/d/e/2PACX-1vYOUR_SHEET_ID_HERE/pub?gid=0&single=true&output=csv"
+const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSHEORz3aArzaDTOWYW6FlC1avk1TYKAhDKfyALmqg2HMDWiD60N6WG2wgMlPkvLWC9d7YzwplhCStb/pub?output=csv";
 
 
 const App = () => {
@@ -15,37 +18,47 @@ const App = () => {
   const [message, setMessage] = useState("");
   const [showMessageBox, setShowMessageBox] = useState(false);
   const [layoutMode, setLayoutMode] = useState('card'); // 'card' or 'table'
+  const [isLoading, setIsLoading] = useState(true); // Added loading state
+
+  // State for toggling table sections visibility
+  const [showUpcomingSection, setShowUpcomingSection] = useState(false);
+  const [showCurrentSection, setShowCurrentSection] = useState(true); // Default to open
+  const [showListedSection, setShowListedSection] = useState(false);
 
   // Function to show a custom message box
   const showMessage = (msg) => {
     setMessage(msg);
     setShowMessageBox(true);
+    // Auto-hide after 3 seconds, but allow manual close
     setTimeout(() => {
       setShowMessageBox(false);
       setMessage("");
-    }, 3000); // Hide after 3 seconds
+    }, 3000);
   };
 
   useEffect(() => {
+    setIsLoading(true); // Set loading state to true when fetching starts
     Papa.parse(GOOGLE_SHEET_CSV_URL, {
       download: true,
       header: true,
       complete: (result) => {
         // Filter out empty rows that PapaParse might include
-        const cleanedData = result.data.filter(row => row.Name);
+        const cleanedData = result.data.filter(row => row.Name && row.Name.trim() !== ''); // Ensure Name is not empty
         setIpoData(cleanedData);
         if (cleanedData.length > 0) {
           showMessage("IPO data loaded successfully!");
         } else {
-          showMessage("No IPO data found. Please check your Google Sheet CSV.");
+          showMessage("No IPO data found. Please check your Google Sheet CSV for content.");
         }
+        setIsLoading(false); // Set loading to false when complete
       },
       error: (error) => {
         console.error("Error parsing CSV:", error);
-        showMessage("Failed to load IPO data. Please check the CSV URL and try again.");
+        showMessage("Failed to load IPO data. Please check the CSV URL and ensure it's publicly accessible.");
+        setIsLoading(false); // Set loading to false on error
       }
     });
-  }, []);
+  }, []); // Run only once on component mount
 
   const sortBy = (key) => {
     let direction = "asc";
@@ -55,8 +68,8 @@ const App = () => {
     setSortConfig({ key, direction });
   };
 
-  // Memoize sorted and filtered data for performance
-  const displayedIpoData = useMemo(() => {
+  // Memoize sorted and filtered data for performance and categorization
+  const { upcomingIpos, currentIpos, listedIpos } = useMemo(() => {
     let sortableItems = [...ipoData];
 
     // Filter based on search term
@@ -94,7 +107,24 @@ const App = () => {
         return String(bVal).localeCompare(String(aVal), undefined, { numeric: true });
       });
     }
-    return sortableItems;
+
+    // Categorize IPOs based on status keywords
+    const upcoming = [];
+    const current = [];
+    const listed = [];
+
+    sortableItems.forEach(ipo => {
+      const status = ipo.Status ? String(ipo.Status).toLowerCase() : '';
+      if (status.includes("upcoming") || status.includes("pre-open")) {
+        upcoming.push(ipo);
+      } else if (status.includes("apply") || status.includes("open") || status.includes("pending") || status.includes("allotted")) {
+        current.push(ipo);
+      } else if (status.includes("listed") || status.includes("closed")) {
+        listed.push(ipo);
+      }
+    });
+
+    return { upcomingIpos: upcoming, currentIpos: current, listedIpos: listed };
   }, [ipoData, sortConfig, searchTerm]);
 
   const handleApplyClick = () => {
@@ -132,7 +162,7 @@ const App = () => {
     } else if (cleanStatus.includes("listed")) {
       return <span className="text-indigo-700 font-semibold">📈 {status}</span>;
     } else {
-      return <span className="text-gray-500 font-semibold">📅 {status}</span>;
+      return <span className="text-gray-500 font-semibold">� {status}</span>;
     }
   };
 
@@ -175,6 +205,69 @@ const App = () => {
     "Name", "Type", "Status", "GMP", "Subscription", "Price", "Est Listing",
     "IPO Size", "Lot", "Open", "Close", "BoA Dt", "Listing"
   ];
+
+  // Helper function to render a collapsible table section
+  const renderTableSection = (title, ipoList, isVisible, toggleVisibility) => (
+    <div className="mb-8">
+      <div
+        className="flex items-center justify-between bg-blue-100 p-3 rounded-t-lg cursor-pointer hover:bg-blue-200 transition-colors duration-200"
+        onClick={toggleVisibility}
+      >
+        <h3 className="text-lg font-semibold text-blue-800">{title} ({ipoList.length})</h3>
+        <svg
+          className={`w-6 h-6 text-blue-800 transform transition-transform duration-200 ${isVisible ? 'rotate-0' : '-rotate-90'}`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+        </svg>
+      </div>
+      <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isVisible ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'}`}>
+        {ipoList.length > 0 ? (
+          <div className="overflow-x-auto border-t border-gray-200">
+            <table className="w-full text-sm bg-white rounded-b-lg shadow-sm">
+              <thead className="bg-gray-50">
+                <tr>
+                  {tableHeaders.map((header) => (
+                    <th
+                      key={header}
+                      onClick={() => sortBy(header)}
+                      className="px-3 py-2 cursor-pointer text-left border-b border-gray-200 text-gray-700 whitespace-nowrap"
+                    >
+                      {header}
+                      <span className={sortConfig.key === header ? "text-black" : "text-gray-400"}>
+                        {sortConfig.key === header ? (
+                          sortConfig.direction === "asc" ? " ▲" : " ▼"
+                        ) : " ⬍"}
+                      </span>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {ipoList.map((ipo, index) => (
+                  <tr key={index} className="border-t border-gray-100 hover:bg-gray-50">
+                    {tableHeaders.map((key) => (
+                      <td key={key} className="px-3 py-2 border-b border-gray-100 whitespace-nowrap">
+                        {key === "Status"
+                          ? getStatusContent(ipo[key], ipo)
+                          : ipo[key] || 'N/A'} {/* Display N/A for empty cells */}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="px-3 py-4 text-center text-gray-600 bg-white rounded-b-lg">No IPOs in this category.</p>
+        )}
+      </div>
+    </div>
+  );
+
 
   return (
     <div className="min-h-screen bg-gray-100 font-sans flex flex-col">
@@ -230,10 +323,23 @@ const App = () => {
             </button>
         </div>
 
+        {/* Loading Indicator */}
+        {/* Only show loading indicator if ipoData is empty and still loading */}
+        {ipoData.length === 0 && isLoading && (
+          <div className="text-center text-gray-600 py-8">
+            <svg className="animate-spin h-8 w-8 text-blue-500 mx-auto mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p>Loading IPO data...</p>
+          </div>
+        )}
+
         {/* Conditional Rendering for Layout */}
         {layoutMode === 'card' ? (
           <section id="ipo-list" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {displayedIpoData.length > 0 ? (
+            {/* Filter displayedIpoData for card view based on search term */}
+            {ipoData.length > 0 && displayedIpoData.length > 0 ? (
               displayedIpoData.map((ipo, index) => (
                 <div key={index} className="card p-6 flex flex-col justify-between">
                   <div>
@@ -265,52 +371,21 @@ const App = () => {
                 </div>
               ))
             ) : (
-              <p className="text-center text-gray-600 col-span-full">No IPOs found matching your criteria.</p>
+              // Only show this message if data is loaded and empty, not while loading
+              !isLoading && <p className="text-center text-gray-600 col-span-full">No IPOs found matching your criteria.</p>
             )}
           </section>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm bg-white rounded-lg shadow border">
-              <thead className="bg-gray-200">
-                <tr>
-                  {tableHeaders.map((header) => (
-                    <th
-                      key={header}
-                      onClick={() => sortBy(header)}
-                      className="px-3 py-2 cursor-pointer text-left border text-gray-700 whitespace-nowrap"
-                    >
-                      {header}
-                      <span className={sortConfig.key === header ? "text-black" : "text-gray-400"}>
-                        {sortConfig.key === header ? (
-                          sortConfig.direction === "asc" ? " ▲" : " ▼"
-                        ) : " ⬍"}
-                      </span>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {displayedIpoData.length > 0 ? (
-                  displayedIpoData.map((ipo, index) => (
-                    <tr key={index} className="border-t hover:bg-gray-50">
-                      {tableHeaders.map((key) => (
-                        <td key={key} className="px-3 py-2 border whitespace-nowrap">
-                          {key === "Status"
-                            ? getStatusContent(ipo[key], ipo)
-                            : ipo[key] || 'N/A'} {/* Display N/A for empty cells */}
-                        </td>
-                      ))}
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={tableHeaders.length} className="px-3 py-4 text-center text-gray-600">
-                      No IPOs found matching your criteria.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+          <div>
+            {/* Render categorized table sections */}
+            {renderTableSection("Current IPOs (Open & Awaiting Allotment)", currentIpos, showCurrentSection, () => setShowCurrentSection(!showCurrentSection))}
+            {renderTableSection("Upcoming IPOs", upcomingIpos, showUpcomingSection, () => setShowUpcomingSection(!showUpcomingSection))}
+            {renderTableSection("Listed/Closed IPOs", listedIpos, showListedSection, () => setShowListedSection(!showListedSection))}
+
+            {/* Message if no IPOs found in table view after filtering/categorizing */}
+            {ipoData.length > 0 && displayedIpoData.length === 0 && (
+              <p className="px-3 py-4 text-center text-gray-600 bg-white rounded-lg shadow-sm">No IPOs found matching your criteria across all categories.</p>
+            )}
           </div>
         )}
 
@@ -419,4 +494,4 @@ const App = () => {
 };
 
 export default App;
-
+�

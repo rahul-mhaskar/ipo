@@ -317,7 +317,7 @@ const App = () => {
         <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="whatsapp-section text-center mb-4">
             <a
-              href="https://whatsapp.com/channel/0029VbBPaggaCHaKAwEkOhhf9zdRl34"
+              href="https://whatsapp.com/channel/0029VbBPCHaKAwEkO9zdRl34"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center bg-green-600 text-white px-6 py-2 rounded-full shadow-md hover:bg-green-700 hover:scale-105 transition transform"

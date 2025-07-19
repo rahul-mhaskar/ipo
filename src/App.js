@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
-import Papa from "papaparse"; // Reverted to direct import
+import Papa from "papaparse"; // Reverted to direct import, assuming npm install is handled
 
 // IMPORTANT: Replace with your actual Google Sheet CSV URL
 const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlsMurbsXT2UBQ2ADbyoiQtLUTznQU4vNzw3nS02_StSrFV9pkrnXOrNAjV_Yj-Byc_zw72z_rM0tQ/pub?output=csv";
@@ -14,9 +14,9 @@ const App = () => {
   const [message, setMessage] = useState("");
   const [showMessageBox, setShowMessageBox] = useState(false);
   const [layoutMode, setLayoutMode] = useState('card'); // 'card' or 'table'
-  const [isLoading, setIsLoading] = useState(true); // New loading state
+  const [isLoading, setIsLoading] = useState(true); // Loading state for data fetch
 
-  // State for toggling table sections
+  // State for toggling table sections visibility
   const [showUpcomingSection, setShowUpcomingSection] = useState(false);
   const [showCurrentSection, setShowCurrentSection] = useState(true); // Default to open
   const [showListedSection, setShowListedSection] = useState(false);
@@ -32,14 +32,6 @@ const App = () => {
   };
 
   useEffect(() => {
-    // Ensure PapaParse is available before attempting to parse
-    if (typeof Papa === 'undefined' || !Papa.parse) {
-      console.error("PapaParse is not available. Ensure it's installed via npm and imported correctly.");
-      showMessage("Error: Data parsing library not found. Please ensure all dependencies are installed.");
-      setIsLoading(false);
-      return;
-    }
-
     setIsLoading(true); // Set loading state to true when fetching starts
     Papa.parse(GOOGLE_SHEET_CSV_URL, {
       download: true,
@@ -57,7 +49,7 @@ const App = () => {
       },
       error: (error) => {
         console.error("Error parsing CSV:", error);
-        showMessage("Failed to load IPO data. Please check the CSV URL and try again.");
+        showMessage("Failed to load IPO data. Please check the CSV URL and ensure it's publicly accessible.");
         setIsLoading(false); // Set loading to false on error
       }
     });
@@ -111,7 +103,7 @@ const App = () => {
       });
     }
 
-    // Categorize IPOs
+    // Categorize IPOs based on status keywords
     const upcoming = [];
     const current = [];
     const listed = [];
@@ -163,7 +155,7 @@ const App = () => {
         </span>
       );
     } else if (cleanStatus.includes("listed")) {
-      return <span className="text-indigo-700 font-semibold">� {status}</span>;
+      return <span className="text-indigo-700 font-semibold">📈 {status}</span>;
     } else {
       return <span className="text-gray-500 font-semibold">📅 {status}</span>;
     }
@@ -376,6 +368,7 @@ const App = () => {
           </section>
         ) : (
           <div>
+            {/* Render categorized table sections */}
             {renderTableSection("Current IPOs (Open & Awaiting Allotment)", currentIpos, showCurrentSection, () => setShowCurrentSection(!showCurrentSection))}
             {renderTableSection("Upcoming IPOs", upcomingIpos, showUpcomingSection, () => setShowUpcomingSection(!showUpcomingSection))}
             {renderTableSection("Listed/Closed IPOs", listedIpos, showListedSection, () => setShowListedSection(!showListedSection))}

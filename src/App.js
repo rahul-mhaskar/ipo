@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 
-import { Card, CardContent } from "./components/ui/card";
+import { Card } from "./components/ui/card";  ✅ CORRECT
+
 import { Input } from "./components/ui/input";
 import { Switch } from "./components/ui/switch";
+
 
 import { Sun, Moon } from 'lucide-react';
 

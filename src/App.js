@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-import { Card } from "./components/ui/card";  ✅ CORRECT
+import { Card } from "./components/ui/card";   // ✅ CORRECT
 
 import { Input } from "./components/ui/input";
 import { Switch } from "./components/ui/switch";

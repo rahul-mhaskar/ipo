@@ -729,7 +729,11 @@ const App = () => {
             <p className="text-gray-700">
               We are continuously working to enhance features and provide the best user experience.
             </p>
- <p className="text-gray-400">
+
+                 <p className="text-center text-gray-800 text-xs mt-4">
+                Please share your suggestions and comments us at <a href="mailto:trackmyipo@outlook.com" className="text-blue-600 hover:underline">trackmyipo@outlook.com</a>
+              </p>
+ <p className="text-gray-600">
                 Disclaimer:
                 All content provided on this platform is intended solely for educational and informational purposes.
                 Under no circumstances should any information published here be interpreted as investment advice, a recommendation to buy or sell any securities, or guidance for participating in IPOs. 

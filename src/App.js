@@ -729,6 +729,15 @@ const App = () => {
             <p className="text-gray-700">
               We are continuously working to enhance features and provide the best user experience.
             </p>
+ <p className="text-gray-400">
+                Disclaimer:
+                All content provided on this platform is intended solely for educational and informational purposes.
+                Under no circumstances should any information published here be interpreted as investment advice, a recommendation to buy or sell any securities, or guidance for participating in IPOs. 
+                We are not registered with SEBI as financial analysts or advisors. 
+                Users are strongly advised to consult a qualified financial advisor before making any investment decisions based on the information presented on this platform. 
+                The content shared is based on publicly available data and prevailing market views as of the date of publication.
+                By using this platform, you acknowledge and agree to these terms and conditions.
+                   </p>
           </div>
         </div>
       )}
@@ -807,7 +816,7 @@ const App = () => {
                 Submit
               </button>
               <p className="text-center text-gray-500 text-xs mt-4">
-                Having trouble submitting form? email us at <a href="mailto:support@trackmyipo.com" className="text-blue-600 hover:underline">support@trackmyipo.com</a>
+                Having trouble submitting form? email us at <a href="mailto:trackmyipo@outlook.com" className="text-blue-600 hover:underline">trackmyipo@outlook.com</a>
               </p>
             </form>
           </div>
@@ -820,7 +829,7 @@ const App = () => {
           {/* WhatsApp Channel Section */}
           <div className="whatsapp-section text-center sm:text-left mb-1 sm:mb-0">
             <a
-              href="https://whatsapp.com/channel/0029VbBPCHaKAwEkO9zdRl34"
+              href="https://www.whatsapp.com/channel/0029VbBPCHaKAwEkO9zdRl34"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center bg-green-600 text-white px-4 py-1.5 rounded-full shadow-md hover:bg-green-700 hover:scale-105 transition transform text-sm"

@@ -461,7 +461,7 @@ const App = () => {
 
     // Simulate form submission
     console.log("Contact Form Submitted:", contactForm);
-    setContactFormMessage('Thanks for reaching out! We will contact you shortly.');
+    setContactFormMessage('we are experiencing technical difficulties. Please write us at <a href="mailto:trackmyipo@outlook.com" className="text-blue-600 hover:underline">trackmyipo@outlook.com</a>');
     // Clear form after a short delay
     setTimeout(() => {
       setContactForm({ name: '', contactNumber: '', locality: '', email: '' });
@@ -727,8 +727,7 @@ const App = () => {
               and other crucial details. Our goal is to empower investors with timely information to make informed decisions.
             </p>
             <p className="text-gray-700">
-              This application fetches data from a publicly accessible Google Sheet, ensuring that you always have access
-              to the most current information. We are continuously working to enhance features and provide the best user experience.
+              We are continuously working to enhance features and provide the best user experience.
             </p>
           </div>
         </div>
@@ -808,7 +807,7 @@ const App = () => {
                 Submit
               </button>
               <p className="text-center text-gray-500 text-xs mt-4">
-                Having trouble submitting form? email us at <a href="mailto:support@trackmyipo.com" className="text-blue-600 hover:underline">support@trackmyipo.com</a>
+                Having trouble submitting form? email us at <a href="mailto:trackmyipo@outlook.com" className="text-blue-600 hover:underline">trackmyipo@outlook.com</a>
               </p>
             </form>
           </div>

@@ -556,11 +556,24 @@ const App = () => {
 
       {/* New Fixed Sort and Total IPOs Bar */}
       <div className="fixed top-[64px] w-full z-40 bg-gray-200 p-2 shadow-md flex flex-col sm:flex-row justify-between items-center text-gray-700 text-sm">
-        <div className="mb-2 sm:mb-0 text-center sm:text-left text-xs sm:text-sm"> {/* Smaller font for count on small screens */}
-        <b>Total Ongoing IPOs:</b> {currentIpos.length} (
+      {/*  <div className="mb-2 sm:mb-0 text-center sm:text-left text-xs sm:text-sm"> 
+       <b>Total Ongoing IPOs:</b> {currentIpos.length} (
   <b>Mainboard:</b> {currentMainboardCount} | 
   <b>SME:</b> {currentSmeCount})
-        </div>
+        </div> */}
+
+        <div className="text-blue-600 text-sm sm:text-base font-medium space-x-1">
+  <span className="text-blue-800">Total Ongoing IPOs:</span>
+  <span>{currentIpos.length}</span>
+  <span>(</span>
+  <span className="text-blue-800">Mainboard:</span>
+  <span>{currentMainboardCount}</span>
+  <span>|</span>
+  <span className="text-blue-800">SME:</span>
+  <span>{currentSmeCount}</span>
+  <span>)</span>
+</div>
+
         <div className="flex gap-2">
           <button
             onClick={() => sortBy("Name")}

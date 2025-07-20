@@ -8,7 +8,6 @@ import Papa from "papaparse";
 const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlsMurbsXT2UBQ2ADbyoiQtLUTznQU4vNzw3nS02_StSrFV9pkrnXOrNAjV_Yj-Byc_zw72z_rM0tQ/pub?output=csv";
 
 
-
 const App = () => {
   const [ipoData, setIpoData] = useState([]);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
@@ -446,6 +445,11 @@ const App = () => {
       setContactFormMessage('Please fill in all mandatory fields.');
       return;
     }
+    // Name field validation: only alphabets and spaces
+    if (!/^[A-Za-z\s]+$/.test(contactForm.name)) {
+      setContactFormMessage('Name can only contain alphabets and spaces.');
+      return;
+    }
     if (!/^\S+@\S+\.\S+$/.test(contactForm.email)) {
       setContactFormMessage('Please enter a valid email address.');
       return;
@@ -561,26 +565,36 @@ const App = () => {
             {ipoData.length > 0 && displayedIpoData.length > 0 ? (
               displayedIpoData.map((ipo, index) => (
                 <div key={index} className="card p-6 flex flex-col justify-between">
+                  {/* Flex container for image and primary text */}
+                  <div className="flex items-start gap-4 mb-4">
+                    {/* IPO Image */}
+                    <div className="flex-shrink-0">
+                      {ipo.ImageURL ? (
+                        <img
+                          src={ipo.ImageURL}
+                          alt={`${ipo.Name} Logo`}
+                          className="w-20 h-20 object-contain rounded-lg border p-1 bg-white"
+                          onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/80x80/e0e0e0/555555?text=No+Image"; }}
+                        />
+                      ) : (
+                        <img
+                          src="https://placehold.co/80x80/e0e0e0/555555?text=No+Image"
+                          alt="No Image Available"
+                          className="w-20 h-20 object-contain rounded-lg border p-1 bg-white"
+                        />
+                      )}
+                    </div>
+                    {/* IPO Name, Type, Description */}
+                    <div className="flex-grow">
+                      <h2 className="text-xl font-semibold text-blue-700 mb-1">{ipo.Name} ({ipo.Type})</h2>
+                      {ipo.Description && (
+                        <p className="text-gray-600 text-sm line-clamp-3">{ipo.Description}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Other details below the image/description block */}
                   <div>
-                    {ipo.ImageURL && (
-                      <img
-                        src={ipo.ImageURL}
-                        alt={`${ipo.Name} Logo`}
-                        className="w-24 h-24 object-contain mx-auto mb-4 rounded-lg border p-1 bg-white"
-                        onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/96x96/e0e0e0/555555?text=No+Image"; }}
-                      />
-                    )}
-                    {!ipo.ImageURL && (
-                       <img
-                        src="https://placehold.co/96x96/e0e0e0/555555?text=No+Image"
-                        alt="No Image Available"
-                        className="w-24 h-24 object-contain mx-auto mb-4 rounded-lg border p-1 bg-white"
-                       />
-                    )}
-                    <h2 className="text-xl font-semibold text-blue-700 mb-2">{ipo.Name} ({ipo.Type})</h2>
-                    {ipo.Description && (
-                      <p className="text-gray-600 text-sm mb-3 line-clamp-3">{ipo.Description}</p>
-                    )}
                     <p className="text-gray-700 mb-1"><strong>Price:</strong> {ipo.Price || 'N/A'}</p>
                     <p className="text-gray-700 mb-1"><strong>Lot Size:</strong> {ipo.Lot || 'N/A'}</p>
                     <p className="text-gray-700 mb-1"><strong>Open Date:</strong> {ipo.Open || 'N/A'}</p>
@@ -794,7 +808,7 @@ const App = () => {
                 Submit
               </button>
               <p className="text-center text-gray-500 text-xs mt-4">
-                Having trouble submitting form? email us at <a href="mailto:rahulmhaskar@live.com" className="text-blue-600 hover:underline">rahulmhaskar@live.com</a>
+                Having trouble submitting form? email us at <a href="mailto:support@trackmyipo.com" className="text-blue-600 hover:underline">support@trackmyipo.com</a>
               </p>
             </form>
           </div>

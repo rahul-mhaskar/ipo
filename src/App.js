@@ -325,7 +325,7 @@ const App = () => {
     setShowAllotmentPopup(true);
   };
 
-  const getStatusContent = (status, ipo) => { // Corrected: Added 'ipo' parameter
+  const getStatusContent = (status, ipo) => {
     const cleanStatus = status ? String(status).toLowerCase() : ''; // Handle undefined status
     if (cleanStatus.includes("apply")) {
       return (
@@ -346,7 +346,7 @@ const App = () => {
     } else if (cleanStatus.includes("listed")) {
       return <span className="text-indigo-700 font-semibold">📈 {status}</span>;
     } else {
-      return <span className="text-gray-500 font-semibold">📅 {status}</span>;
+      return <span className="text-gray-500 font-semibold">� {status}</span>;
     }
   };
 

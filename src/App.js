@@ -3,7 +3,7 @@ import Papa from "papaparse";
 
 // IMPORTANT: Replace with your actual Google Sheet CSV URL.
 // It MUST be a "Published to web" CSV link from Google Sheets, NOT an editor link.
-// Example of a CORRECT format:
+// Example of a CORRECT csv format:
 // "https://docs.google.com/sheets/d/e/2PACX-1vYOUR_SHEET_ID_HERE/pub?gid=0&single=true&output=csv"
 const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlsMurbsXT2UBQ2ADbyoiQtLUTznQU4vNzw3nS02_StSrFV9pkrnXOrNAjV_Yj-Byc_zw72z_rM0tQ/pub?output=csv";
 

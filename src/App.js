@@ -5,7 +5,8 @@ import Papa from "papaparse";
 // It MUST be a "Published to web" CSV link from Google Sheets, NOT an editor link.
 // Example of a CORRECT format:
 // "https://docs.google.com/spreadsheets/d/e/2PACX-1vYOUR_SHEET_ID_HERE/pub?gid=0&single=true&output=csv"
-const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSHEORz3aArzaDTOWYW6FlC1avk1TYKAhDKfyALmqg2HMDWiD60N6WG2wgMlPkvLWC9d7YzwplhCStb/pub?output=csv";
+const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlsMurbsXT2UBQ2ADbyoiQtLUTznQU4vNzw3nS02_StSrFV9pkrnXOrNAjV_Yj-Byc_zw72z_rM0tQ/pub?output=csv";
+
 
 
 const App = () => {

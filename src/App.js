@@ -5,7 +5,7 @@ import Papa from "papaparse";
 // It MUST be a "Published to web" CSV link from Google Sheets, NOT an editor link.
 // Example of a CORRECT format:
 // "https://docs.google.com/sheets/d/e/2PACX-1vYOUR_SHEET_ID_HERE/pub?gid=0&single=true&output=csv"
-const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlsMurbsXT2UBQ2ADbyoiQtLUTznQU4vNzw3nS02_StSrFV9pkrnXOrNAjV_Yj-Byc_zw72z_rM0tQ/pub?output=csv";
+const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSHEORz3aArzaDTOWYW6FlC1avk1TYKAhDKfyALmqg2HMDWiD60N6WG2wgMlPkvLWC9d7YzwplhCStb/pub?output=csv";
 
 
 const App = () => {
@@ -325,12 +325,12 @@ const App = () => {
     setShowAllotmentPopup(true);
   };
 
-  const getStatusContent = (status, ipo) => {
+  const getStatusContent = (status, ipo) => { // Corrected: Added 'ipo' parameter
     const cleanStatus = status ? String(status).toLowerCase() : ''; // Handle undefined status
     if (cleanStatus.includes("apply")) {
       return (
         <span className="text-blue-600 cursor-pointer hover:underline font-semibold" onClick={handleApplyClick}>
-          � {status}
+          🚀 {status}
         </span>
       );
     } else if (cleanStatus.includes("pre")) {
@@ -722,7 +722,7 @@ const App = () => {
             <button
               onClick={() => setShowBrokerPopup(false)}
               className="absolute top-2 right-2 text-gray-600 hover:text-black text-lg"
-            >
+              >
               ×
             </button>
             <h2 className="text-lg font-semibold mb-4 text-center text-gray-800">

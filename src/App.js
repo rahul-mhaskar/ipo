@@ -38,7 +38,7 @@ const App = () => {
     setTimeout(() => {
       setShowMessageBox(false);
       setMessage("");
-    }, 1500);
+    }, 500);
   };
 
   useEffect(() => {

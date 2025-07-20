@@ -1,9 +1,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import Papa from "papaparse";
 
-const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSHEORz3aArzaDTOWYW6FlC1avk1TYKAhDKfyALmqg2HMDWiD60N6WG2wgMlPkvLWC9d7YzwplhCStb/pub?output=csv";
-
-
+const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlsMurbsXT2UBQ2ADbyoiQtLUTznQU4vNzw3nS02_StSrFV9pkrnXOrNAjV_Yj-Byc_zw72z_rM0tQ/pub?output=csv";
 const App = () => {
   const [ipoData, setIpoData] = useState([]);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });

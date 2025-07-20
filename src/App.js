@@ -467,7 +467,7 @@ const App = () => {
       setContactForm({ name: '', contactNumber: '', locality: '', email: '' });
       setContactFormMessage('');
       setShowContactUsModal(false); // Close modal after submission
-    }, 10000);
+    }, 5000);
   };
 
 
@@ -493,7 +493,7 @@ const App = () => {
       )}
 
       {/* Header */}
-      <header className="bg-gradient-to-r from-blue-600 to-purple-700 text-white p-4 shadow-lg rounded-b-xl">
+      <header className="fixed top-0 w-full z-50 bg-gradient-to-r from-blue-600 to-purple-700 text-white p-4 shadow-lg rounded-b-xl">
         <div className="container mx-auto flex flex-col sm:flex-row justify-between items-center">
           <div className="flex items-center mb-2 sm:mb-0">
             {/* Using a simple SVG for the logo as image path won't work directly */}
@@ -502,7 +502,7 @@ const App = () => {
             </svg>
             <h1 className="text-3xl font-bold">Track My IPO</h1> {/* Changed name here */}
           </div>
-          <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-1/2">
+          <div className="flex flex-col sm:flex-row sm:flex-nowrap items-center gap-2 w-full sm:w-auto"> {/* Adjusted for no wrap */}
             <div className="relative w-full sm:w-2/3">
               <input
                 type="text"
@@ -519,21 +519,21 @@ const App = () => {
             {/* Toggle Button for Layout */}
             <button
               onClick={() => setLayoutMode(layoutMode === 'card' ? 'table' : 'card')}
-              className="bg-white text-blue-700 font-bold py-2 px-4 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out w-full sm:w-auto"
+              className="bg-white text-blue-700 font-bold py-1.5 px-3 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out w-full sm:w-auto text-sm"
             >
               Switch to {layoutMode === 'card' ? 'Table' : 'Card'} View
             </button>
             {/* About Us Button */}
             <button
               onClick={() => setShowAboutUsModal(true)}
-              className="bg-white text-blue-700 font-bold py-2 px-4 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out w-full sm:w-auto"
+              className="bg-white text-blue-700 font-bold py-1.5 px-3 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out w-full sm:w-auto text-sm"
             >
               About Us
             </button>
             {/* Contact Us Button */}
             <button
               onClick={() => setShowContactUsModal(true)}
-              className="bg-white text-blue-700 font-bold py-2 px-4 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out w-full sm:w-auto"
+              className="bg-white text-blue-700 font-bold py-1.5 px-3 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out w-full sm:w-auto text-sm"
             >
               Contact Us
             </button>
@@ -541,8 +541,8 @@ const App = () => {
         </div>
       </header>
 
-      {/* Main Content - Added pb-28 to account for fixed footer height */}
-      <main className="container mx-auto p-4 flex-grow overflow-y-auto pb-28">
+      {/* Main Content - Added pt-16 to account for fixed header height */}
+      <main className="container mx-auto p-4 flex-grow overflow-y-auto pt-16 pb-28">
         <div className="mb-6 flex justify-end">
             <button
                 onClick={() => sortBy("Name")}
@@ -807,7 +807,7 @@ const App = () => {
                 Submit
               </button>
               <p className="text-center text-gray-500 text-xs mt-4">
-                Having trouble submitting form? email us at <a href="mailto:trackmyipo@outlook.com" className="text-blue-600 hover:underline">trackmyipo@outlook.com</a>
+                Having trouble submitting form? email us at <a href="mailto:support@trackmyipo.com" className="text-blue-600 hover:underline">support@trackmyipo.com</a>
               </p>
             </form>
           </div>

@@ -3,10 +3,9 @@ import Papa from "papaparse";
 
 // IMPORTANT: Replace with your actual Google Sheet CSV URL.
 // It MUST be a "Published to web" CSV link from Google Sheets, NOT an editor link.
-// Example of a CORRECT csv format:
+// Example of a CORRECT format:
 // "https://docs.google.com/sheets/d/e/2PACX-1vYOUR_SHEET_ID_HERE/pub?gid=0&single=true&output=csv"
 const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlsMurbsXT2UBQ2ADbyoiQtLUTznQU4vNzw3nS02_StSrFV9pkrnXOrNAjV_Yj-Byc_zw72z_rM0tQ/pub?output=csv";
-
 
 const App = () => {
   const [ipoData, setIpoData] = useState([]);
@@ -480,7 +479,7 @@ const App = () => {
 
     // Simulate form submission
     console.log("Contact Form Submitted:", contactForm);
-    setContactFormMessage('we are experiencing technical difficulties. Please write us at trackmyipo@outlook.com');
+    setContactFormMessage('Thanks for reaching out! We will contact you shortly.');
     // Clear form after a short delay
     setTimeout(() => {
       setContactForm({ name: '', contactNumber: '', locality: '', email: '' });
@@ -756,18 +755,10 @@ const App = () => {
               and other crucial details. Our goal is to empower investors with timely information to make informed decisions.
             </p>
             <p className="text-gray-700">
-              We are continuously working to enhance features and provide the best user experience.
+              This application fetches data from a publicly accessible Google Sheet, ensuring that you always have access
+              to the most current information. We are continuously working to enhance features and provide the best user experience.
             </p>
-                  <p className="text-center text-gray-500 text-xs mt-4">
-                For suggestions questions and comments write us at <a href="mailto:trackmyipo@outlook.com" className="text-blue-600 hover:underline">trackmyipo@outlook.com</a>
-              </p>
-
-</p>
-                  <p className="text-center text-gray-200 text-xs mt-2">
-                Disclaimer:
-All content provided on this platform is intended solely for educational and informational purposes. Under no circumstances should any information published here be interpreted as investment advice, a recommendation to buy or sell any securities, or guidance for participating in IPOs. We are not registered with SEBI as financial analysts or advisors. Users are strongly advised to consult a qualified financial advisor before making any investment decisions based on the information presented on this platform. The content shared is based on publicly available data and prevailing market views as of the date of publication. By using this platform, you acknowledge and agree to these terms and condition
-  </p>     
-  </div>
+          </div>
         </div>
       )}
 
@@ -845,7 +836,7 @@ All content provided on this platform is intended solely for educational and inf
                 Submit
               </button>
               <p className="text-center text-gray-500 text-xs mt-4">
-                Having trouble submitting form? email us at <a href="mailto:trackmyipo@outlook.com" className="text-blue-600 hover:underline">trackmyipo@outlook.com</a>
+                Having trouble submitting form? email us at <a href="mailto:support@trackmyipo.com" className="text-blue-600 hover:underline">support@trackmyipo.com</a>
               </p>
             </form>
           </div>

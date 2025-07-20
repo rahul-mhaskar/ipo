@@ -1,8 +1,11 @@
 import React, { useEffect, useState, useMemo } from "react";
 import Papa from "papaparse";
 
-// IMPORTANT: Replace with your actual Google Sheet CSV URL
-const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlsMurbsXT2UBQ2ADbyoiQtLUTznQU4vNzw3nS02_StSrFV9pkrnXOrNAjV_Yj-Byc_zw72z_rM0tQ/pub?output=csv";
+// IMPORTANT: Replace with your actual Google Sheet CSV URL.
+// It MUST be a "Published to web" CSV link from Google Sheets, NOT an editor link.
+// Example of a CORRECT format:
+// "https://docs.google.com/spreadsheets/d/e/2PACX-1vYOUR_SHEET_ID_HERE/pub?gid=0&single=true&output=csv"
+const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSHEORz3aArzaDTOWYW6FlC1avk1TYKAhDKfyALmqg2HMDWiD60N6WG2wgMlPkvLWC9d7YzwplhCStb/pub?output=csv";
 
 
 const App = () => {
@@ -16,36 +19,89 @@ const App = () => {
   const [showMessageBox, setShowMessageBox] = useState(false);
   const [layoutMode, setLayoutMode] = useState('card'); // 'card' or 'table'
 
+  // States for the new splash screen loading animation
+  const [isLoading, setIsLoading] = useState(true); // Controls visibility of the full splash screen
+  const [loadingProgress, setLoadingProgress] = useState(0); // For percentage display
+  const [loadingText, setLoadingText] = useState("Initializing..."); // Dynamic loading messages
+
+  // State for toggling table sections visibility
+  const [showUpcomingSection, setShowUpcomingSection] = useState(false);
+  const [showCurrentSection, setShowCurrentSection] = useState(true); // Default to open
+  const [showListedSection, setShowListedSection] = useState(false);
+
   // Function to show a custom message box
   const showMessage = (msg) => {
     setMessage(msg);
     setShowMessageBox(true);
+    // Auto-hide after 1.5 seconds (reduced from 3 seconds)
     setTimeout(() => {
       setShowMessageBox(false);
       setMessage("");
-    }, 3000); // Hide after 3 seconds
+    }, 1500);
   };
 
   useEffect(() => {
+    let progressInterval;
+    let currentProgress = 0;
+
+    // Function to simulate loading progress
+    const startProgressSimulation = () => {
+      progressInterval = setInterval(() => {
+        // Simulate progress up to 95% before actual data load completes
+        currentProgress = Math.min(currentProgress + Math.random() * 10, 95);
+        setLoadingProgress(Math.floor(currentProgress));
+
+        // Update loading text based on progress
+        if (currentProgress < 30) {
+          setLoadingText("Connecting to data source...");
+        } else if (currentProgress < 70) {
+          setLoadingText("Fetching IPO records...");
+        } else {
+          setLoadingText("Processing data...");
+        }
+      }, 200); // Update every 200ms
+    };
+
+    setIsLoading(true); // Ensure splash screen is visible
+    setLoadingProgress(0); // Reset progress
+    setLoadingText("Loading IPO data..."); // Initial message
+    startProgressSimulation(); // Start progress simulation
+
     Papa.parse(GOOGLE_SHEET_CSV_URL, {
       download: true,
       header: true,
       complete: (result) => {
-        // Filter out empty rows that PapaParse might include
-        const cleanedData = result.data.filter(row => row.Name);
+        clearInterval(progressInterval); // Stop the progress simulation
+        const cleanedData = result.data.filter(row => row.Name && row.Name.trim() !== '');
         setIpoData(cleanedData);
-        if (cleanedData.length > 0) {
-          showMessage("IPO data loaded successfully!");
-        } else {
-          showMessage("No IPO data found. Please check your Google Sheet CSV.");
-        }
+
+        setLoadingProgress(100); // Set progress to 100% immediately
+        setLoadingText("Data loaded successfully!"); // Final success message on splash
+
+        setTimeout(() => { // Briefly show 100% and success message before hiding splash
+          setIsLoading(false); // Hide the splash screen
+          showMessage("IPO data loaded successfully!"); // Show confirmation in the main message box
+        }, 500); // Show 100% for 0.5 seconds
+
       },
       error: (error) => {
+        clearInterval(progressInterval); // Stop the progress simulation
         console.error("Error parsing CSV:", error);
-        showMessage("Failed to load IPO data. Please check the CSV URL and try again.");
+        setLoadingProgress(0); // Reset progress on error
+        setLoadingText(`Error: ${error.message}. Please check URL.`); // Display error on splash
+        
+        setTimeout(() => { // Show error message briefly on splash, then hide splash
+            setIsLoading(false); // Hide the splash screen
+            showMessage(`Failed to load IPO data: ${error.message}. Please check the CSV URL and ensure it's publicly accessible.`);
+        }, 2000); // Show error on splash for 2 seconds before hiding
       }
     });
-  }, []);
+
+    // Cleanup function for the effect
+    return () => {
+      clearInterval(progressInterval); // Clear interval if component unmounts
+    };
+  }, []); // Run only once on component mount
 
   const sortBy = (key) => {
     let direction = "asc";
@@ -55,8 +111,8 @@ const App = () => {
     setSortConfig({ key, direction });
   };
 
-  // Memoize sorted and filtered data for performance
-  const displayedIpoData = useMemo(() => {
+  // Memoize sorted and filtered data for performance and categorization
+  const { upcomingIpos, currentIpos, listedIpos } = useMemo(() => {
     let sortableItems = [...ipoData];
 
     // Filter based on search term
@@ -94,8 +150,61 @@ const App = () => {
         return String(bVal).localeCompare(String(aVal), undefined, { numeric: true });
       });
     }
-    return sortableItems;
+
+    // Categorize IPOs based on status keywords
+    const upcoming = [];
+    const current = [];
+    const listed = [];
+
+    sortableItems.forEach(ipo => {
+      const status = ipo.Status ? String(ipo.Status).toLowerCase() : '';
+      if (status.includes("upcoming") || status.includes("pre-open")) {
+        upcoming.push(ipo);
+      } else if (status.includes("apply") || status.includes("open") || status.includes("pending") || status.includes("allotted")) {
+        current.push(ipo);
+      } else if (status.includes("listed") || status.includes("closed")) {
+        listed.push(ipo);
+      }
+    });
+
+    return { upcomingIpos: upcoming, currentIpos: current, listedIpos: listed };
   }, [ipoData, sortConfig, searchTerm]);
+
+  // This is used for card view and for determining if any IPOs match search
+  const displayedIpoData = useMemo(() => {
+    let filteredItems = [...ipoData];
+    if (searchTerm) {
+      filteredItems = filteredItems.filter(ipo =>
+        ipo.Name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ipo.Status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ipo.Type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ipo.GMP?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ipo.Price?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    // Apply sorting for card view as well
+    if (sortConfig.key) {
+      filteredItems.sort((a, b) => {
+        const aVal = a[sortConfig.key] || "";
+        const bVal = b[sortConfig.key] || "";
+        const numericKeys = ["GMP", "Price", "IPO Size", "Lot"];
+        if (numericKeys.includes(sortConfig.key)) {
+          const numA = parseFloat(String(aVal).replace(/[^0-9.-]+/g, ""));
+          const numB = parseFloat(String(bVal).replace(/[^0-9.-]+/g, ""));
+          if (sortConfig.direction === "asc") {
+            return numA - numB;
+          }
+          return numB - numA;
+        }
+        if (sortConfig.direction === "asc") {
+          return String(aVal).localeCompare(String(bVal), undefined, { numeric: true });
+        }
+        return String(bVal).localeCompare(String(aVal), undefined, { numeric: true });
+      });
+    }
+    return filteredItems;
+  }, [ipoData, sortConfig, searchTerm]);
+
 
   const handleApplyClick = () => {
     setShowBrokerPopup(true);
@@ -176,8 +285,90 @@ const App = () => {
     "IPO Size", "Lot", "Open", "Close", "BoA Dt", "Listing"
   ];
 
+  // Helper function to render a collapsible table section
+  const renderTableSection = (title, ipoList, isVisible, toggleVisibility) => (
+    <div className="mb-8">
+      <div
+        className="flex items-center justify-between bg-blue-100 p-3 rounded-t-lg cursor-pointer hover:bg-blue-200 transition-colors duration-200"
+        onClick={toggleVisibility}
+      >
+        <h3 className="text-lg font-semibold text-blue-800">{title} ({ipoList.length})</h3>
+        <svg
+          className={`w-6 h-6 text-blue-800 transform transition-transform duration-200 ${isVisible ? 'rotate-0' : '-rotate-90'}`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+        </svg>
+      </div>
+      <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isVisible ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'}`}>
+        {ipoList.length > 0 ? (
+          <div className="overflow-x-auto border-t border-gray-200">
+            <table className="w-full text-sm bg-white rounded-b-lg shadow-sm">
+              <thead className="bg-gray-50">
+                <tr>
+                  {tableHeaders.map((header) => (
+                    <th
+                      key={header}
+                      onClick={() => sortBy(header)}
+                      className="px-3 py-2 cursor-pointer text-left border-b border-gray-200 text-gray-700 whitespace-nowrap"
+                    >
+                      {header}
+                      <span className={sortConfig.key === header ? "text-black" : "text-gray-400"}>
+                        {sortConfig.key === header ? (
+                          sortConfig.direction === "asc" ? " ▲" : " ▼"
+                        ) : " ⬍"}
+                      </span>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {ipoList.map((ipo, index) => (
+                  <tr key={index} className="border-t border-gray-100 hover:bg-gray-50">
+                    {tableHeaders.map((key) => (
+                      <td key={key} className="px-3 py-2 border-b border-gray-100 whitespace-nowrap">
+                        {key === "Status"
+                          ? getStatusContent(ipo[key], ipo)
+                          : ipo[key] || 'N/A'} {/* Display N/A for empty cells */}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="px-3 py-4 text-center text-gray-600 bg-white rounded-b-lg">No IPOs in this category.</p>
+        )}
+      </div>
+    </div>
+  );
+
+
   return (
     <div className="min-h-screen bg-gray-100 font-sans flex flex-col">
+      {/* Full-screen Loading Splash Screen */}
+      {isLoading && (
+        <div className="fixed inset-0 bg-gradient-to-br from-blue-600 to-purple-700 text-white flex flex-col items-center justify-center z-50 transition-opacity duration-500 opacity-100">
+          <svg className="animate-spin h-16 w-16 text-white mb-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <h2 className="text-4xl font-bold mb-4">Track My IPO</h2>
+          <p className="text-xl mb-2">{loadingText}</p>
+          <div className="w-64 bg-white bg-opacity-30 rounded-full h-2.5 mb-4">
+            <div
+              className="bg-white h-2.5 rounded-full transition-all duration-300 ease-out"
+              style={{ width: `${loadingProgress}%` }}
+            ></div>
+          </div>
+          <p className="text-lg font-semibold">{loadingProgress}%</p>
+        </div>
+      )}
+
       {/* Header */}
       <header className="bg-gradient-to-r from-blue-600 to-purple-700 text-white p-4 shadow-lg rounded-b-xl">
         <div className="container mx-auto flex flex-col sm:flex-row justify-between items-center">
@@ -186,7 +377,7 @@ const App = () => {
             <svg className="w-10 h-10 mr-3 text-white" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 2L2 22h20L12 2zm0 17l-5-10h10l-5 10z"/>
             </svg>
-            <h1 className="text-3xl font-bold">IPO Tracker</h1>
+            <h1 className="text-3xl font-bold">Track My IPO</h1> {/* Changed name here */}
           </div>
           <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-1/2">
             <div className="relative w-full sm:w-2/3">
@@ -233,7 +424,8 @@ const App = () => {
         {/* Conditional Rendering for Layout */}
         {layoutMode === 'card' ? (
           <section id="ipo-list" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {displayedIpoData.length > 0 ? (
+            {/* Filter displayedIpoData for card view based on search term */}
+            {ipoData.length > 0 && displayedIpoData.length > 0 ? (
               displayedIpoData.map((ipo, index) => (
                 <div key={index} className="card p-6 flex flex-col justify-between">
                   <div>
@@ -265,52 +457,21 @@ const App = () => {
                 </div>
               ))
             ) : (
-              <p className="text-center text-gray-600 col-span-full">No IPOs found matching your criteria.</p>
+              // Only show this message if data is loaded and empty, not while loading
+              !isLoading && <p className="text-center text-gray-600 col-span-full">No IPOs found matching your criteria.</p>
             )}
           </section>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm bg-white rounded-lg shadow border">
-              <thead className="bg-gray-200">
-                <tr>
-                  {tableHeaders.map((header) => (
-                    <th
-                      key={header}
-                      onClick={() => sortBy(header)}
-                      className="px-3 py-2 cursor-pointer text-left border text-gray-700 whitespace-nowrap"
-                    >
-                      {header}
-                      <span className={sortConfig.key === header ? "text-black" : "text-gray-400"}>
-                        {sortConfig.key === header ? (
-                          sortConfig.direction === "asc" ? " ▲" : " ▼"
-                        ) : " ⬍"}
-                      </span>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {displayedIpoData.length > 0 ? (
-                  displayedIpoData.map((ipo, index) => (
-                    <tr key={index} className="border-t hover:bg-gray-50">
-                      {tableHeaders.map((key) => (
-                        <td key={key} className="px-3 py-2 border whitespace-nowrap">
-                          {key === "Status"
-                            ? getStatusContent(ipo[key], ipo)
-                            : ipo[key] || 'N/A'} {/* Display N/A for empty cells */}
-                        </td>
-                      ))}
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={tableHeaders.length} className="px-3 py-4 text-center text-gray-600">
-                      No IPOs found matching your criteria.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+          <div>
+            {/* Render categorized table sections */}
+            {renderTableSection("Current IPOs (Open & Awaiting Allotment)", currentIpos, showCurrentSection, () => setShowCurrentSection(!showCurrentSection))}
+            {renderTableSection("Upcoming IPOs", upcomingIpos, showUpcomingSection, () => setShowUpcomingSection(!showUpcomingSection))}
+            {renderTableSection("Listed/Closed IPOs", listedIpos, showListedSection, () => setShowListedSection(!showListedSection))}
+
+            {/* Message if no IPOs found in table view after filtering/categorizing */}
+            {ipoData.length > 0 && currentIpos.length === 0 && upcomingIpos.length === 0 && listedIpos.length === 0 && (
+              <p className="px-3 py-4 text-center text-gray-600 bg-white rounded-lg shadow-sm">No IPOs found matching your criteria across all categories.</p>
+            )}
           </div>
         )}
 
@@ -419,4 +580,3 @@ const App = () => {
 };
 
 export default App;
-

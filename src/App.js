@@ -461,13 +461,13 @@ const App = () => {
 
     // Simulate form submission
     console.log("Contact Form Submitted:", contactForm);
-    setContactFormMessage('we are experiencing technical difficulties. Please write us at <a href="mailto:trackmyipo@outlook.com" className="text-blue-600 hover:underline">trackmyipo@outlook.com</a>');
+    setContactFormMessage('we are experiencing technical difficulties. Please write us at trackmyipo@outlook.com');
     // Clear form after a short delay
     setTimeout(() => {
       setContactForm({ name: '', contactNumber: '', locality: '', email: '' });
       setContactFormMessage('');
       setShowContactUsModal(false); // Close modal after submission
-    }, 2000);
+    }, 10000);
   };
 
 

@@ -5,7 +5,7 @@ import Papa from "papaparse";
 // It MUST be a "Published to web" CSV link from Google Sheets, NOT an editor link.
 // Example of a CORRECT format:
 // "https://docs.google.com/sheets/d/e/2PACX-1vYOUR_SHEET_ID_HERE/pub?gid=0&single=true&output=csv"
-const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/sheets/d/e/2PACX-1vSHEORz3aArzaDTOWYW6FlC1avk1TYKAhDKfyALmqg2HMDWiD60N6WG2wgMlPkvLWC9d7YzwplhCStb/pub?output=csv";
+const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlsMurbsXT2UBQ2ADbyoiQtLUTznQU4vNzw3nS02_StSrFV9pkrnXOrNAjV_Yj-Byc_zw72z_rM0tQ/pub?output=csv";
 
 
 const App = () => {
@@ -164,7 +164,7 @@ const App = () => {
   };
 
   // Memoize sorted and filtered data for performance and categorization
-  const { upcomingIpos, currentIpos, listedIpos, totalIposCount, currentMainboardCount, currentSmeCount } = useMemo(() => {
+  const { upcomingIpos, currentIpos, listedIpos } = useMemo(() => {
     let sortableItems = [...ipoData];
 
     // Filter based on search term
@@ -237,26 +237,7 @@ const App = () => {
       }
     });
 
-    // Calculate Mainboard and SME counts for current IPOs
-    let currentMainboard = 0;
-    let currentSme = 0;
-    current.forEach(ipo => {
-      if (ipo.Type && ipo.Type.toLowerCase().includes("mainboard")) {
-        currentMainboard++;
-      } else if (ipo.Type && ipo.Type.toLowerCase().includes("sme")) {
-        currentSme++;
-      }
-    });
-
-
-    return {
-      upcomingIpos: upcoming,
-      currentIpos: current,
-      listedIpos: listed,
-      totalIposCount: sortableItems.length, // Total IPOs after search filter
-      currentMainboardCount: currentMainboard,
-      currentSmeCount: currentSme
-    };
+    return { upcomingIpos: upcoming, currentIpos: current, listedIpos: listed };
   }, [ipoData, sortConfig, searchTerm]);
 
   // This is used for card view and for determining if any IPOs match search
@@ -480,13 +461,13 @@ const App = () => {
 
     // Simulate form submission
     console.log("Contact Form Submitted:", contactForm);
-    setContactFormMessage('Thanks for reaching out! We will contact you shortly.');
+    setContactFormMessage('we are experiencing technical difficulties. Please write us at trackmyipo@outlook.com');
     // Clear form after a short delay
     setTimeout(() => {
       setContactForm({ name: '', contactNumber: '', locality: '', email: '' });
       setContactFormMessage('');
       setShowContactUsModal(false); // Close modal after submission
-    }, 2000);
+    }, 5000);
   };
 
 
@@ -512,47 +493,47 @@ const App = () => {
       )}
 
       {/* Header */}
-      <header className="fixed top-0 w-full z-50 bg-gradient-to-r from-blue-600 to-purple-700 text-white p-3 shadow-lg rounded-b-xl"> {/* Adjusted padding for compactness */}
+      <header className="fixed top-0 w-full z-50 bg-gradient-to-r from-blue-600 to-purple-700 text-white p-4 shadow-lg rounded-b-xl">
         <div className="container mx-auto flex flex-col sm:flex-row justify-between items-center">
           <div className="flex items-center mb-2 sm:mb-0">
             {/* Using a simple SVG for the logo as image path won't work directly */}
-            <svg className="w-8 h-8 mr-2 text-white" fill="currentColor" viewBox="0 0 24 24"> {/* Smaller icon */}
+            <svg className="w-10 h-10 mr-3 text-white" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 2L2 22h20L12 2zm0 17l-5-10h10l-5 10z"/>
             </svg>
-            <h1 className="text-2xl font-bold">Track My IPO</h1> {/* Smaller font size */}
+            <h1 className="text-3xl font-bold">Track My IPO</h1> {/* Changed name here */}
           </div>
-          <div className="flex flex-col sm:flex-row sm:flex-nowrap items-center gap-1 w-full sm:w-auto mt-2 sm:mt-0"> {/* Adjusted for no wrap, smaller gap, and responsive margin-top */}
-            <div className="relative w-full sm:w-auto flex-grow"> {/* flex-grow to allow search to expand */}
+          <div className="flex flex-col sm:flex-row sm:flex-nowrap items-center gap-2 w-full sm:w-auto"> {/* Adjusted for no wrap */}
+            <div className="relative w-full sm:w-2/3">
               <input
                 type="text"
                 id="searchInput"
                 placeholder="Search IPOs..."
-                className="w-full p-1.5 pl-8 rounded-lg bg-white bg-opacity-20 text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-white text-sm" {/* Smaller padding/font */}
+                className="w-full p-2 pl-10 rounded-lg bg-white bg-opacity-20 text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-white"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <svg className="absolute left-2 top-1/2 transform -translate-y-1/2 text-white w-4 h-4" width="20" height="20" fill="currentColor" viewBox="0 0 20 20"> {/* Smaller icon */}
+              <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white" width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd"></path>
               </svg>
             </div>
             {/* Toggle Button for Layout */}
             <button
               onClick={() => setLayoutMode(layoutMode === 'card' ? 'table' : 'card')}
-              className="bg-white text-blue-700 font-bold py-1 px-2 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out w-auto text-xs whitespace-nowrap" {/* Even smaller buttons, w-auto to prevent stretching */}
+              className="bg-white text-blue-700 font-bold py-1.5 px-3 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out w-full sm:w-auto text-sm"
             >
               Switch to {layoutMode === 'card' ? 'Table' : 'Card'} View
             </button>
             {/* About Us Button */}
             <button
               onClick={() => setShowAboutUsModal(true)}
-              className="bg-white text-blue-700 font-bold py-1 px-2 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out w-auto text-xs whitespace-nowrap"
+              className="bg-white text-blue-700 font-bold py-1.5 px-3 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out w-full sm:w-auto text-sm"
             >
               About Us
             </button>
             {/* Contact Us Button */}
             <button
               onClick={() => setShowContactUsModal(true)}
-              className="bg-white text-blue-700 font-bold py-1 px-2 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out w-auto text-xs whitespace-nowrap"
+              className="bg-white text-blue-700 font-bold py-1.5 px-3 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out w-full sm:w-auto text-sm"
             >
               Contact Us
             </button>
@@ -560,29 +541,23 @@ const App = () => {
         </div>
       </header>
 
-      {/* New Fixed Sort and Total IPOs Bar */}
-      <div className="fixed top-[64px] w-full z-40 bg-gray-200 p-2 shadow-md flex flex-col sm:flex-row justify-between items-center text-gray-700 text-sm">
-        <div className="mb-2 sm:mb-0 text-center sm:text-left text-xs sm:text-sm"> {/* Smaller font for count on small screens */}
-          Total IPOs: {totalIposCount} (Current: {currentIpos.length} | Mainboard: {currentMainboardCount} | SME: {currentSmeCount})
+      {/* Main Content - Added pt-16 to account for fixed header height */}
+      <main className="container mx-auto p-4 flex-grow overflow-y-auto pt-16 pb-28">
+        <div className="mb-6 flex justify-end">
+            <button
+                onClick={() => sortBy("Name")}
+                className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out mr-2"
+            >
+                Sort by Name {sortConfig.key === "Name" ? (sortConfig.direction === "asc" ? "▲" : "▼") : "⬍"}
+            </button>
+            <button
+                onClick={() => sortBy("Open")}
+                className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out"
+            >
+                Sort by Open Date {sortConfig.key === "Open" ? (sortConfig.direction === "asc" ? "▲" : "▼") : "⬍"}
+            </button>
         </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => sortBy("Name")}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-3 rounded-lg transition duration-300 ease-in-out text-xs"
-          >
-            Sort by Name {sortConfig.key === "Name" ? (sortConfig.direction === "asc" ? "▲" : "▼") : "⬍"}
-          </button>
-          <button
-            onClick={() => sortBy("Open")}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-3 rounded-lg transition duration-300 ease-in-out text-xs"
-          >
-            Sort by Open Date {sortConfig.key === "Open" ? (sortConfig.direction === "asc" ? "▲" : "▼") : "⬍"}
-          </button>
-        </div>
-      </div>
 
-      {/* Main Content - Adjusted padding top to account for fixed header and new bar */}
-      <main className="container mx-auto p-4 flex-grow overflow-y-auto pt-[96px] pb-28"> {/* 64px for header + 32px for new bar = 96px */}
         {/* Conditional Rendering for Layout */}
         {layoutMode === 'card' ? (
           <section id="ipo-list" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -752,8 +727,7 @@ const App = () => {
               and other crucial details. Our goal is to empower investors with timely information to make informed decisions.
             </p>
             <p className="text-gray-700">
-              This application fetches data from a publicly accessible Google Sheet, ensuring that you always have access
-              to the most current information. We are continuously working to enhance features and provide the best user experience.
+              We are continuously working to enhance features and provide the best user experience.
             </p>
           </div>
         </div>
@@ -869,7 +843,6 @@ const App = () => {
             </div>
           </div>
         </div>
-        <p className="text-center text-gray-500 text-xs mt-2">© {new Date().getFullYear()} Track My IPO. All rights reserved.</p> {/* All rights reserved text */}
       </footer>
     </div>
   );

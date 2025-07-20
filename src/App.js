@@ -532,7 +532,7 @@ const App = () => {
             {/* Toggle Button for Layout */}
             <button
               onClick={() => setLayoutMode(layoutMode === 'card' ? 'table' : 'card')}
-              className="bg-white text-blue-700 font-bold py-1 px-2 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out w-auto text-xs whitespace-nowrap" {/* Even smaller buttons, w-auto to prevent stretching */}
+              className="bg-white text-blue-700 font-bold py-1 px-2 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out w-auto text-xs whitespace-nowrap"
             >
               Switch to {layoutMode === 'card' ? 'Table' : 'Card'} View
             </button>

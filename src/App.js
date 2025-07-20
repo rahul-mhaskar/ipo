@@ -557,7 +557,7 @@ const App = () => {
       {/* New Fixed Sort and Total IPOs Bar */}
       <div className="fixed top-[64px] w-full z-40 bg-gray-200 p-2 shadow-md flex flex-col sm:flex-row justify-between items-center text-gray-700 text-sm">
         <div className="mb-2 sm:mb-0 text-center sm:text-left text-xs sm:text-sm"> {/* Smaller font for count on small screens */}
-          Total IPOs: {totalIposCount} (Current: {currentIpos.length} | Mainboard: {currentMainboardCount} | SME: {currentSmeCount})
+          Total Ongoing IPOs: {currentIpos.length} | Mainboard: {currentMainboardCount} | SME: {currentSmeCount}
         </div>
         <div className="flex gap-2">
           <button

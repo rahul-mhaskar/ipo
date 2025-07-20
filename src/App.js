@@ -4,9 +4,8 @@ import Papa from "papaparse";
 // IMPORTANT: Replace with your actual Google Sheet CSV URL.
 // It MUST be a "Published to web" CSV link from Google Sheets, NOT an editor link.
 // Example of a CORRECT format:
-// "https://docs.google.com/spreadsheets/d/e/2PACX-1vYOUR_SHEET_ID_HERE/pub?gid=0&single=true&output=csv"
-const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlsMurbsXT2UBQ2ADbyoiQtLUTznQU4vNzw3nS02_StSrFV9pkrnXOrNAjV_Yj-Byc_zw72z_rM0tQ/pub?output=csv";
-
+// "https://docs.google.com/sheets/d/e/2PACX-1vYOUR_SHEET_ID_HERE/pub?gid=0&single=true&output=csv"
+const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/sheets/d/e/2PACX-1vSHEORz3aArzaDTOWYW6FlC1avk1TYKAhDKfyALmqg2HMDWiD60N6WG2wgMlPkvLWC9d7YzwplhCStb/pub?output=csv";
 
 
 const App = () => {
@@ -30,15 +29,67 @@ const App = () => {
   const [showCurrentSection, setShowCurrentSection] = useState(true); // Default to open
   const [showListedSection, setShowListedSection] = useState(false);
 
+  // States for About Us and Contact Us modals
+  const [showAboutUsModal, setShowAboutUsModal] = useState(false);
+  const [showContactUsModal, setShowContactUsModal] = useState(false);
+  const [contactForm, setContactForm] = useState({
+    name: '',
+    contactNumber: '',
+    locality: '',
+    email: ''
+  });
+  const [contactFormMessage, setContactFormMessage] = useState('');
+
   // Function to show a custom message box
   const showMessage = (msg) => {
     setMessage(msg);
     setShowMessageBox(true);
-    // Auto-hide after 1.5 seconds (reduced from 3 seconds)
+    // Auto-hide after 0.5 seconds (reduced from 1.5 seconds)
     setTimeout(() => {
       setShowMessageBox(false);
       setMessage("");
-    }, 500);
+    }, 500); // Reduced delay here
+  };
+
+  // Helper for parsing dates for sorting (DD Month YYYY or DD Month format)
+  const monthMap = {
+    "jan": 0, "feb": 1, "mar": 2, "apr": 3, "may": 4, "jun": 5,
+    "jul": 6, "aug": 7, "sep": 8, "oct": 9, "nov": 10, "dec": 11
+  };
+
+  const parseDateForSort = (dateString) => {
+    if (!dateString || typeof dateString !== 'string') return null;
+    const cleanedDateString = dateString.trim();
+
+    // Try parsing with a full year first (e.g., "21 June 2024")
+    const fullDate = new Date(cleanedDateString);
+    if (!isNaN(fullDate.getTime())) {
+      return fullDate;
+    }
+
+    // Fallback for "DD Month" format, assuming current year
+    const parts = cleanedDateString.split(' ');
+    if (parts.length >= 2) {
+      const day = parseInt(parts[0], 10);
+      const monthName = parts[1].toLowerCase().substring(0, 3);
+      const month = monthMap[monthName];
+
+      if (!isNaN(day) && month !== undefined) {
+        const currentYear = new Date().getFullYear();
+        // Heuristic: If the month/day has already passed this year, assume it's for next year.
+        // This helps sort "20 Dec" (past) before "05 Jan" (next year) if no year is provided.
+        let yearToUse = currentYear;
+        const today = new Date();
+        if (month < today.getMonth() || (month === today.getMonth() && day < today.getDate())) {
+          yearToUse = currentYear + 1;
+        }
+        const parsedDate = new Date(yearToUse, month, day);
+        if (!isNaN(parsedDate.getTime())) {
+          return parsedDate;
+        }
+      }
+    }
+    return null; // Unable to parse
   };
 
   useEffect(() => {
@@ -82,7 +133,7 @@ const App = () => {
         setTimeout(() => { // Briefly show 100% and success message before hiding splash
           setIsLoading(false); // Hide the splash screen
           showMessage("IPO data loaded successfully!"); // Show confirmation in the main message box
-        }, 500); // Show 100% for 0.5 seconds
+        }, 100); // Reduced delay here (from 500ms to 100ms)
 
       },
       error: (error) => {
@@ -123,7 +174,8 @@ const App = () => {
         ipo.Status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         ipo.Type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         ipo.GMP?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ipo.Price?.toLowerCase().includes(searchTerm.toLowerCase())
+        ipo.Price?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ipo.Description?.toLowerCase().includes(searchTerm.toLowerCase()) // Include description in search
       );
     }
 
@@ -142,6 +194,23 @@ const App = () => {
             return numA - numB;
           }
           return numB - numA;
+        }
+
+        // Handle date sorting for specific date columns
+        const dateKeys = ["Open", "Close", "BoA Dt", "Listing"];
+        if (dateKeys.includes(sortConfig.key)) {
+          const dateA = parseDateForSort(aVal);
+          const dateB = parseDateForSort(bVal);
+
+          // Handle null dates (e.g., 'N/A') by pushing them to the end
+          if (dateA === null && dateB === null) return 0;
+          if (dateA === null) return sortConfig.direction === "asc" ? 1 : -1;
+          if (dateB === null) return sortConfig.direction === "asc" ? -1 : 1;
+
+          if (sortConfig.direction === "asc") {
+            return dateA.getTime() - dateB.getTime();
+          }
+          return dateB.getTime() - dateA.getTime();
         }
 
         // Default to string comparison for other keys
@@ -180,7 +249,8 @@ const App = () => {
         ipo.Status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         ipo.Type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         ipo.GMP?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ipo.Price?.toLowerCase().includes(searchTerm.toLowerCase())
+        ipo.Price?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ipo.Description?.toLowerCase().includes(searchTerm.toLowerCase()) // Include description in search
       );
     }
     // Apply sorting for card view as well
@@ -189,6 +259,8 @@ const App = () => {
         const aVal = a[sortConfig.key] || "";
         const bVal = b[sortConfig.key] || "";
         const numericKeys = ["GMP", "Price", "IPO Size", "Lot"];
+        const dateKeys = ["Open", "Close", "BoA Dt", "Listing"];
+
         if (numericKeys.includes(sortConfig.key)) {
           const numA = parseFloat(String(aVal).replace(/[^0-9.-]+/g, ""));
           const numB = parseFloat(String(bVal).replace(/[^0-9.-]+/g, ""));
@@ -196,7 +268,20 @@ const App = () => {
             return numA - numB;
           }
           return numB - numA;
+        } else if (dateKeys.includes(sortConfig.key)) {
+          const dateA = parseDateForSort(aVal);
+          const dateB = parseDateForSort(bVal);
+
+          if (dateA === null && dateB === null) return 0;
+          if (dateA === null) return sortConfig.direction === "asc" ? 1 : -1;
+          if (dateB === null) return sortConfig.direction === "asc" ? -1 : 1;
+
+          if (sortConfig.direction === "asc") {
+            return dateA.getTime() - dateB.getTime();
+          }
+          return dateB.getTime() - dateA.getTime();
         }
+        // Default to string comparison for other keys
         if (sortConfig.direction === "asc") {
           return String(aVal).localeCompare(String(bVal), undefined, { numeric: true });
         }
@@ -348,6 +433,38 @@ const App = () => {
     </div>
   );
 
+  const handleContactFormChange = (e) => {
+    const { name, value } = e.target;
+    setContactForm(prevState => ({ ...prevState, [name]: value }));
+  };
+
+  const handleContactFormSubmit = (e) => {
+    e.preventDefault();
+    // Basic validation
+    if (!contactForm.name || !contactForm.contactNumber || !contactForm.locality || !contactForm.email) {
+      setContactFormMessage('Please fill in all mandatory fields.');
+      return;
+    }
+    if (!/^\S+@\S+\.\S+$/.test(contactForm.email)) {
+      setContactFormMessage('Please enter a valid email address.');
+      return;
+    }
+    if (!/^\d{10}$/.test(contactForm.contactNumber)) {
+      setContactFormMessage('Please enter a valid 10-digit contact number.');
+      return;
+    }
+
+    // Simulate form submission
+    console.log("Contact Form Submitted:", contactForm);
+    setContactFormMessage('Thanks for reaching out! We will contact you shortly.');
+    // Clear form after a short delay
+    setTimeout(() => {
+      setContactForm({ name: '', contactNumber: '', locality: '', email: '' });
+      setContactFormMessage('');
+      setShowContactUsModal(false); // Close modal after submission
+    }, 2000);
+  };
+
 
   return (
     <div className="min-h-screen bg-gray-100 font-sans flex flex-col">
@@ -401,6 +518,20 @@ const App = () => {
             >
               Switch to {layoutMode === 'card' ? 'Table' : 'Card'} View
             </button>
+            {/* About Us Button */}
+            <button
+              onClick={() => setShowAboutUsModal(true)}
+              className="bg-white text-blue-700 font-bold py-2 px-4 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out w-full sm:w-auto"
+            >
+              About Us
+            </button>
+            {/* Contact Us Button */}
+            <button
+              onClick={() => setShowContactUsModal(true)}
+              className="bg-white text-blue-700 font-bold py-2 px-4 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out w-full sm:w-auto"
+            >
+              Contact Us
+            </button>
           </div>
         </div>
       </header>
@@ -430,7 +561,25 @@ const App = () => {
               displayedIpoData.map((ipo, index) => (
                 <div key={index} className="card p-6 flex flex-col justify-between">
                   <div>
+                    {ipo.ImageURL && (
+                      <img
+                        src={ipo.ImageURL}
+                        alt={`${ipo.Name} Logo`}
+                        className="w-24 h-24 object-contain mx-auto mb-4 rounded-lg border p-1 bg-white"
+                        onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/96x96/e0e0e0/555555?text=No+Image"; }}
+                      />
+                    )}
+                    {!ipo.ImageURL && (
+                       <img
+                        src="https://placehold.co/96x96/e0e0e0/555555?text=No+Image"
+                        alt="No Image Available"
+                        className="w-24 h-24 object-contain mx-auto mb-4 rounded-lg border p-1 bg-white"
+                       />
+                    )}
                     <h2 className="text-xl font-semibold text-blue-700 mb-2">{ipo.Name} ({ipo.Type})</h2>
+                    {ipo.Description && (
+                      <p className="text-gray-600 text-sm mb-3 line-clamp-3">{ipo.Description}</p>
+                    )}
                     <p className="text-gray-700 mb-1"><strong>Price:</strong> {ipo.Price || 'N/A'}</p>
                     <p className="text-gray-700 mb-1"><strong>Lot Size:</strong> {ipo.Lot || 'N/A'}</p>
                     <p className="text-gray-700 mb-1"><strong>Open Date:</strong> {ipo.Open || 'N/A'}</p>
@@ -542,6 +691,111 @@ const App = () => {
             <div className="flex flex-wrap justify-center gap-4">
               {renderBrokerLinks()}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* About Us Modal */}
+      {showAboutUsModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full relative">
+            <button
+              className="absolute top-2 right-2 text-gray-600 hover:text-black text-lg"
+              onClick={() => setShowAboutUsModal(false)}
+            >
+              ×
+            </button>
+            <h3 className="text-2xl font-bold text-gray-800 mb-4 text-center">About Track My IPO</h3>
+            <p className="text-gray-700 mb-4">
+              Track My IPO is your go-to application for staying updated on the latest Initial Public Offerings (IPOs).
+              We aim to provide a simple, intuitive, and efficient way to track IPO statuses, GMP (Grey Market Premium),
+              and other crucial details. Our goal is to empower investors with timely information to make informed decisions.
+            </p>
+            <p className="text-gray-700">
+              This application fetches data from a publicly accessible Google Sheet, ensuring that you always have access
+              to the most current information. We are continuously working to enhance features and provide the best user experience.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Contact Us Modal */}
+      {showContactUsModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full relative">
+            <button
+              className="absolute top-2 right-2 text-gray-600 hover:text-black text-lg"
+              onClick={() => { setShowContactUsModal(false); setContactFormMessage(''); }}
+            >
+              ×
+            </button>
+            <h3 className="text-2xl font-bold text-gray-800 mb-4 text-center">Contact Us</h3>
+            <form onSubmit={handleContactFormSubmit} className="space-y-4">
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name <span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={contactForm.name}
+                  onChange={handleContactFormChange}
+                  className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="contactNumber" className="block text-sm font-medium text-gray-700">Contact Number <span className="text-red-500">*</span></label>
+                <input
+                  type="tel"
+                  id="contactNumber"
+                  name="contactNumber"
+                  value={contactForm.contactNumber}
+                  onChange={handleContactFormChange}
+                  className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  required
+                  pattern="[0-9]{10}" // Basic pattern for 10 digits
+                  title="Please enter a 10-digit phone number"
+                />
+              </div>
+              <div>
+                <label htmlFor="locality" className="block text-sm font-medium text-gray-700">Locality <span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  id="locality"
+                  name="locality"
+                  value={contactForm.locality}
+                  onChange={handleContactFormChange}
+                  className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email <span className="text-red-500">*</span></label> {/* Changed label */}
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={contactForm.email}
+                  onChange={handleContactFormChange}
+                  className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  required
+                />
+              </div>
+              {contactFormMessage && (
+                <p className={`text-center text-sm ${contactFormMessage.includes('Thanks') ? 'text-green-600' : 'text-red-600'}`}>
+                  {contactFormMessage}
+                </p>
+              )}
+              <button
+                type="submit"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
+              >
+                Submit
+              </button>
+              <p className="text-center text-gray-500 text-xs mt-4">
+                Having trouble submitting form? email us at <a href="mailto:rahulmhaskar@live.com" className="text-blue-600 hover:underline">rahulmhaskar@live.com</a>
+              </p>
+            </form>
           </div>
         </div>
       )}

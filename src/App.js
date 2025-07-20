@@ -235,7 +235,7 @@ const App = () => {
     let currentMainboard = 0;
     let currentSme = 0;
     current.forEach(ipo => {
-      if (ipo.Type && ipo.Type.toLowerCase().includes("mainboard")) {
+      if (ipo.Type && ipo.Type.toLowerCase().includes("main board")) {
         currentMainboard++;
       } else if (ipo.Type && ipo.Type.toLowerCase().includes("sme")) {
         currentSme++;

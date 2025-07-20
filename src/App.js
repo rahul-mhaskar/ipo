@@ -820,7 +820,7 @@ const App = () => {
           {/* WhatsApp Channel Section */}
           <div className="whatsapp-section text-center sm:text-left mb-1 sm:mb-0">
             <a
-              href="https://whatsapp.com/channel/0029VbBPaggaCHaKAwEkOhhf9zdRl34"
+              href="https://whatsapp.com/channel/0029VbBPCHaKAwEkO9zdRl34"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center bg-green-600 text-white px-4 py-1.5 rounded-full shadow-md hover:bg-green-700 hover:scale-105 transition transform text-sm"

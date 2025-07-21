@@ -33,6 +33,17 @@ const App = () => {
     email: ''
   });
   const [contactFormMessage, setContactFormMessage] = useState('');
+  
+useEffect(() => {
+    if (typeof window.gtag === 'function') {
+      window.gtag('event', 'page_view', {
+        page_title: 'Track My IPO Home', // A descriptive title for your page
+        page_location: window.location.href, // The full URL of the page
+        page_path: '/' // The path of the page (e.g., '/', '/about', '/contact')
+      });
+    }
+  }, []); // Empty dependency array means this runs once on component mount
+
 
   // Function to show a custom message box
   const showMessage = (msg) => {

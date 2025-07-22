@@ -1,7 +1,13 @@
 import React, { useEffect, useState, useMemo } from "react";
 import Papa from "papaparse";
 
-const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlsMurbsXT2UBQ2ADbyoiQtLUTznQU4vNzw3nS02_StSrFV9pkrnXOrNAjV_Yj-Byc_zw72z_rM0tQ/pub?output=csv";
+// IMPORTANT: Replace with your actual Google Sheet CSV URL.
+// It MUST be a "Published to web" CSV link from Google Sheets, NOT an editor link.
+// Example of a CORRECT format:
+// "https://docs.google.com/sheets/d/e/2PACX-1vYOUR_SHEET_ID_HERE/pub?gid=0&single=true&output=csv"
+const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSHEORz3aArzaDTOWYW6FlC1avk1TYKAhDKfyALmqg2HMDWiD60N6WG2wgMlPkvLWC9d7YzwplhCStb/pub?output=csv";
+
+
 const App = () => {
   const [ipoData, setIpoData] = useState([]);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
@@ -33,8 +39,12 @@ const App = () => {
     email: ''
   });
   const [contactFormMessage, setContactFormMessage] = useState('');
-  
-useEffect(() => {
+
+  // Google Analytics Page View Tracking
+  // This useEffect will send a page_view event when the App component mounts.
+  // For more complex SPAs with routing, you would trigger this event
+  // whenever the virtual "page" changes.
+  useEffect(() => {
     if (typeof window.gtag === 'function') {
       window.gtag('event', 'page_view', {
         page_title: 'Track My IPO Home', // A descriptive title for your page
@@ -246,7 +256,7 @@ useEffect(() => {
     let currentMainboard = 0;
     let currentSme = 0;
     current.forEach(ipo => {
-      if (ipo.Type && ipo.Type.toLowerCase().includes("main board")) {
+      if (ipo.Type && ipo.Type.toLowerCase().includes("mainboard")) {
         currentMainboard++;
       } else if (ipo.Type && ipo.Type.toLowerCase().includes("sme")) {
         currentSme++;
@@ -517,47 +527,47 @@ useEffect(() => {
       )}
 
       {/* Header */}
-      <header className="fixed top-0 w-full z-50 bg-gradient-to-r from-blue-600 to-purple-700 text-white p-3 shadow-lg rounded-b-xl"> {/* Adjusted padding for compactness */}
+      <header className="fixed top-0 w-full z-50 bg-gradient-to-r from-blue-600 to-purple-700 text-white p-2 sm:p-3 shadow-lg rounded-b-xl"> {/* Reduced p on mobile */}
         <div className="container mx-auto flex flex-col sm:flex-row justify-between items-center">
-          <div className="flex items-center mb-2 sm:mb-0">
+          <div className="flex items-center mb-1 sm:mb-0"> {/* Reduced mb on mobile */}
             {/* Using a simple SVG for the logo as image path won't work directly */}
-            <svg className="w-8 h-8 mr-2 text-white" fill="currentColor" viewBox="0 0 24 24"> {/* Smaller icon */}
+            <svg className="w-6 h-6 sm:w-8 sm:h-8 mr-1 sm:mr-2 text-white" fill="currentColor" viewBox="0 0 24 24"> {/* Smaller icon on mobile */}
                 <path d="M12 2L2 22h20L12 2zm0 17l-5-10h10l-5 10z"/>
             </svg>
-            <h1 className="text-2xl font-bold">Track My IPO</h1> {/* Smaller font size */}
+            <h1 className="text-xl sm:text-2xl font-bold">Track My IPO</h1> {/* Smaller font size on mobile */}
           </div>
-          <div className="flex flex-col sm:flex-row sm:flex-nowrap items-center gap-1 w-full sm:w-auto mt-2 sm:mt-0"> {/* Adjusted for no wrap, smaller gap, and responsive margin-top */}
+          <div className="flex flex-col sm:flex-row sm:flex-nowrap items-center gap-0.5 sm:gap-1 w-full sm:w-auto mt-1 sm:mt-0"> {/* Reduced gap and mt on mobile */}
             <div className="relative w-full sm:w-auto flex-grow"> {/* flex-grow to allow search to expand */}
               <input
                 type="text"
                 id="searchInput"
                 placeholder="Search IPOs..."
-                className="w-full p-1.5 pl-8 rounded-lg bg-white bg-opacity-20 text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-white text-sm"
+                className="w-full p-1 pl-7 rounded-lg bg-white bg-opacity-20 text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-white text-xs sm:text-sm" {/* Smaller padding/font on mobile */}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <svg className="absolute left-2 top-1/2 transform -translate-y-1/2 text-white w-4 h-4" width="20" height="20" fill="currentColor" viewBox="0 0 20 20"> {/* Smaller icon */}
+              <svg className="absolute left-1.5 top-1/2 transform -translate-y-1/2 text-white w-3.5 h-3.5 sm:w-4 sm:h-4" width="20" height="20" fill="currentColor" viewBox="0 0 20 20"> {/* Smaller icon on mobile */}
                 <path fillRule="evenodd" d="M8 4a4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd"></path>
               </svg>
             </div>
             {/* Toggle Button for Layout */}
             <button
               onClick={() => setLayoutMode(layoutMode === 'card' ? 'table' : 'card')}
-              className="bg-white text-blue-700 font-bold py-1 px-2 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out w-auto text-xs whitespace-nowrap"
+              className="bg-white text-blue-700 font-bold py-0.5 px-1.5 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out w-auto text-xs whitespace-nowrap" {/* Even smaller buttons, w-auto to prevent stretching */}
             >
               Switch to {layoutMode === 'card' ? 'Table' : 'Card'} View
             </button>
             {/* About Us Button */}
             <button
               onClick={() => setShowAboutUsModal(true)}
-              className="bg-white text-blue-700 font-bold py-1 px-2 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out w-auto text-xs whitespace-nowrap"
+              className="bg-white text-blue-700 font-bold py-0.5 px-1.5 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out w-auto text-xs whitespace-nowrap"
             >
               About Us
             </button>
             {/* Contact Us Button */}
             <button
               onClick={() => setShowContactUsModal(true)}
-              className="bg-white text-blue-700 font-bold py-1 px-2 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out w-auto text-xs whitespace-nowrap"
+              className="bg-white text-blue-700 font-bold py-0.5 px-1.5 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out w-auto text-xs whitespace-nowrap"
             >
               Contact Us
             </button>
@@ -566,35 +576,20 @@ useEffect(() => {
       </header>
 
       {/* New Fixed Sort and Total IPOs Bar */}
-      <div className="fixed top-[64px] w-full z-40 bg-gray-200 p-2 shadow-md flex flex-col sm:flex-row justify-between items-center text-gray-700 text-sm">
-      {/*  <div className="mb-2 sm:mb-0 text-center sm:text-left text-xs sm:text-sm"> 
-       <b>Total Ongoing IPOs:</b> {currentIpos.length} (
-  <b>Mainboard:</b> {currentMainboardCount} | 
-  <b>SME:</b> {currentSmeCount})
-        </div> */}
-
-        <div className="text-blue-600 text-sm sm:text-base font-medium space-x-1">
-  <span className="text-blue-800">Total Ongoing IPOs:</span>
-  <span>{currentIpos.length}</span>
-  <span>(</span>
-  <span className="text-blue-800">Mainboard:</span>
-  <span>{currentMainboardCount}</span>
-  <span>|</span>
-  <span className="text-blue-800">SME:</span>
-  <span>{currentSmeCount}</span>
-  <span>)</span>
-</div>
-
-        <div className="flex gap-2">
+      <div className="fixed top-[52px] sm:top-[64px] w-full z-40 bg-gray-200 p-1.5 sm:p-2 shadow-md flex flex-col sm:flex-row justify-between items-center text-gray-700 text-xs sm:text-sm"> {/* Adjusted top and padding on mobile */}
+        <div className="mb-1 sm:mb-0 text-center sm:text-left text-xs sm:text-sm"> {/* Smaller font for count on small screens */}
+          Total IPOs: {totalIposCount} (Current: {currentIpos.length} | Mainboard: {currentMainboardCount} | SME: {currentSmeCount})
+        </div>
+        <div className="flex gap-1 sm:gap-2"> {/* Reduced gap on mobile */}
           <button
             onClick={() => sortBy("Name")}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-3 rounded-lg transition duration-300 ease-in-out text-xs"
+            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-0.5 px-2 rounded-lg transition duration-300 ease-in-out text-xs" {/* Smaller buttons on mobile */}
           >
             Sort by Name {sortConfig.key === "Name" ? (sortConfig.direction === "asc" ? "▲" : "▼") : "⬍"}
           </button>
           <button
             onClick={() => sortBy("Open")}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-3 rounded-lg transition duration-300 ease-in-out text-xs"
+            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-0.5 px-2 rounded-lg transition duration-300 ease-in-out text-xs" {/* Smaller buttons on mobile */}
           >
             Sort by Open Date {sortConfig.key === "Open" ? (sortConfig.direction === "asc" ? "▲" : "▼") : "⬍"}
           </button>
@@ -602,7 +597,7 @@ useEffect(() => {
       </div>
 
       {/* Main Content - Adjusted padding top to account for fixed header and new bar */}
-      <main className="container mx-auto p-4 flex-grow overflow-y-auto pt-[96px] pb-28"> {/* 64px for header + 32px for new bar = 96px */}
+      <main className="container mx-auto p-4 flex-grow overflow-y-auto pt-[88px] sm:pt-[96px] pb-28"> {/* Adjusted pt for mobile: 52px header + 36px sort bar = 88px */}
         {/* Conditional Rendering for Layout */}
         {layoutMode === 'card' ? (
           <section id="ipo-list" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -873,35 +868,35 @@ useEffect(() => {
       )}
 
       {/* Broker Referral Section (Sticky Footer) - Made more compact */}
-      <footer id="broker-section" className="fixed bottom-0 left-0 w-full bg-white border-t shadow z-40 py-2 px-4">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-center sm:justify-between gap-2">
+      <footer id="broker-section" className="fixed bottom-0 left-0 w-full bg-white border-t shadow z-40 py-1.5 sm:py-2 px-2 sm:px-4"> {/* Reduced p on mobile */}
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-center sm:justify-between gap-1 sm:gap-2"> {/* Reduced gap on mobile */}
           {/* WhatsApp Channel Section */}
-          <div className="whatsapp-section text-center sm:text-left mb-1 sm:mb-0">
+          <div className="whatsapp-section text-center sm:text-left mb-0.5 sm:mb-1"> {/* Reduced mb on mobile */}
             <a
               href="https://www.whatsapp.com/channel/0029VbBPCHaKAwEkO9zdRl34"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center bg-green-600 text-white px-4 py-1.5 rounded-full shadow-md hover:bg-green-700 hover:scale-105 transition transform text-sm"
+              className="inline-flex items-center bg-green-600 text-white px-3 py-1 rounded-full shadow-md hover:bg-green-700 hover:scale-105 transition transform text-xs" {/* Reduced padding/font on mobile */}
             >
               <img
                 src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"
                 alt="WhatsApp"
-                className="w-4 h-4 mr-1"
+                className="w-3.5 h-3.5 mr-1" // Smaller icon on mobile
               />
               WhatsApp Updates
             </a>
           </div>
           
           <div className="flex flex-col items-center sm:items-end">
-            <h2 className="text-sm font-semibold mb-1 text-center text-gray-800 hover:text-blue-600 transition-all">
+            <h2 className="text-xs sm:text-sm font-semibold mb-0.5 sm:mb-1 text-center text-gray-800 hover:text-blue-600 transition-all"> {/* Reduced font/mb on mobile */}
               🛡️ Open Demat account securely with verified investment brokers.
             </h2>
-            <div className="flex flex-wrap justify-center gap-2 overflow-x-auto pb-0.5">
+            <div className="flex flex-wrap justify-center gap-1 overflow-x-auto pb-0.5"> {/* Reduced gap on mobile */}
               {renderBrokerLinks()}
             </div>
           </div>
         </div>
-        <p className="text-center text-gray-500 text-xs mt-2">© {new Date().getFullYear()} Track My IPO. All rights reserved.</p> {/* All rights reserved text */}
+        <p className="text-center text-gray-500 text-xs mt-1">© {new Date().getFullYear()} Track My IPO. All rights reserved.</p> {/* Reduced mt on mobile */}
       </footer>
     </div>
   );

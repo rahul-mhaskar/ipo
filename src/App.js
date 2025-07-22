@@ -5,7 +5,7 @@ import Papa from "papaparse";
 // It MUST be a "Published to web" CSV link from Google Sheets, NOT an editor link.
 // Example of a CORRECT format:
 // "https://docs.google.com/sheets/d/e/2PACX-1vYOUR_SHEET_ID_HERE/pub?gid=0&single=true&output=csv"
-const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSHEORz3aArzaDTOWYW6FlC1avk1TYKAhDKfyALmqg2HMDWiD60N6WG2wgMlPkvLWC9d7YzwplhCStb/pub?output=csv";
+const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlsMurbsXT2UBQ2ADbyoiQtLUTznQU4vNzw3nS02_StSrFV9pkrnXOrNAjV_Yj-Byc_zw72z_rM0tQ/pub?output=csv";
 
 
 const App = () => {
@@ -41,8 +41,12 @@ const App = () => {
   const [contactFormMessage, setContactFormMessage] = useState('');
 
   // State for footer visibility (for shutter effect)
-  const [isFooterExpanded, setIsFooterExpanded] = useState(false);
+  const [isFooterExpanded, setIsFooterExpanded] = useState(true); // Start expanded
   const footerTimeoutRef = useRef(null); // Ref to store the timeout ID
+  const bounceIntervalRef = useRef(null); // Ref for bounce animation interval
+
+  // State for sidebar (hamburger menu)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Google Analytics Page View Tracking
   useEffect(() => {
@@ -58,26 +62,67 @@ const App = () => {
   // Effect for footer shutter behavior
   useEffect(() => {
     // Function to collapse footer after a delay
-    const collapseFooter = () => {
-      setIsFooterExpanded(false);
-    };
-
-    if (isFooterExpanded) {
-      // Clear any existing timeout
+    const startCollapseTimeout = () => {
       if (footerTimeoutRef.current) {
         clearTimeout(footerTimeoutRef.current);
       }
-      // Set new timeout to collapse after 5 seconds
-      footerTimeoutRef.current = setTimeout(collapseFooter, 5000);
+      footerTimeoutRef.current = setTimeout(() => {
+        setIsFooterExpanded(false);
+      }, 2000); // Collapse after 2 seconds
+    };
+
+    // Function to start bounce animation
+    const startBounceAnimation = () => {
+      if (bounceIntervalRef.current) {
+        clearInterval(bounceIntervalRef.current);
+      }
+      bounceIntervalRef.current = setInterval(() => {
+        // Add a class for a quick bounce animation
+        const footerElement = document.getElementById('broker-section');
+        if (footerElement) {
+          footerElement.classList.add('animate-bounce-once');
+          setTimeout(() => {
+            footerElement.classList.remove('animate-bounce-once');
+          }, 500); // Remove bounce class after animation
+        }
+      }, 10000); // Bounce every 10 seconds
+    };
+
+    if (isFooterExpanded) {
+      startCollapseTimeout(); // Start timer to collapse
+      if (bounceIntervalRef.current) {
+        clearInterval(bounceIntervalRef.current); // Stop bouncing if expanded
+      }
+    } else {
+      startBounceAnimation(); // Start bouncing if collapsed
     }
 
-    // Cleanup function: clear timeout if component unmounts or footer collapses
+    // Cleanup function
     return () => {
       if (footerTimeoutRef.current) {
         clearTimeout(footerTimeoutRef.current);
       }
+      if (bounceIntervalRef.current) {
+        clearInterval(bounceIntervalRef.current);
+      }
     };
   }, [isFooterExpanded]); // Re-run when footer expansion state changes
+
+  // Add CSS for bounce animation directly in the component for simplicity
+  // In a real app, this would be in a CSS file.
+  const bounceAnimationCss = `
+    @keyframes bounce-once {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-5px); /* Small upward bounce */
+      }
+    }
+    .animate-bounce-once {
+      animation: bounce-once 0.5s ease-in-out;
+    }
+  `;
 
 
   // Function to show a custom message box
@@ -532,6 +577,9 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 font-sans flex flex-col">
+      {/* Inject global styles for animations */}
+      <style>{bounceAnimationCss}</style>
+
       {/* Full-screen Loading Splash Screen */}
       {isLoading && (
         <div className="fixed inset-0 bg-gradient-to-br from-blue-600 to-purple-700 text-white flex flex-col items-center justify-center z-50 transition-opacity duration-500 opacity-100">
@@ -553,49 +601,101 @@ const App = () => {
 
       {/* Header */}
       <header className="fixed top-0 w-full z-50 bg-gradient-to-r from-blue-600 to-purple-700 text-white p-2 sm:p-3 shadow-lg rounded-b-xl">
-        <div className="container mx-auto flex flex-col sm:flex-row justify-between items-center">
-          <div className="flex items-center mb-1 sm:mb-0">
+        <div className="container mx-auto flex justify-between items-center">
+          {/* Hamburger Icon for Sidebar (Mobile Only) */}
+          <div className="sm:hidden">
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="p-2 -ml-2 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-white"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path>
+              </svg>
+            </button>
+          </div>
+
+          <div className="flex items-center flex-grow justify-center sm:justify-start"> {/* Centered on mobile, left on desktop */}
             <svg className="w-6 h-6 sm:w-8 sm:h-8 mr-1 sm:mr-2 text-white" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 2L2 22h20L12 2zm0 17l-5-10h10l-5 10z"/>
             </svg>
             <h1 className="text-xl sm:text-2xl font-bold">Track My IPO</h1>
           </div>
-          {/* Navigation buttons - Horizontal scroll on mobile, flex-nowrap to prevent wrapping */}
-          <div className="flex flex-row sm:flex-row sm:flex-nowrap items-center gap-0.5 sm:gap-1 w-full sm:w-auto mt-1 sm:mt-0 overflow-x-auto pb-1 sm:pb-0 justify-end"> {/* Added overflow-x-auto and justify-end for mobile */}
-            <div className="relative flex-shrink-0 w-full sm:w-auto sm:flex-grow"> {/* flex-shrink-0 to prevent search from shrinking, flex-grow on desktop */}
-              <input
-                type="text"
-                id="searchInput"
-                placeholder="Search IPOs..."
-                className="w-full p-1 pl-7 rounded-lg bg-white bg-opacity-20 text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-white text-xs sm:text-sm"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              <svg className="absolute left-1.5 top-1/2 transform -translate-y-1/2 text-white w-3.5 h-3.5 sm:w-4 sm:h-4" width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M8 4a4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd"></path>
-              </svg>
-            </div>
+
+          {/* Search Bar - Always visible in header */}
+          <div className="relative flex-shrink-0 w-1/2 sm:w-auto sm:flex-grow ml-auto sm:ml-0"> {/* Adjusted width for mobile, ml-auto to push right */}
+            <input
+              type="text"
+              id="searchInput"
+              placeholder="Search IPOs..."
+              className="w-full p-1 pl-7 rounded-lg bg-white bg-opacity-20 text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-white text-xs sm:text-sm"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <svg className="absolute left-1.5 top-1/2 transform -translate-y-1/2 text-white w-3.5 h-3.5 sm:w-4 sm:h-4" width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M8 4a4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd"></path>
+            </svg>
+          </div>
+
+          {/* Desktop Navigation Buttons (Hidden on Mobile) */}
+          <div className="hidden sm:flex items-center gap-1 ml-4">
             <button
               onClick={() => setLayoutMode(layoutMode === 'card' ? 'table' : 'card')}
-              className="flex-shrink-0 bg-white text-blue-700 font-bold py-0.5 px-1.5 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out text-xs whitespace-nowrap"
+              className="bg-white text-blue-700 font-bold py-1 px-2 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out text-xs whitespace-nowrap"
             >
               Switch to {layoutMode === 'card' ? 'Table' : 'Card'} View
             </button>
             <button
               onClick={() => setShowAboutUsModal(true)}
-              className="flex-shrink-0 bg-white text-blue-700 font-bold py-0.5 px-1.5 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out text-xs whitespace-nowrap"
+              className="bg-white text-blue-700 font-bold py-1 px-2 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out text-xs whitespace-nowrap"
             >
               About Us
             </button>
             <button
               onClick={() => setShowContactUsModal(true)}
-              className="flex-shrink-0 bg-white text-blue-700 font-bold py-0.5 px-1.5 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out text-xs whitespace-nowrap"
+              className="bg-white text-blue-700 font-bold py-1 px-2 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out text-xs whitespace-nowrap"
             >
               Contact Us
             </button>
           </div>
         </div>
       </header>
+
+      {/* Mobile Sidebar (Drawer) */}
+      <div className={`fixed inset-y-0 left-0 w-64 bg-blue-800 text-white z-50 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out sm:hidden`}>
+        <div className="p-4 flex justify-between items-center border-b border-blue-700">
+          <h2 className="text-xl font-bold">Navigation</h2>
+          <button onClick={() => setIsSidebarOpen(false)} className="text-white text-2xl">
+            &times;
+          </button>
+        </div>
+        <nav className="p-4 space-y-2">
+          <button
+            onClick={() => { setLayoutMode(layoutMode === 'card' ? 'table' : 'card'); setIsSidebarOpen(false); }}
+            className="block w-full text-left py-2 px-3 rounded-md hover:bg-blue-700 transition-colors"
+          >
+            Switch to {layoutMode === 'card' ? 'Table' : 'Card'} View
+          </button>
+          <button
+            onClick={() => { setShowAboutUsModal(true); setIsSidebarOpen(false); }}
+            className="block w-full text-left py-2 px-3 rounded-md hover:bg-blue-700 transition-colors"
+          >
+            About Us
+          </button>
+          <button
+            onClick={() => { setShowContactUsModal(true); setIsSidebarOpen(false); }}
+            className="block w-full text-left py-2 px-3 rounded-md hover:bg-blue-700 transition-colors"
+          >
+            Contact Us
+          </button>
+        </nav>
+      </div>
+      {/* Overlay for sidebar */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 sm:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        ></div>
+      )}
 
       {/* New Fixed Sort and Total IPOs Bar */}
       <div className="fixed top-[52px] sm:top-[64px] w-full z-40 bg-gray-200 p-1.5 sm:p-2 shadow-md flex flex-col sm:flex-row justify-between items-center text-gray-700 text-xs sm:text-sm">
@@ -627,33 +727,31 @@ const App = () => {
             {/* Filter displayedIpoData for card view based on search term */}
             {ipoData.length > 0 && displayedIpoData.length > 0 ? (
               displayedIpoData.map((ipo, index) => (
-                <div key={index} className="card p-6 flex flex-col justify-between">
-                  {/* Flex container for image and primary text */}
-                  <div className="flex items-start gap-4 mb-4">
-                    {/* IPO Image */}
-                    <div className="flex-shrink-0">
-                      {ipo.ImageURL ? (
-                        <img
-                          src={ipo.ImageURL}
-                          alt={`${ipo.Name} Logo`}
-                          className="w-20 h-20 object-contain rounded-lg border p-1 bg-white"
-                          onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/80x80/e0e0e0/555555?text=No+Image"; }}
-                        />
-                      ) : (
-                        <img
-                          src="https://placehold.co/80x80/e0e0e0/555555?text=No+Image"
-                          alt="No Image Available"
-                          className="w-20 h-20 object-contain rounded-lg border p-1 bg-white"
-                        />
-                      )}
-                    </div>
-                    {/* IPO Name, Type, Description */}
-                    <div className="flex-grow">
-                      <h2 className="text-xl font-semibold text-blue-700 mb-1">{ipo.Name} ({ipo.Type})</h2>
-                      {ipo.Description && (
-                        <p className="text-gray-600 text-sm line-clamp-3">{ipo.Description}</p>
-                      )}
-                    </div>
+                <div key={index} className="card p-6 flex flex-col justify-between relative"> {/* Added relative for image positioning */}
+                  {/* IPO Image - Positioned top-right */}
+                  <div className="absolute top-4 right-4 flex-shrink-0"> {/* Adjusted top/right for spacing */}
+                    {ipo.ImageURL ? (
+                      <img
+                        src={ipo.ImageURL}
+                        alt={`${ipo.Name} Logo`}
+                        className="w-16 h-16 sm:w-20 sm:h-20 object-contain rounded-lg border p-1 bg-white shadow-sm" // Smaller on mobile
+                        onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/80x80/e0e0e0/555555?text=No+Image"; }}
+                      />
+                    ) : (
+                      <img
+                        src="https://placehold.co/80x80/e0e0e0/555555?text=No+Image"
+                        alt="No Image Available"
+                        className="w-16 h-16 sm:w-20 sm:h-20 object-contain rounded-lg border p-1 bg-white shadow-sm" // Smaller on mobile
+                      />
+                    )}
+                  </div>
+
+                  {/* IPO Name, Type, Description */}
+                  <div className="flex-grow pr-20 sm:pr-24 mb-4"> {/* Added right padding to prevent overlap with image */}
+                    <h2 className="text-xl font-semibold text-blue-700 mb-1">{ipo.Name} ({ipo.Type})</h2>
+                    {ipo.Description && (
+                      <DescriptionWithToggle description={ipo.Description} />
+                    )}
                   </div>
 
                   {/* Other details below the image/description block */}
@@ -784,27 +882,27 @@ const App = () => {
               ×
             </button>
             <h3 className="text-2xl font-bold text-gray-800 mb-4 text-center">About Track My IPO</h3>
-            <p className="text-gray-700 mb-4">
+            <p className="text-gray-700 mb-4 text-sm max-h-60 overflow-y-auto"> {/* Added max-h and overflow for scrollability */}
               Track My IPO is your go-to application for staying updated on the latest Initial Public Offerings (IPOs).
               We aim to provide a simple, intuitive, and efficient way to track IPO statuses, GMP (Grey Market Premium),
               and other crucial details. Our goal is to empower investors with timely information to make informed decisions.
             </p>
-            <p className="text-gray-700">
+            <p className="text-gray-700 text-sm mb-4">
               We are continuously working to enhance features and provide the best user experience.
             </p>
 
-                 <p className="text-center text-gray-800 text-xs mt-4">
-                Please share your suggestions and comments us at <a href="mailto:trackmyipo@outlook.com" className="text-blue-600 hover:underline">trackmyipo@outlook.com</a>
-              </p>
- <p className="text-gray-600">
-                Disclaimer:
-                All content provided on this platform is intended solely for educational and informational purposes.
-                Under no circumstances should any information published here be interpreted as investment advice, a recommendation to buy or sell any securities, or guidance for participating in IPOs. 
-                We are not registered with SEBI as financial analysts or advisors. 
-                Users are strongly advised to consult a qualified financial advisor before making any investment decisions based on the information presented on this platform. 
-                The content shared is based on publicly available data and prevailing market views as of the date of publication.
-                By using this platform, you acknowledge and agree to these terms and conditions.
-                   </p>
+            <p className="text-center text-gray-800 text-xs mt-4">
+              Please share your suggestions and comments us at <a href="mailto:trackmyipo@outlook.com" className="text-blue-600 hover:underline">trackmyipo@outlook.com</a>
+            </p>
+            <p className="text-gray-600 text-xs mt-2"> {/* Reduced font size for disclaimer */}
+              Disclaimer:
+              All content provided on this platform is intended solely for educational and informational purposes.
+              Under no circumstances should any information published here be interpreted as investment advice, a recommendation to buy or sell any securities, or guidance for participating in IPOs. 
+              We are not registered with SEBI as financial analysts or advisors. 
+              Users are strongly advised to consult a qualified financial advisor before making any investment decisions based on the information presented on this platform. 
+              The content shared is based on publicly available data and prevailing market views as of the date of publication.
+              By using this platform, you acknowledge and agree to these terms and conditions.
+            </p>
           </div>
         </div>
       )}
@@ -895,10 +993,10 @@ const App = () => {
         id="broker-section"
         className={`fixed bottom-0 left-0 w-full bg-white border-t shadow z-40 transition-all duration-300 ease-in-out
           ${isFooterExpanded ? 'h-auto py-2 sm:py-2 px-2 sm:px-4' : 'h-[40px] sm:h-[40px] py-1 px-2 sm:px-4 overflow-hidden'}`}
+        onClick={() => setIsFooterExpanded(!isFooterExpanded)} {/* Toggle on click anywhere in footer */}
       >
         <div
           className="flex justify-center items-center h-full sm:h-auto cursor-pointer"
-          onClick={() => setIsFooterExpanded(!isFooterExpanded)}
         >
           <div className="flex flex-col items-center">
             {/* Arrow icon for expand/collapse */}
@@ -953,5 +1051,45 @@ const App = () => {
     </div>
   );
 };
+
+// New component for Description with Show More/Read Less
+const DescriptionWithToggle = ({ description }) => {
+  const [showFullDescription, setShowFullDescription] = useState(false);
+  const textRef = useRef(null);
+  const [isTruncated, setIsTruncated] = useState(false);
+
+  useEffect(() => {
+    if (textRef.current) {
+      // Check if the content overflows its container
+      // A common way to check for truncation is comparing scrollHeight and clientHeight
+      // Add a small buffer to account for line-height differences
+      setIsTruncated(textRef.current.scrollHeight > textRef.current.clientHeight + 5);
+    }
+  }, [description, showFullDescription]); // Re-check if description or toggle state changes
+
+  if (!description) {
+    return <p className="text-gray-600 text-sm">N/A</p>;
+  }
+
+  return (
+    <div>
+      <p
+        ref={textRef}
+        className={`text-gray-600 text-sm ${!showFullDescription ? 'line-clamp-3' : ''}`}
+      >
+        {description}
+      </p>
+      {isTruncated && ( // Only show button if text is actually truncated
+        <button
+          onClick={() => setShowFullDescription(!showFullDescription)}
+          className="text-blue-500 hover:underline text-xs mt-1"
+        >
+          {showFullDescription ? 'Read Less' : 'Show More'}
+        </button>
+      )}
+    </div>
+  );
+};
+
 
 export default App;

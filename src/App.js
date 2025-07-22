@@ -522,7 +522,7 @@ const App = () => {
                       <td key={key} className="px-3 py-2 border-b border-gray-100 whitespace-nowrap">
                         {key === "Status"
                           ? getStatusContent(ipo[key], ipo)
-                          : ipo[key] || 'N/A'} // Display N/A for empty cells */}
+                          : ipo[key] || 'N/A'} 
                       </td>
                     ))}
                   </tr>

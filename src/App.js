@@ -582,13 +582,13 @@ const App = () => {
         <div className="flex gap-1 sm:gap-2"> {/* Reduced gap on mobile */}
           <button
             onClick={() => sortBy("Name")}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-0.5 px-2 rounded-lg transition duration-300 ease-in-out text-xs" {/* Smaller buttons on mobile */}
+            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-0.5 px-2 rounded-lg transition duration-300 ease-in-out text-xs" 
           >
             Sort by Name {sortConfig.key === "Name" ? (sortConfig.direction === "asc" ? "▲" : "▼") : "⬍"}
           </button>
           <button
             onClick={() => sortBy("Open")}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-0.5 px-2 rounded-lg transition duration-300 ease-in-out text-xs" {/* Smaller buttons on mobile */}
+            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-0.5 px-2 rounded-lg transition duration-300 ease-in-out text-xs" 
           >
             Sort by Open Date {sortConfig.key === "Open" ? (sortConfig.direction === "asc" ? "▲" : "▼") : "⬍"}
           </button>

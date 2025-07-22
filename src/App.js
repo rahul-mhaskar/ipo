@@ -875,8 +875,7 @@ const App = () => {
               href="https://www.whatsapp.com/channel/0029VbBPCHaKAwEkO9zdRl34"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center bg-green-600 text-white px-3 py-1 rounded-full shadow-md hover:bg-green-700 hover:scale-105 transition transform text-xs" {/* Reduced padding/font on mobile */}
-            >
+              className="inline-flex items-center bg-green-600 text-white px-3 py-1 rounded-full shadow-md hover:bg-green-700 hover:scale-105 transition transform text-xs"             >
               <img
                 src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"
                 alt="WhatsApp"

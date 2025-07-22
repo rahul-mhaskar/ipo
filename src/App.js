@@ -618,43 +618,30 @@ const App = () => {
             <svg className="w-6 h-6 sm:w-8 sm:h-8 mr-1 sm:mr-2 text-white" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 2L2 22h20L12 2zm0 17l-5-10h10l-5 10z"/>
             </svg>
-            <h1 className="text-xl sm:text-2xl font-bold">Track My IPO</h1>
+            <h1 className="text-xl sm:text-2xl font-bold whitespace-nowrap">Track My IPO</h1> {/* Added whitespace-nowrap */}
           </div>
 
-          {/* Search Bar - Always visible in header */}
-          <div className="relative flex-shrink-0 w-1/2 sm:w-auto sm:flex-grow ml-auto sm:ml-0"> {/* Adjusted width for mobile, ml-auto to push right */}
-            <input
-              type="text"
-              id="searchInput"
-              placeholder="Search IPOs..."
-              className="w-full p-1 pl-7 rounded-lg bg-white bg-opacity-20 text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-white text-xs sm:text-sm"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <svg className="absolute left-1.5 top-1/2 transform -translate-y-1/2 text-white w-3.5 h-3.5 sm:w-4 sm:h-4" width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M8 4a4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd"></path>
-            </svg>
-          </div>
-
-          {/* Desktop Navigation Buttons (Hidden on Mobile) */}
-          <div className="hidden sm:flex items-center gap-1 ml-4">
+          {/* Search Bar & Switch View Button (Mobile & Desktop) */}
+          <div className="flex items-center gap-1 ml-auto sm:ml-0"> {/* ml-auto to push search/button to right on mobile */}
+            <div className="relative flex-shrink-0 w-32 sm:w-auto sm:flex-grow"> {/* Adjusted width for mobile search */}
+              <input
+                type="text"
+                id="searchInput"
+                placeholder="Search IPOs..."
+                className="w-full p-1 pl-7 rounded-lg bg-white bg-opacity-20 text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-white text-xs sm:text-sm"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <svg className="absolute left-1.5 top-1/2 transform -translate-y-1/2 text-white w-3.5 h-3.5 sm:w-4 sm:h-4" width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M8 4a4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd"></path>
+              </svg>
+            </div>
+            {/* Switch to Table/Card View Button - Now always in header */}
             <button
               onClick={() => setLayoutMode(layoutMode === 'card' ? 'table' : 'card')}
-              className="bg-white text-blue-700 font-bold py-1 px-2 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out text-xs whitespace-nowrap"
+              className="flex-shrink-0 bg-white text-blue-700 font-bold py-0.5 px-1.5 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out text-xs whitespace-nowrap"
             >
               Switch to {layoutMode === 'card' ? 'Table' : 'Card'} View
-            </button>
-            <button
-              onClick={() => setShowAboutUsModal(true)}
-              className="bg-white text-blue-700 font-bold py-1 px-2 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out text-xs whitespace-nowrap"
-            >
-              About Us
-            </button>
-            <button
-              onClick={() => setShowContactUsModal(true)}
-              className="bg-white text-blue-700 font-bold py-1 px-2 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out text-xs whitespace-nowrap"
-            >
-              Contact Us
             </button>
           </div>
         </div>
@@ -669,18 +656,14 @@ const App = () => {
           </button>
         </div>
         <nav className="p-4 space-y-2">
-          <button
-            onClick={() => { setLayoutMode(layoutMode === 'card' ? 'table' : 'card'); setIsSidebarOpen(false); }}
-            className="block w-full text-left py-2 px-3 rounded-md hover:bg-blue-700 transition-colors"
-          >
-            Switch to {layoutMode === 'card' ? 'Table' : 'Card'} View
-          </button>
+          {/* About Us Button */}
           <button
             onClick={() => { setShowAboutUsModal(true); setIsSidebarOpen(false); }}
             className="block w-full text-left py-2 px-3 rounded-md hover:bg-blue-700 transition-colors"
           >
             About Us
           </button>
+          {/* Contact Us Button */}
           <button
             onClick={() => { setShowContactUsModal(true); setIsSidebarOpen(false); }}
             className="block w-full text-left py-2 px-3 rounded-md hover:bg-blue-700 transition-colors"
@@ -727,45 +710,53 @@ const App = () => {
             {/* Filter displayedIpoData for card view based on search term */}
             {ipoData.length > 0 && displayedIpoData.length > 0 ? (
               displayedIpoData.map((ipo, index) => (
-                <div key={index} className="card p-6 flex flex-col justify-between relative"> {/* Added relative for image positioning */}
-                  {/* IPO Image - Positioned top-right */}
-                  <div className="absolute top-4 right-4 flex-shrink-0"> {/* Adjusted top/right for spacing */}
-                    {ipo.ImageURL ? (
-                      <img
-                        src={ipo.ImageURL}
-                        alt={`${ipo.Name} Logo`}
-                        className="w-16 h-16 sm:w-20 sm:h-20 object-contain rounded-lg border p-1 bg-white shadow-sm" // Smaller on mobile
-                        onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/80x80/e0e0e0/555555?text=No+Image"; }}
-                      />
-                    ) : (
-                      <img
-                        src="https://placehold.co/80x80/e0e0e0/555555?text=No+Image"
-                        alt="No Image Available"
-                        className="w-16 h-16 sm:w-20 sm:h-20 object-contain rounded-lg border p-1 bg-white shadow-sm" // Smaller on mobile
-                      />
-                    )}
+                <div key={index} className="card p-6 flex flex-col justify-between relative">
+                  {/* IPO Name and Type */}
+                  <div className="flex-grow mb-2">
+                    <h2 className="text-xl font-semibold text-blue-700">{ipo.Name} ({ipo.Type})</h2>
                   </div>
 
-                  {/* IPO Name, Type, Description */}
-                  <div className="flex-grow pr-20 sm:pr-24 mb-4"> {/* Added right padding to prevent overlap with image */}
-                    <h2 className="text-xl font-semibold text-blue-700 mb-1">{ipo.Name} ({ipo.Type})</h2>
-                    {ipo.Description && (
+                  {/* Details and IPO Image - Grouped */}
+                  <div className="flex items-start gap-4 mb-4">
+                    <div className="flex-grow"> {/* Details column */}
+                      <p className="text-gray-700 text-sm mb-0.5"><strong>Price:</strong> {ipo.Price || 'N/A'}</p>
+                      <p className="text-gray-700 text-sm mb-0.5"><strong>Lot Size:</strong> {ipo.Lot || 'N/A'}</p>
+                      <p className="text-gray-700 text-sm mb-0.5"><strong>Open Date:</strong> {ipo.Open || 'N/A'}</p>
+                      <p className="text-gray-700 text-sm mb-0.5"><strong>Close Date:</strong> {ipo.Close || 'N/A'}</p>
+                    </div>
+                    {/* IPO Image - Now beside the details */}
+                    <div className="flex-shrink-0">
+                      {ipo.ImageURL ? (
+                        <img
+                          src={ipo.ImageURL}
+                          alt={`${ipo.Name} Logo`}
+                          className="w-16 h-16 object-contain rounded-lg border p-1 bg-white shadow-sm"
+                          onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/80x80/e0e0e0/555555?text=No+Image"; }}
+                        />
+                      ) : (
+                        <img
+                          src="https://placehold.co/80x80/e0e0e0/555555?text=No+Image"
+                          alt="No Image Available"
+                          className="w-16 h-16 object-contain rounded-lg border p-1 bg-white shadow-sm"
+                        />
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Description with Show More/Read Less */}
+                  {ipo.Description && (
+                    <div className="mb-4">
                       <DescriptionWithToggle description={ipo.Description} />
-                    )}
-                  </div>
-
-                  {/* Other details below the image/description block */}
-                  <div>
-                    <p className="text-gray-700 mb-1"><strong>Price:</strong> {ipo.Price || 'N/A'}</p>
-                    <p className="text-gray-700 mb-1"><strong>Lot Size:</strong> {ipo.Lot || 'N/A'}</p>
-                    <p className="text-gray-700 mb-1"><strong>Open Date:</strong> {ipo.Open || 'N/A'}</p>
-                    <p className="text-gray-700 mb-4"><strong>Close Date:</strong> {ipo.Close || 'N/A'}</p>
-                    <p className="text-gray-600 text-sm mb-4">
-                      <strong>GMP:</strong> {ipo.GMP || 'N/A'} |
-                      <strong> Est. Listing:</strong> {ipo["Est Listing"] || 'N/A'} |
-                      <strong> IPO Size:</strong> {ipo["IPO Size"] || 'N/A'}
-                    </p>
-                  </div>
+                    </div>
+                  )}
+                  
+                  {/* GMP/Est Listing/IPO Size - below the image/price block */}
+                  <p className="text-gray-600 text-sm mb-4">
+                    <strong>GMP:</strong> {ipo.GMP || 'N/A'} |
+                    <strong> Est. Listing:</strong> {ipo["Est Listing"] || 'N/A'} |
+                    <strong> IPO Size:</strong> {ipo["IPO Size"] || 'N/A'}
+                  </p>
+                  {/* Status and View Details button */}
                   <div className="flex items-center justify-between mt-auto">
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold
                       ${ipo.Status?.toLowerCase().includes('open') || ipo.Status?.toLowerCase().includes('apply') ? 'status-open' :
@@ -891,18 +882,18 @@ const App = () => {
               We are continuously working to enhance features and provide the best user experience.
             </p>
 
-            <p className="text-center text-gray-800 text-xs mt-4">
-              Please share your suggestions and comments us at <a href="mailto:trackmyipo@outlook.com" className="text-blue-600 hover:underline">trackmyipo@outlook.com</a>
-            </p>
-            <p className="text-gray-600 text-xs mt-2"> {/* Reduced font size for disclaimer */}
-              Disclaimer:
-              All content provided on this platform is intended solely for educational and informational purposes.
-              Under no circumstances should any information published here be interpreted as investment advice, a recommendation to buy or sell any securities, or guidance for participating in IPOs. 
-              We are not registered with SEBI as financial analysts or advisors. 
-              Users are strongly advised to consult a qualified financial advisor before making any investment decisions based on the information presented on this platform. 
-              The content shared is based on publicly available data and prevailing market views as of the date of publication.
-              By using this platform, you acknowledge and agree to these terms and conditions.
-            </p>
+                 <p className="text-center text-gray-800 text-xs mt-4">
+                Please share your suggestions and comments us at <a href="mailto:trackmyipo@outlook.com" className="text-blue-600 hover:underline">trackmyipo@outlook.com</a>
+              </p>
+ <p className="text-gray-600 text-xs mt-2"> {/* Reduced font size for disclaimer */}
+                Disclaimer:
+                All content provided on this platform is intended solely for educational and informational purposes.
+                Under no circumstances should any information published here be interpreted as investment advice, a recommendation to buy or sell any securities, or guidance for participating in IPOs. 
+                We are not registered with SEBI as financial analysts or advisors. 
+                Users are strongly advised to consult a qualified financial advisor before making any investment decisions based on the information presented on this platform. 
+                The content shared is based on publicly available data and prevailing market views as of the date of publication.
+                By using this platform, you acknowledge and agree to these terms and conditions.
+                   </p>
           </div>
         </div>
       )}
@@ -991,9 +982,9 @@ const App = () => {
       {/* Collapsible Footer */}
       <footer
         id="broker-section"
-        className={`fixed bottom-0 left-0 w-full bg-white border-t shadow z-40 transition-all duration-300 ease-in-out
+        className={`fixed bottom-0 left-0 w-full bg-white border-t shadow z-40 transition-all duration-1000 ease-in-out
           ${isFooterExpanded ? 'h-auto py-2 sm:py-2 px-2 sm:px-4' : 'h-[40px] sm:h-[40px] py-1 px-2 sm:px-4 overflow-hidden'}`}
-        onClick={() => setIsFooterExpanded(!isFooterExpanded)} 
+        onClick={() => setIsFooterExpanded(!isFooterExpanded)} {/* Toggle on click anywhere in footer */}
       >
         <div
           className="flex justify-center items-center h-full sm:h-auto cursor-pointer"

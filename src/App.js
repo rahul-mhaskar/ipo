@@ -5,7 +5,7 @@ import Papa from "papaparse";
 // It MUST be a "Published to web" CSV link from Google Sheets, NOT an editor link.
 // Example of a CORRECT format:
 // "https://docs.google.com/sheets/d/e/2PACX-1vYOUR_SHEET_ID_HERE/pub?gid=0&single=true&output=csv"
-const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlsMurbsXT2UBQ2ADbyoiQtLUTznQU4vNzw3nS02_StSrFV9pkrnXOrNAjV_Yj-Byc_zw72z_rM0tQ/pub?output=csv";
+const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSHEORz3aArzaDTOWYW6FlC1avk1TYKAhDKfyALmqg2HMDWiD60N6WG2wgMlPkvLWC9d7YzwplhCStb/pub?output=csv";
 
 
 const App = () => {
@@ -68,7 +68,7 @@ const App = () => {
       }
       footerTimeoutRef.current = setTimeout(() => {
         setIsFooterExpanded(false);
-      }, 2000); // Collapse after 2 seconds
+      }, 3000); // Collapse after 3 seconds
     };
 
     // Function to start bounce animation
@@ -326,7 +326,7 @@ const App = () => {
     let currentMainboard = 0;
     let currentSme = 0;
     current.forEach(ipo => {
-      if (ipo.Type && ipo.Type.toLowerCase().includes("main board")) {
+      if (ipo.Type && ipo.Type.toLowerCase().includes("mainboard")) {
         currentMainboard++;
       } else if (ipo.Type && ipo.Type.toLowerCase().includes("sme")) {
         currentSme++;
@@ -522,7 +522,7 @@ const App = () => {
                       <td key={key} className="px-3 py-2 border-b border-gray-100 whitespace-nowrap">
                         {key === "Status"
                           ? getStatusContent(ipo[key], ipo)
-                          : ipo[key] || 'N/A'} {/* Display N/A for empty cells */}
+                          : ipo[key] || 'N/A'} //* Display N/A for empty cells */}
                       </td>
                     ))}
                   </tr>
@@ -600,44 +600,62 @@ const App = () => {
       )}
 
       {/* Header */}
-      <header className="fixed top-0 w-full z-50 bg-gradient-to-r from-blue-600 to-purple-700 text-white p-2 sm:p-4 shadow-lg rounded-b-xl"> {/* Adjusted desktop padding */}
-        <div className="container mx-auto flex justify-between items-center">
-          {/* Mobile: Hamburger Icon */}
-          <div className="sm:hidden">
-            <button
-              onClick={() => setIsSidebarOpen(true)}
-              className="p-2 -ml-2 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-white"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path>
+      <header className="fixed top-0 w-full z-50 bg-gradient-to-r from-blue-600 to-purple-700 text-white p-2 sm:p-4 shadow-lg rounded-b-xl">
+        <div className="container mx-auto flex flex-col sm:flex-row justify-between items-center">
+          {/* Top Row: Mobile Hamburger, Logo, Title (Mobile) / Desktop Logo, Title, Search, Buttons (Desktop) */}
+          <div className="flex w-full sm:w-auto justify-between items-center mb-2 sm:mb-0">
+            {/* Mobile: Hamburger Icon */}
+            <div className="sm:hidden">
+              <button
+                onClick={() => setIsSidebarOpen(true)}
+                className="p-2 -ml-2 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-white"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+              </button>
+            </div>
+
+            {/* Logo and Title */}
+            <div className="flex items-center flex-grow sm:flex-grow-0 justify-center sm:justify-start">
+              <svg className="w-6 h-6 sm:w-10 sm:h-10 mr-1 sm:mr-3 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2L2 22h20L12 2zm0 17l-5-10h10l-5 10z"/>
               </svg>
-            </button>
+              <h1 className="text-xl sm:text-3xl font-bold whitespace-nowrap">Track My IPO</h1>
+            </div>
+
+            {/* Desktop Navigation Buttons (Hidden on Mobile) */}
+            <div className="hidden sm:flex items-center gap-2 ml-auto"> {/* ml-auto to push to right */}
+              <button
+                onClick={() => setShowAboutUsModal(true)}
+                className="bg-white text-blue-700 font-bold py-1.5 px-3 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out text-sm whitespace-nowrap"
+              >
+                About Us
+              </button>
+              <button
+                onClick={() => setShowContactUsModal(true)}
+                className="bg-white text-blue-700 font-bold py-1.5 px-3 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out text-sm whitespace-nowrap"
+              >
+                Contact Us
+              </button>
+            </div>
           </div>
 
-          {/* Logo and Title */}
-          <div className="flex items-center flex-grow sm:flex-grow-0 justify-center sm:justify-start"> {/* Centered on mobile, left on desktop */}
-            <svg className="w-6 h-6 sm:w-10 sm:h-10 mr-1 sm:mr-3 text-white" fill="currentColor" viewBox="0 0 24 24"> {/* Adjusted desktop icon size */}
-                <path d="M12 2L2 22h20L12 2zm0 17l-5-10h10l-5 10z"/>
-            </svg>
-            <h1 className="text-xl sm:text-3xl font-bold whitespace-nowrap">Track My IPO</h1> {/* Adjusted desktop font size */}
-          </div>
-
-          {/* Search Bar & Switch View Button */}
-          <div className="flex items-center gap-1 sm:gap-2 ml-auto sm:ml-0 w-auto sm:w-full sm:max-w-xl"> {/* Adjusted width for search on mobile */}
-            <div className="relative flex-shrink-0 w-32 sm:w-auto sm:flex-grow"> {/* Adjusted width for mobile search */}
+          {/* Second Row (Mobile Only): Search Bar & Switch View Button */}
+          <div className="flex w-full sm:hidden items-center gap-1"> {/* Only visible on mobile */}
+            <div className="relative flex-grow">
               <input
                 type="text"
                 id="searchInput"
                 placeholder="Search IPOs..."
-                className="w-full p-1 pl-7 rounded-lg bg-white bg-opacity-20 text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-white text-xs sm:text-sm"
+                className="w-full p-1 pl-7 rounded-lg bg-white bg-opacity-20 text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-white text-xs"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <svg className="absolute left-1.5 top-1/2 transform -translate-y-1/2 text-white w-3.5 h-3.5 sm:w-4 sm:h-4" width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="absolute left-1.5 top-1/2 transform -translate-y-1/2 text-white w-3.5 h-3.5" width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd"></path>
               </svg>
             </div>
-            {/* Switch to Table/Card View Button - Always in header */}
             <button
               onClick={() => setLayoutMode(layoutMode === 'card' ? 'table' : 'card')}
               className="flex-shrink-0 bg-white text-blue-700 font-bold py-0.5 px-1.5 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out text-xs whitespace-nowrap"
@@ -646,20 +664,19 @@ const App = () => {
             </button>
           </div>
 
-          {/* Desktop Navigation Buttons (Hidden on Mobile) */}
-          <div className="hidden sm:flex items-center gap-2 ml-4"> {/* Reverted desktop buttons */}
-            <button
-              onClick={() => setShowAboutUsModal(true)}
-              className="bg-white text-blue-700 font-bold py-1.5 px-3 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out text-sm whitespace-nowrap"
-            >
-              About Us
-            </button>
-            <button
-              onClick={() => setShowContactUsModal(true)}
-              className="bg-white text-blue-700 font-bold py-1.5 px-3 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out text-sm whitespace-nowrap"
-            >
-              Contact Us
-            </button>
+          {/* Desktop Search Bar (Hidden on Mobile) */}
+          <div className="hidden sm:flex relative flex-grow max-w-xl mx-4"> {/* Centered on desktop */}
+            <input
+              type="text"
+              id="searchInputDesktop"
+              placeholder="Search IPOs..."
+              className="w-full p-2 pl-9 rounded-lg bg-white bg-opacity-20 text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-white text-sm"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <svg className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-white w-5 h-5" width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd"></path>
+            </svg>
           </div>
         </div>
       </header>
@@ -698,7 +715,9 @@ const App = () => {
       )}
 
       {/* New Fixed Sort and Total IPOs Bar */}
-      <div className="fixed top-[52px] sm:top-[76px] w-full z-40 bg-gray-200 p-1.5 sm:p-2 shadow-md flex flex-col sm:flex-row justify-between items-center text-gray-700 text-xs sm:text-sm"> {/* Adjusted top for desktop header height */}
+      {/* Adjusted top for mobile header (approx 52px for logo/title + 36px for search/switch = 88px) */}
+      {/* Adjusted top for desktop header (approx 76px for full header) */}
+      <div className="fixed top-[88px] sm:top-[76px] w-full z-40 bg-gray-200 p-1.5 sm:p-2 shadow-md flex flex-col sm:flex-row justify-between items-center text-gray-700 text-xs sm:text-sm">
         <div className="mb-1 sm:mb-0 text-center sm:text-left text-xs sm:text-sm">
           Total IPOs: {totalIposCount} (Current: {currentIpos.length} | Mainboard: {currentMainboardCount} | SME: {currentSmeCount})
         </div>
@@ -720,7 +739,7 @@ const App = () => {
 
       {/* Main Content - Adjusted padding top to account for fixed header and new bar */}
       {/* Dynamic padding-bottom based on footer state */}
-      <main className={`container mx-auto p-4 flex-grow overflow-y-auto pt-[88px] sm:pt-[100px] ${isFooterExpanded ? 'pb-[180px] sm:pb-28' : 'pb-[40px] sm:pb-28'}`}> {/* Adjusted pt for desktop: 76px header + 24px sort bar = 100px */}
+      <main className={`container mx-auto p-4 flex-grow overflow-y-auto pt-[112px] sm:pt-[100px] ${isFooterExpanded ? 'pb-[180px] sm:pb-28' : 'pb-[40px] sm:pb-28'}`}> {/* pt for mobile: 88px (header) + 24px (sort bar) = 112px */}
         {/* Conditional Rendering for Layout */}
         {layoutMode === 'card' ? (
           <section id="ipo-list" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -820,7 +839,7 @@ const App = () => {
                 className="absolute top-2 right-2 text-gray-600 hover:text-black text-xl font-bold"
               >
                 X
-              </button>
+            </button>
             </div>
           </div>
         )}
@@ -1001,7 +1020,7 @@ const App = () => {
         id="broker-section"
         className={`fixed bottom-0 left-0 w-full bg-white border-t shadow z-40 transition-all duration-1000 ease-in-out
           ${isFooterExpanded ? 'h-auto py-2 sm:py-2 px-2 sm:px-4' : 'h-[40px] sm:h-[40px] py-1 px-2 sm:px-4 overflow-hidden'}`}
-        onClick={() => setIsFooterExpanded(!isFooterExpanded)} // Toggle on click anywhere in footer
+        onClick={() => setIsFooterExpanded(!isFooterExpanded)} {/* Toggle on click anywhere in footer */}
       >
         <div
           className="flex justify-center items-center h-full sm:h-auto cursor-pointer"
@@ -1065,27 +1084,30 @@ const DescriptionWithToggle = ({ description }) => {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const textRef = useRef(null);
   const [isTruncated, setIsTruncated] = useState(false);
+  const MAX_LINES = 3; // Set desired max lines for truncation
 
   useEffect(() => {
-    // To accurately check for truncation, we need to render the text
-    // and then compare its scrollHeight to its clientHeight.
-    // This effect runs after render.
     if (textRef.current) {
-      // Temporarily remove line-clamp to get true scrollHeight if not showing full
-      const originalLineClamp = textRef.current.style.webkitLineClamp;
-      if (!showFullDescription) {
-        textRef.current.style.webkitLineClamp = 'unset'; // Remove clamp temporarily
-      }
-      
-      const isContentTruncated = textRef.current.scrollHeight > textRef.current.clientHeight + 5; // Add a small buffer
-      
-      // Restore original line-clamp if it was removed
-      if (!showFullDescription) {
-        textRef.current.style.webkitLineClamp = originalLineClamp;
-      }
-      setIsTruncated(isContentTruncated);
+      // Create a temporary element to measure the text without line-clamping
+      const tempDiv = document.createElement('div');
+      tempDiv.style.visibility = 'hidden';
+      tempDiv.style.position = 'absolute';
+      tempDiv.style.width = textRef.current.offsetWidth + 'px'; // Same width as the actual element
+      tempDiv.style.fontSize = window.getComputedStyle(textRef.current).fontSize;
+      tempDiv.style.lineHeight = window.getComputedStyle(textRef.current).lineHeight;
+      tempDiv.textContent = description;
+      document.body.appendChild(tempDiv);
+
+      // Calculate approximate height for MAX_LINES
+      const lineHeight = parseFloat(window.getComputedStyle(textRef.current).lineHeight);
+      const maxHeight = lineHeight * MAX_LINES;
+
+      // Check if the actual content height exceeds the max lines height
+      setIsTruncated(tempDiv.scrollHeight > maxHeight + 5); // Add a small buffer
+
+      document.body.removeChild(tempDiv);
     }
-  }, [description, showFullDescription]); // Re-run if description or toggle state changes
+  }, [description, showFullDescription]); // Re-check if description or toggle state changes
 
   if (!description) {
     return <p className="text-gray-600 text-sm">N/A</p>;
@@ -1095,7 +1117,7 @@ const DescriptionWithToggle = ({ description }) => {
     <div>
       <p
         ref={textRef}
-        className={`text-gray-600 text-sm ${!showFullDescription && isTruncated ? 'line-clamp-3' : ''}`}
+        className={`text-gray-600 text-sm ${!showFullDescription && isTruncated ? `line-clamp-${MAX_LINES}` : ''}`}
       >
         {description}
       </p>

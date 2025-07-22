@@ -326,7 +326,7 @@ const App = () => {
     let currentMainboard = 0;
     let currentSme = 0;
     current.forEach(ipo => {
-      if (ipo.Type && ipo.Type.toLowerCase().includes("mainboard")) {
+      if (ipo.Type && ipo.Type.toLowerCase().includes("main board")) {
         currentMainboard++;
       } else if (ipo.Type && ipo.Type.toLowerCase().includes("sme")) {
         currentSme++;
@@ -600,9 +600,9 @@ const App = () => {
       )}
 
       {/* Header */}
-      <header className="fixed top-0 w-full z-50 bg-gradient-to-r from-blue-600 to-purple-700 text-white p-2 sm:p-3 shadow-lg rounded-b-xl">
+      <header className="fixed top-0 w-full z-50 bg-gradient-to-r from-blue-600 to-purple-700 text-white p-2 sm:p-4 shadow-lg rounded-b-xl"> {/* Adjusted desktop padding */}
         <div className="container mx-auto flex justify-between items-center">
-          {/* Hamburger Icon for Sidebar (Mobile Only) */}
+          {/* Mobile: Hamburger Icon */}
           <div className="sm:hidden">
             <button
               onClick={() => setIsSidebarOpen(true)}
@@ -614,15 +614,16 @@ const App = () => {
             </button>
           </div>
 
-          <div className="flex items-center flex-grow justify-center sm:justify-start"> {/* Centered on mobile, left on desktop */}
-            <svg className="w-6 h-6 sm:w-8 sm:h-8 mr-1 sm:mr-2 text-white" fill="currentColor" viewBox="0 0 24 24">
+          {/* Logo and Title */}
+          <div className="flex items-center flex-grow sm:flex-grow-0 justify-center sm:justify-start"> {/* Centered on mobile, left on desktop */}
+            <svg className="w-6 h-6 sm:w-10 sm:h-10 mr-1 sm:mr-3 text-white" fill="currentColor" viewBox="0 0 24 24"> {/* Adjusted desktop icon size */}
                 <path d="M12 2L2 22h20L12 2zm0 17l-5-10h10l-5 10z"/>
             </svg>
-            <h1 className="text-xl sm:text-2xl font-bold whitespace-nowrap">Track My IPO</h1> {/* Added whitespace-nowrap */}
+            <h1 className="text-xl sm:text-3xl font-bold whitespace-nowrap">Track My IPO</h1> {/* Adjusted desktop font size */}
           </div>
 
-          {/* Search Bar & Switch View Button (Mobile & Desktop) */}
-          <div className="flex items-center gap-1 ml-auto sm:ml-0"> {/* ml-auto to push search/button to right on mobile */}
+          {/* Search Bar & Switch View Button */}
+          <div className="flex items-center gap-1 sm:gap-2 ml-auto sm:ml-0 w-auto sm:w-full sm:max-w-xl"> {/* Adjusted width for search on mobile */}
             <div className="relative flex-shrink-0 w-32 sm:w-auto sm:flex-grow"> {/* Adjusted width for mobile search */}
               <input
                 type="text"
@@ -633,15 +634,31 @@ const App = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
               <svg className="absolute left-1.5 top-1/2 transform -translate-y-1/2 text-white w-3.5 h-3.5 sm:w-4 sm:h-4" width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M8 4a4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd"></path>
+                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd"></path>
               </svg>
             </div>
-            {/* Switch to Table/Card View Button - Now always in header */}
+            {/* Switch to Table/Card View Button - Always in header */}
             <button
               onClick={() => setLayoutMode(layoutMode === 'card' ? 'table' : 'card')}
               className="flex-shrink-0 bg-white text-blue-700 font-bold py-0.5 px-1.5 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out text-xs whitespace-nowrap"
             >
               Switch to {layoutMode === 'card' ? 'Table' : 'Card'} View
+            </button>
+          </div>
+
+          {/* Desktop Navigation Buttons (Hidden on Mobile) */}
+          <div className="hidden sm:flex items-center gap-2 ml-4"> {/* Reverted desktop buttons */}
+            <button
+              onClick={() => setShowAboutUsModal(true)}
+              className="bg-white text-blue-700 font-bold py-1.5 px-3 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out text-sm whitespace-nowrap"
+            >
+              About Us
+            </button>
+            <button
+              onClick={() => setShowContactUsModal(true)}
+              className="bg-white text-blue-700 font-bold py-1.5 px-3 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out text-sm whitespace-nowrap"
+            >
+              Contact Us
             </button>
           </div>
         </div>
@@ -656,14 +673,14 @@ const App = () => {
           </button>
         </div>
         <nav className="p-4 space-y-2">
-          {/* About Us Button */}
+          {/* About Us Button (Mobile Sidebar) */}
           <button
             onClick={() => { setShowAboutUsModal(true); setIsSidebarOpen(false); }}
             className="block w-full text-left py-2 px-3 rounded-md hover:bg-blue-700 transition-colors"
           >
             About Us
           </button>
-          {/* Contact Us Button */}
+          {/* Contact Us Button (Mobile Sidebar) */}
           <button
             onClick={() => { setShowContactUsModal(true); setIsSidebarOpen(false); }}
             className="block w-full text-left py-2 px-3 rounded-md hover:bg-blue-700 transition-colors"
@@ -681,7 +698,7 @@ const App = () => {
       )}
 
       {/* New Fixed Sort and Total IPOs Bar */}
-      <div className="fixed top-[52px] sm:top-[64px] w-full z-40 bg-gray-200 p-1.5 sm:p-2 shadow-md flex flex-col sm:flex-row justify-between items-center text-gray-700 text-xs sm:text-sm">
+      <div className="fixed top-[52px] sm:top-[76px] w-full z-40 bg-gray-200 p-1.5 sm:p-2 shadow-md flex flex-col sm:flex-row justify-between items-center text-gray-700 text-xs sm:text-sm"> {/* Adjusted top for desktop header height */}
         <div className="mb-1 sm:mb-0 text-center sm:text-left text-xs sm:text-sm">
           Total IPOs: {totalIposCount} (Current: {currentIpos.length} | Mainboard: {currentMainboardCount} | SME: {currentSmeCount})
         </div>
@@ -703,7 +720,7 @@ const App = () => {
 
       {/* Main Content - Adjusted padding top to account for fixed header and new bar */}
       {/* Dynamic padding-bottom based on footer state */}
-      <main className={`container mx-auto p-4 flex-grow overflow-y-auto pt-[88px] sm:pt-[96px] ${isFooterExpanded ? 'pb-[180px] sm:pb-28' : 'pb-[40px] sm:pb-28'}`}>
+      <main className={`container mx-auto p-4 flex-grow overflow-y-auto pt-[88px] sm:pt-[100px] ${isFooterExpanded ? 'pb-[180px] sm:pb-28' : 'pb-[40px] sm:pb-28'}`}> {/* Adjusted pt for desktop: 76px header + 24px sort bar = 100px */}
         {/* Conditional Rendering for Layout */}
         {layoutMode === 'card' ? (
           <section id="ipo-list" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -985,6 +1002,7 @@ const App = () => {
         className={`fixed bottom-0 left-0 w-full bg-white border-t shadow z-40 transition-all duration-1000 ease-in-out
           ${isFooterExpanded ? 'h-auto py-2 sm:py-2 px-2 sm:px-4' : 'h-[40px] sm:h-[40px] py-1 px-2 sm:px-4 overflow-hidden'}`}
         onClick={() => setIsFooterExpanded(!isFooterExpanded)} 
+        {/* Toggle on click anywhere in footer */}
       >
         <div
           className="flex justify-center items-center h-full sm:h-auto cursor-pointer"
@@ -1050,13 +1068,25 @@ const DescriptionWithToggle = ({ description }) => {
   const [isTruncated, setIsTruncated] = useState(false);
 
   useEffect(() => {
+    // To accurately check for truncation, we need to render the text
+    // and then compare its scrollHeight to its clientHeight.
+    // This effect runs after render.
     if (textRef.current) {
-      // Check if the content overflows its container
-      // A common way to check for truncation is comparing scrollHeight and clientHeight
-      // Add a small buffer to account for line-height differences
-      setIsTruncated(textRef.current.scrollHeight > textRef.current.clientHeight + 5);
+      // Temporarily remove line-clamp to get true scrollHeight if not showing full
+      const originalLineClamp = textRef.current.style.webkitLineClamp;
+      if (!showFullDescription) {
+        textRef.current.style.webkitLineClamp = 'unset'; // Remove clamp temporarily
+      }
+      
+      const isContentTruncated = textRef.current.scrollHeight > textRef.current.clientHeight + 5; // Add a small buffer
+      
+      // Restore original line-clamp if it was removed
+      if (!showFullDescription) {
+        textRef.current.style.webkitLineClamp = originalLineClamp;
+      }
+      setIsTruncated(isContentTruncated);
     }
-  }, [description, showFullDescription]); // Re-check if description or toggle state changes
+  }, [description, showFullDescription]); // Re-run if description or toggle state changes
 
   if (!description) {
     return <p className="text-gray-600 text-sm">N/A</p>;
@@ -1066,7 +1096,7 @@ const DescriptionWithToggle = ({ description }) => {
     <div>
       <p
         ref={textRef}
-        className={`text-gray-600 text-sm ${!showFullDescription ? 'line-clamp-3' : ''}`}
+        className={`text-gray-600 text-sm ${!showFullDescription && isTruncated ? 'line-clamp-3' : ''}`}
       >
         {description}
       </p>

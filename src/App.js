@@ -993,7 +993,7 @@ const App = () => {
         id="broker-section"
         className={`fixed bottom-0 left-0 w-full bg-white border-t shadow z-40 transition-all duration-300 ease-in-out
           ${isFooterExpanded ? 'h-auto py-2 sm:py-2 px-2 sm:px-4' : 'h-[40px] sm:h-[40px] py-1 px-2 sm:px-4 overflow-hidden'}`}
-        onClick={() => setIsFooterExpanded(!isFooterExpanded)} {/* Toggle on click anywhere in footer */}
+        onClick={() => setIsFooterExpanded(!isFooterExpanded)} 
       >
         <div
           className="flex justify-center items-center h-full sm:h-auto cursor-pointer"

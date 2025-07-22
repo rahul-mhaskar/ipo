@@ -68,7 +68,7 @@ const App = () => {
       }
       footerTimeoutRef.current = setTimeout(() => {
         setIsFooterExpanded(false);
-      }, 3000); // Collapse after 3 seconds
+      }, 4000); // Collapse after 4 seconds
     };
 
     // Function to start bounce animation
@@ -431,7 +431,7 @@ const App = () => {
     } else if (cleanStatus.includes("listed")) {
       return <span className="text-indigo-700 font-semibold">📈 {status}</span>;
     } else {
-      return <span className="text-gray-500 font-semibold">📅 {status}</span>;
+      return <span className="text-gray-500 font-semibold">� {status}</span>;
     }
   };
 
@@ -522,7 +522,7 @@ const App = () => {
                       <td key={key} className="px-3 py-2 border-b border-gray-100 whitespace-nowrap">
                         {key === "Status"
                           ? getStatusContent(ipo[key], ipo)
-                          : ipo[key] || 'N/A'} //* Display N/A for empty cells */}
+                          : ipo[key] || 'N/A'} // Display N/A for empty cells */}
                       </td>
                     ))}
                   </tr>
@@ -602,10 +602,10 @@ const App = () => {
       {/* Header */}
       <header className="fixed top-0 w-full z-50 bg-gradient-to-r from-blue-600 to-purple-700 text-white p-2 sm:p-4 shadow-lg rounded-b-xl">
         <div className="container mx-auto flex flex-col sm:flex-row justify-between items-center">
-          {/* Top Row: Mobile Hamburger, Logo, Title (Mobile) / Desktop Logo, Title, Search, Buttons (Desktop) */}
-          <div className="flex w-full sm:w-auto justify-between items-center mb-2 sm:mb-0">
-            {/* Mobile: Hamburger Icon */}
-            <div className="sm:hidden">
+          {/* Mobile Top Row: Hamburger, Centered Logo/Title */}
+          <div className="flex w-full sm:w-auto justify-between items-center mb-2 sm:mb-0 relative"> {/* Added relative for absolute positioning of hamburger */}
+            {/* Mobile: Hamburger Icon (Absolute positioning to not affect centering) */}
+            <div className="sm:hidden absolute left-0 top-1/2 transform -translate-y-1/2">
               <button
                 onClick={() => setIsSidebarOpen(true)}
                 className="p-2 -ml-2 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-white"
@@ -616,16 +616,42 @@ const App = () => {
               </button>
             </div>
 
-            {/* Logo and Title */}
-            <div className="flex items-center flex-grow sm:flex-grow-0 justify-center sm:justify-start">
+            {/* Logo and Title (Centered on Mobile) */}
+            <div className="flex items-center flex-grow justify-center sm:justify-start"> {/* Centered on mobile, left on desktop */}
               <svg className="w-6 h-6 sm:w-10 sm:h-10 mr-1 sm:mr-3 text-white" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M12 2L2 22h20L12 2zm0 17l-5-10h10l-5 10z"/>
               </svg>
               <h1 className="text-xl sm:text-3xl font-bold whitespace-nowrap">Track My IPO</h1>
             </div>
+          </div>
 
-            {/* Desktop Navigation Buttons (Hidden on Mobile) */}
-            <div className="hidden sm:flex items-center gap-2 ml-auto"> {/* ml-auto to push to right */}
+          {/* Desktop Layout: Switch View, Search, About Us, Contact Us */}
+          <div className="hidden sm:flex items-center gap-2 w-full"> {/* Desktop layout */}
+            {/* Switch to Table/Card View Button - Left of search */}
+            <button
+              onClick={() => setLayoutMode(layoutMode === 'card' ? 'table' : 'card')}
+              className="bg-white text-blue-700 font-bold py-1.5 px-3 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out text-sm whitespace-nowrap flex-shrink-0"
+            >
+              Switch to {layoutMode === 'card' ? 'Table' : 'Card'} View
+            </button>
+
+            {/* Desktop Search Bar - Central and Wide */}
+            <div className="relative flex-grow max-w-xl mx-4"> {/* Central and Wide */}
+              <input
+                type="text"
+                id="searchInputDesktop"
+                placeholder="Search IPOs..."
+                className="w-full p-2 pl-9 rounded-lg bg-white bg-opacity-20 text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-white text-sm"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <svg className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-white w-5 h-5" width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd"></path>
+              </svg>
+            </div>
+
+            {/* Desktop Navigation Buttons - Right of search */}
+            <div className="flex items-center gap-2 flex-shrink-0">
               <button
                 onClick={() => setShowAboutUsModal(true)}
                 className="bg-white text-blue-700 font-bold py-1.5 px-3 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out text-sm whitespace-nowrap"
@@ -641,7 +667,7 @@ const App = () => {
             </div>
           </div>
 
-          {/* Second Row (Mobile Only): Search Bar & Switch View Button */}
+          {/* Mobile Second Row: Search Bar & Switch View Button */}
           <div className="flex w-full sm:hidden items-center gap-1"> {/* Only visible on mobile */}
             <div className="relative flex-grow">
               <input
@@ -662,21 +688,6 @@ const App = () => {
             >
               Switch to {layoutMode === 'card' ? 'Table' : 'Card'} View
             </button>
-          </div>
-
-          {/* Desktop Search Bar (Hidden on Mobile) */}
-          <div className="hidden sm:flex relative flex-grow max-w-xl mx-4"> {/* Centered on desktop */}
-            <input
-              type="text"
-              id="searchInputDesktop"
-              placeholder="Search IPOs..."
-              className="w-full p-2 pl-9 rounded-lg bg-white bg-opacity-20 text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-white text-sm"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <svg className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-white w-5 h-5" width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd"></path>
-            </svg>
           </div>
         </div>
       </header>
@@ -1020,7 +1031,7 @@ const App = () => {
         id="broker-section"
         className={`fixed bottom-0 left-0 w-full bg-white border-t shadow z-40 transition-all duration-1000 ease-in-out
           ${isFooterExpanded ? 'h-auto py-2 sm:py-2 px-2 sm:px-4' : 'h-[40px] sm:h-[40px] py-1 px-2 sm:px-4 overflow-hidden'}`}
-        onClick={() => setIsFooterExpanded(!isFooterExpanded)} //* Toggle on click anywhere in footer */}
+        onClick={() => setIsFooterExpanded(!isFooterExpanded)} // Toggle on click anywhere in footer */}
       >
         <div
           className="flex justify-center items-center h-full sm:h-auto cursor-pointer"
@@ -1084,30 +1095,33 @@ const DescriptionWithToggle = ({ description }) => {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const textRef = useRef(null);
   const [isTruncated, setIsTruncated] = useState(false);
-  const MAX_LINES = 3; // Set desired max lines for truncation
+  const MAX_LINES = 2; // Set desired max lines for truncation to 2
 
   useEffect(() => {
     if (textRef.current) {
-      // Create a temporary element to measure the text without line-clamping
-      const tempDiv = document.createElement('div');
-      tempDiv.style.visibility = 'hidden';
-      tempDiv.style.position = 'absolute';
-      tempDiv.style.width = textRef.current.offsetWidth + 'px'; // Same width as the actual element
-      tempDiv.style.fontSize = window.getComputedStyle(textRef.current).fontSize;
-      tempDiv.style.lineHeight = window.getComputedStyle(textRef.current).lineHeight;
-      tempDiv.textContent = description;
-      document.body.appendChild(tempDiv);
-
+      // To accurately check for truncation, we need to render the text
+      // and then compare its scrollHeight to its clientHeight.
+      // This effect runs after render.
+      // Temporarily remove line-clamp to get true scrollHeight if not showing full
+      const originalLineClamp = textRef.current.style.webkitLineClamp;
+      if (!showFullDescription) {
+        textRef.current.style.webkitLineClamp = 'unset'; // Remove clamp temporarily
+      }
+      
       // Calculate approximate height for MAX_LINES
       const lineHeight = parseFloat(window.getComputedStyle(textRef.current).lineHeight);
       const maxHeight = lineHeight * MAX_LINES;
 
       // Check if the actual content height exceeds the max lines height
-      setIsTruncated(tempDiv.scrollHeight > maxHeight + 5); // Add a small buffer
-
-      document.body.removeChild(tempDiv);
+      const isContentTruncated = textRef.current.scrollHeight > maxHeight + 5; // Add a small buffer
+      
+      // Restore original line-clamp if it was removed
+      if (!showFullDescription) {
+        textRef.current.style.webkitLineClamp = originalLineClamp;
+      }
+      setIsTruncated(isContentTruncated);
     }
-  }, [description, showFullDescription]); // Re-check if description or toggle state changes
+  }, [description, showFullDescription]); // Re-run if description or toggle state changes
 
   if (!description) {
     return <p className="text-gray-600 text-sm">N/A</p>;
@@ -1135,3 +1149,4 @@ const DescriptionWithToggle = ({ description }) => {
 
 
 export default App;
+�

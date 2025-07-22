@@ -542,7 +542,7 @@ const App = () => {
                 type="text"
                 id="searchInput"
                 placeholder="Search IPOs..."
-                className="w-full p-1 pl-7 rounded-lg bg-white bg-opacity-20 text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-white text-xs sm:text-sm" {/* Smaller padding/font on mobile */}
+                className="w-full p-1 pl-7 rounded-lg bg-white bg-opacity-20 text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-white text-xs sm:text-sm"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />

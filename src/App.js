@@ -1149,4 +1149,3 @@ const DescriptionWithToggle = ({ description }) => {
 
 
 export default App;
-�

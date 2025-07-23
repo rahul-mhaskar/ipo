@@ -31,7 +31,7 @@ const App = () => {
 
   // States for About Us and Contact Us modals
   const [showAboutUsModal, setShowAboutUsModal] = useState(false);
-  const [showContactUsModal, setShowContactUsToModal] = useState(false);
+  const [showContactUsModal, setShowContactUsModal] = useState(false);
   const [contactForm, setContactForm] = useState({
     name: '',
     contactNumber: '',
@@ -522,7 +522,7 @@ const App = () => {
                       <td key={key} className="px-3 py-2 border-b border-gray-100 whitespace-nowrap">
                         {key === "Status"
                           ? getStatusContent(ipo[key], ipo)
-                          : ipo[key] || 'N/A'} {/* Display N/A for empty cells */}
+                          : ipo[key] || 'N/A'} //* Display N/A for empty cells */}
                       </td>
                     ))}
                   </tr>
@@ -542,7 +542,7 @@ const App = () => {
     setContactForm(prevState => ({ ...prevState, [name]: value }));
   };
 
-  const handleContactFormToSubmit = (e) => {
+  const handleContactFormSubmit = (e) => {
     e.preventDefault();
     // Basic validation
     if (!contactForm.name || !contactForm.contactNumber || !contactForm.locality || !contactForm.email) {
@@ -570,7 +570,7 @@ const App = () => {
     setTimeout(() => {
       setContactForm({ name: '', contactNumber: '', locality: '', email: '' });
       setContactFormMessage('');
-      setShowContactUsToModal(false); // Close modal after submission
+      setShowContactUsModal(false); // Close modal after submission
     }, 5000);
   };
 
@@ -602,7 +602,7 @@ const App = () => {
       {/* Header */}
       <header className="fixed top-0 w-full z-50 bg-gradient-to-r from-blue-600 to-purple-700 text-white p-2 sm:p-4 shadow-lg rounded-b-xl">
         <div className="container mx-auto flex flex-col sm:flex-row justify-between items-center">
-          {/* Top Row (Mobile) / Full Header (Desktop) */}
+          {/* Top Row: Mobile Hamburger, Logo, Title (Mobile) / Desktop Logo, Title, Search, Buttons (Desktop) */}
           <div className="flex w-full sm:w-auto justify-between items-center mb-2 sm:mb-0">
             {/* Mobile: Hamburger Icon */}
             <div className="sm:hidden">
@@ -624,27 +624,8 @@ const App = () => {
               <h1 className="text-xl sm:text-3xl font-bold whitespace-nowrap">Track My IPO</h1>
             </div>
 
-            {/* Desktop Search Bar & Buttons (Hidden on Mobile) */}
-            <div className="hidden sm:flex items-center flex-grow justify-end gap-2"> {/* desktop layout */}
-              <div className="relative flex-grow max-w-xl mx-4">
-                <input
-                  type="text"
-                  id="searchInputDesktop"
-                  placeholder="Search IPOs..."
-                  className="w-full p-2 pl-9 rounded-lg bg-white bg-opacity-20 text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-white text-sm"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <svg className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-white w-5 h-5" width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd"></path>
-                </svg>
-              </div>
-              <button
-                onClick={() => setLayoutMode(layoutMode === 'card' ? 'table' : 'card')}
-                className="bg-white text-blue-700 font-bold py-1.5 px-3 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out text-sm whitespace-nowrap"
-              >
-                Switch to {layoutMode === 'card' ? 'Table' : 'Card'} View
-              </button>
+            {/* Desktop Navigation Buttons (Hidden on Mobile) */}
+            <div className="hidden sm:flex items-center gap-2 ml-auto"> {/* ml-auto to push to right */}
               <button
                 onClick={() => setShowAboutUsModal(true)}
                 className="bg-white text-blue-700 font-bold py-1.5 px-3 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out text-sm whitespace-nowrap"
@@ -652,7 +633,7 @@ const App = () => {
                 About Us
               </button>
               <button
-                onClick={() => setShowContactUsToModal(true)}
+                onClick={() => setShowContactUsModal(true)}
                 className="bg-white text-blue-700 font-bold py-1.5 px-3 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out text-sm whitespace-nowrap"
               >
                 Contact Us
@@ -660,12 +641,12 @@ const App = () => {
             </div>
           </div>
 
-          {/* Mobile Second Row: Search Bar & Switch View Button */}
-          <div className="flex w-full sm:hidden items-center gap-1 mt-2"> {/* Only visible on mobile, added mt-2 */}
+          {/* Second Row (Mobile Only): Search Bar & Switch View Button */}
+          <div className="flex w-full sm:hidden items-center gap-1"> {/* Only visible on mobile */}
             <div className="relative flex-grow">
               <input
                 type="text"
-                id="searchInputMobile"
+                id="searchInput"
                 placeholder="Search IPOs..."
                 className="w-full p-1 pl-7 rounded-lg bg-white bg-opacity-20 text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-white text-xs"
                 value={searchTerm}
@@ -681,6 +662,21 @@ const App = () => {
             >
               Switch to {layoutMode === 'card' ? 'Table' : 'Card'} View
             </button>
+          </div>
+
+          {/* Desktop Search Bar (Hidden on Mobile) */}
+          <div className="hidden sm:flex relative flex-grow max-w-xl mx-4"> {/* Centered on desktop */}
+            <input
+              type="text"
+              id="searchInputDesktop"
+              placeholder="Search IPOs..."
+              className="w-full p-2 pl-9 rounded-lg bg-white bg-opacity-20 text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-white text-sm"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <svg className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-white w-5 h-5" width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd"></path>
+            </svg>
           </div>
         </div>
       </header>
@@ -703,7 +699,7 @@ const App = () => {
           </button>
           {/* Contact Us Button (Mobile Sidebar) */}
           <button
-            onClick={() => { setShowContactUsToModal(true); setIsSidebarOpen(false); }}
+            onClick={() => { setShowContactUsModal(true); setIsSidebarOpen(false); }}
             className="block w-full text-left py-2 px-3 rounded-md hover:bg-blue-700 transition-colors"
           >
             Contact Us
@@ -939,17 +935,17 @@ const App = () => {
       )}
 
       {/* Contact Us Modal */}
-      {showContactUsToModal && (
+      {showContactUsModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full relative">
             <button
               className="absolute top-2 right-2 text-gray-600 hover:text-black text-lg"
-              onClick={() => { setShowContactUsToModal(false); setContactFormMessage(''); }}
+              onClick={() => { setShowContactUsModal(false); setContactFormMessage(''); }}
             >
               ×
             </button>
             <h3 className="text-2xl font-bold text-gray-800 mb-4 text-center">Contact Us</h3>
-            <form onSubmit={handleContactFormToSubmit} className="space-y-4">
+            <form onSubmit={handleContactFormSubmit} className="space-y-4">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name <span className="text-red-500">*</span></label>
                 <input
@@ -1024,7 +1020,7 @@ const App = () => {
         id="broker-section"
         className={`fixed bottom-0 left-0 w-full bg-white border-t shadow z-40 transition-all duration-1000 ease-in-out
           ${isFooterExpanded ? 'h-auto py-2 sm:py-2 px-2 sm:px-4' : 'h-[40px] sm:h-[40px] py-1 px-2 sm:px-4 overflow-hidden'}`}
-        onClick={() => setIsFooterExpanded(!isFooterExpanded)} 
+        onClick={() => setIsFooterExpanded(!isFooterExpanded)} //* Toggle on click anywhere in footer */}
       >
         <div
           className="flex justify-center items-center h-full sm:h-auto cursor-pointer"
@@ -1092,37 +1088,26 @@ const DescriptionWithToggle = ({ description }) => {
 
   useEffect(() => {
     if (textRef.current) {
-      const element = textRef.current;
-      
-      // Temporarily remove line-clamp to get the true scrollHeight
-      // Store original styles to revert later if necessary (though React re-renders usually handle this)
-      const originalWebkitLineClamp = element.style.webkitLineClamp;
-      const originalDisplay = element.style.display;
-      const originalOverflow = element.style.overflow;
+      // Create a temporary element to measure the text without line-clamping
+      const tempDiv = document.createElement('div');
+      tempDiv.style.visibility = 'hidden';
+      tempDiv.style.position = 'absolute';
+      tempDiv.style.width = textRef.current.offsetWidth + 'px'; // Same width as the actual element
+      tempDiv.style.fontSize = window.getComputedStyle(textRef.current).fontSize;
+      tempDiv.style.lineHeight = window.getComputedStyle(textRef.current).lineHeight;
+      tempDiv.textContent = description;
+      document.body.appendChild(tempDiv);
 
-      element.style.webkitLineClamp = 'unset';
-      element.style.display = 'block'; // Ensure it behaves like a block for height calculation
-      element.style.overflow = 'visible';
+      // Calculate approximate height for MAX_LINES
+      const lineHeight = parseFloat(window.getComputedStyle(textRef.current).lineHeight);
+      const maxHeight = lineHeight * MAX_LINES;
 
-      const fullHeight = element.scrollHeight;
+      // Check if the actual content height exceeds the max lines height
+      setIsTruncated(tempDiv.scrollHeight > maxHeight + 5); // Add a small buffer
 
-      // Re-apply line-clamp to get the height when clamped
-      element.style.webkitLineClamp = `${MAX_LINES}`;
-      element.style.display = '-webkit-box'; // Required for line-clamp
-      element.style.overflow = 'hidden';
-
-      const clampedHeight = element.clientHeight;
-
-      // Determine if truncation is needed by comparing full height to clamped height
-      // Add a small buffer (e.g., 2-5 pixels) to account for floating point inaccuracies or minor line-height differences
-      setIsTruncated(fullHeight > clampedHeight + 5); 
-
-      // Restore original styles (though React's re-render will often overwrite these anyway)
-      element.style.webkitLineClamp = originalWebkitLineClamp;
-      element.style.display = originalDisplay;
-      element.style.overflow = originalOverflow;
+      document.body.removeChild(tempDiv);
     }
-  }, [description]); // Re-evaluate truncation only when description content changes
+  }, [description, showFullDescription]); // Re-check if description or toggle state changes
 
   if (!description) {
     return <p className="text-gray-600 text-sm">N/A</p>;

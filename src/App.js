@@ -522,7 +522,7 @@ const App = () => {
                       <td key={key} className="px-3 py-2 border-b border-gray-100 whitespace-nowrap">
                         {key === "Status"
                           ? getStatusContent(ipo[key], ipo)
-                          : ipo[key] || 'N/A'} {/* Display N/A for empty cells */}
+                          : ipo[key] || 'N/A'} 
                       </td>
                     ))}
                   </tr>
@@ -1024,8 +1024,7 @@ const App = () => {
         id="broker-section"
         className={`fixed bottom-0 left-0 w-full bg-white border-t shadow z-40 transition-all duration-1000 ease-in-out
           ${isFooterExpanded ? 'h-auto py-2 sm:py-2 px-2 sm:px-4' : 'h-[40px] sm:h-[40px] py-1 px-2 sm:px-4 overflow-hidden'}`}
-        onClick={() => setIsFooterExpanded(!isFooterExpanded)} {/* Toggle on click anywhere in footer */}
-      >
+        onClick={() => setIsFooterExpanded(!isFooterExpanded)}      >
         <div
           className="flex justify-center items-center h-full sm:h-auto cursor-pointer"
         >

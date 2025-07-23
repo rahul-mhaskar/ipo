@@ -5,7 +5,7 @@ import Papa from "papaparse";
 // It MUST be a "Published to web" CSV link from Google Sheets, NOT an editor link.
 // Example of a CORRECT format:
 // "https://docs.google.com/sheets/d/e/2PACX-1vYOUR_SHEET_ID_HERE/pub?gid=0&single=true&output=csv"
-const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlsMurbsXT2UBQ2ADbyoiQtLUTznQU4vNzw3nS02_StSrFV9pkrnXOrNAjV_Yj-Byc_zw72z_rM0tQ/pub?output=csv";
+const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSHEORz3aArzaDTOWYW6FlC1avk1TYKAhDKfyALmqg2HMDWiD60N6WG2wgMlPkvLWC9d7YzwplhCStb/pub?output=csv";
 
 
 const App = () => {
@@ -31,7 +31,7 @@ const App = () => {
 
   // States for About Us and Contact Us modals
   const [showAboutUsModal, setShowAboutUsModal] = useState(false);
-  const [showContactUsModal, setShowContactUsModal] = useState(false); // Corrected state setter name
+  const [showContactUsModal, setShowContactUsModal] = useState(false);
   const [contactForm, setContactForm] = useState({
     name: '',
     contactNumber: '',
@@ -326,7 +326,7 @@ const App = () => {
     let currentMainboard = 0;
     let currentSme = 0;
     current.forEach(ipo => {
-      if (ipo.Type && ipo.Type.toLowerCase().includes("mainboard")) {
+      if (ipo.Type && ipo.Type.toLowerCase().includes("main board")) {
         currentMainboard++;
       } else if (ipo.Type && ipo.Type.toLowerCase().includes("sme")) {
         currentSme++;
@@ -429,7 +429,7 @@ const App = () => {
         </span>
       );
     } else if (cleanStatus.includes("listed")) {
-      return <span className="text-indigo-700 font-semibold">📈 {status}</span>;
+      return <span className="text-indigo-700 font-semibold">� {status}</span>;
     } else {
       return <span className="text-gray-500 font-semibold">📅 {status}</span>;
     }
@@ -602,7 +602,7 @@ const App = () => {
       {/* Header */}
       <header className="fixed top-0 w-full z-50 bg-gradient-to-r from-blue-600 to-purple-700 text-white p-2 sm:p-4 shadow-lg rounded-b-xl">
         <div className="container mx-auto flex flex-col sm:flex-row justify-between items-center">
-          {/* Top Row (Mobile) / Full Header (Desktop) */}
+          {/* Mobile Top Row: Hamburger, Logo, Title */}
           <div className="flex w-full sm:w-auto justify-between items-center mb-2 sm:mb-0">
             {/* Mobile: Hamburger Icon */}
             <div className="sm:hidden">
@@ -616,48 +616,53 @@ const App = () => {
               </button>
             </div>
 
-            {/* Logo and Title */}
-            <div className="flex items-center flex-grow sm:flex-grow-0 justify-center sm:justify-start">
+            {/* Logo and Title - Centered on mobile, left on desktop */}
+            <div className="flex items-center flex-grow sm:flex-grow-0 justify-center sm:justify-start"> {/* Removed justify-center for mobile to allow centering via flex-grow on parent */}
               <svg className="w-6 h-6 sm:w-10 sm:h-10 mr-1 sm:mr-3 text-white" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M12 2L2 22h20L12 2zm0 17l-5-10h10l-5 10z"/>
               </svg>
               <h1 className="text-xl sm:text-3xl font-bold whitespace-nowrap">Track My IPO</h1>
             </div>
 
-            {/* Desktop Search Bar & Buttons (Hidden on Mobile) */}
-            <div className="hidden sm:flex items-center flex-grow justify-end gap-2"> {/* desktop layout */}
-              <div className="relative flex-grow max-w-xl mx-4">
-                <input
-                  type="text"
-                  id="searchInputDesktop"
-                  placeholder="Search IPOs..."
-                  className="w-full p-2 pl-9 rounded-lg bg-white bg-opacity-20 text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-white text-sm"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <svg className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-white w-5 h-5" width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd"></path>
-                </svg>
-              </div>
-              <button
-                onClick={() => setLayoutMode(layoutMode === 'card' ? 'table' : 'card')}
-                className="bg-white text-blue-700 font-bold py-1.5 px-3 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out text-sm whitespace-nowrap"
-              >
-                Switch to {layoutMode === 'card' ? 'Table' : 'Card'} View
-              </button>
-              <button
-                onClick={() => setShowAboutUsModal(true)}
-                className="bg-white text-blue-700 font-bold py-1.5 px-3 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out text-sm whitespace-nowrap"
-              >
-                About Us
-              </button>
-              <button
-                onClick={() => setShowContactUsModal(true)} // Corrected to setShowContactUsModal
-                className="bg-white text-blue-700 font-bold py-1.5 px-3 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out text-sm whitespace-nowrap"
-              >
-                Contact Us
-              </button>
+            {/* Placeholder for desktop buttons to maintain spacing on mobile if needed, but hidden */}
+            <div className="hidden sm:flex w-auto items-center gap-2">
+              {/* These buttons are now moved to the rightmost div for desktop */}
             </div>
+          </div>
+
+          {/* Desktop Search Bar & Buttons (Hidden on Mobile) */}
+          <div className="hidden sm:flex items-center flex-grow justify-end gap-2"> {/* desktop layout */}
+            <div className="relative flex-grow max-w-sm"> {/* Adjusted max-w for search bar */}
+              <input
+                type="text"
+                id="searchInputDesktop"
+                placeholder="Search IPOs..."
+                className="w-full p-4 pl-9 rounded-lg bg-white bg-opacity-20 text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-white text-sm" // Increased vertical padding
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <svg className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-white w-5 h-5" width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd"></path>
+              </svg>
+            </div>
+            <button
+              onClick={() => setLayoutMode(layoutMode === 'card' ? 'table' : 'card')}
+              className="bg-white text-blue-700 font-bold py-1.5 px-3 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out text-sm whitespace-nowrap"
+            >
+              Switch to {layoutMode === 'card' ? 'Table' : 'Card'} View
+            </button>
+            <button
+              onClick={() => setShowAboutUsModal(true)}
+              className="bg-white text-blue-700 font-bold py-1.5 px-3 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out text-sm whitespace-nowrap"
+            >
+              About Us
+            </button>
+            <button
+              onClick={() => setShowContactUsModal(true)}
+              className="bg-white text-blue-700 font-bold py-1.5 px-3 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out text-sm whitespace-nowrap"
+            >
+              Contact Us
+            </button>
           </div>
 
           {/* Mobile Second Row: Search Bar & Switch View Button */}
@@ -703,7 +708,7 @@ const App = () => {
           </button>
           {/* Contact Us Button (Mobile Sidebar) */}
           <button
-            onClick={() => { setShowContactUsModal(true); setIsSidebarOpen(false); }} // Corrected to setShowContactUsModal
+            onClick={() => { setShowContactUsModal(true); setIsSidebarOpen(false); }}
             className="block w-full text-left py-2 px-3 rounded-md hover:bg-blue-700 transition-colors"
           >
             Contact Us
@@ -1022,9 +1027,10 @@ const App = () => {
       {/* Collapsible Footer */}
       <footer
         id="broker-section"
-        className={`fixed bottom-0 left-0 w-full bg-white border-t shadow z-40 transition-all duration-1000 ease-in-out
+        className={`fixed bottom-0 left-0 w-full bg-white border-t shadow z-40 transition-all duration-[2000ms] ease-in-out
           ${isFooterExpanded ? 'h-auto py-2 sm:py-2 px-2 sm:px-4' : 'h-[40px] sm:h-[40px] py-1 px-2 sm:px-4 overflow-hidden'}`}
-        onClick={() => setIsFooterExpanded(!isFooterExpanded)}      >
+        onClick={() => setIsFooterExpanded(!isFooterExpanded)}
+      >
         <div
           className="flex justify-center items-center h-full sm:h-auto cursor-pointer"
         >
@@ -1096,8 +1102,6 @@ const DescriptionWithToggle = ({ description }) => {
       const element = textRef.current;
       
       // Temporarily remove line-clamp styles to get the full scrollHeight
-      // This is crucial because clientHeight will be limited by line-clamp,
-      // making it seem like it's not truncated even if content is hidden.
       const originalWebkitLineClamp = element.style.webkitLineClamp;
       const originalDisplay = element.style.display;
       const originalOverflow = element.style.overflow;
@@ -1108,14 +1112,8 @@ const DescriptionWithToggle = ({ description }) => {
 
       const fullHeight = element.scrollHeight; // Get height of full content
 
-      // Re-apply original styles or line-clamp for rendering
-      element.style.webkitLineClamp = originalWebkitLineClamp;
-      element.style.display = originalDisplay;
-      element.style.overflow = originalOverflow;
-
       // Check if the full content height is greater than the height when clamped to MAX_LINES
       // We'll use a temporary element to measure the height when clamped to MAX_LINES
-      // This is more reliable than relying on `clientHeight` of the actual element if it's already clamped.
       const tempClampedDiv = document.createElement('div');
       tempClampedDiv.style.visibility = 'hidden';
       tempClampedDiv.style.position = 'absolute';
@@ -1134,6 +1132,11 @@ const DescriptionWithToggle = ({ description }) => {
 
       // If full height is significantly greater than clamped height, it's truncated
       setIsTruncated(fullHeight > clampedHeight + 5); // Add a small buffer
+
+      // Restore original styles for rendering
+      element.style.webkitLineClamp = originalWebkitLineClamp;
+      element.style.display = originalDisplay;
+      element.style.overflow = originalOverflow;
     }
   }, [description]); // Only re-run when description changes
 

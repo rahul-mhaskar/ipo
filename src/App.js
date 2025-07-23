@@ -429,7 +429,7 @@ const App = () => {
         </span>
       );
     } else if (cleanStatus.includes("listed")) {
-      return <span className="text-indigo-700 font-semibold">� {status}</span>;
+      return <span className="text-indigo-700 font-semibold">📈 {status}</span>;
     } else {
       return <span className="text-gray-500 font-semibold">📅 {status}</span>;
     }
@@ -617,11 +617,11 @@ const App = () => {
             </div>
 
             {/* Logo and Title - Centered on mobile, left on desktop */}
-            <div className="flex items-center flex-grow sm:flex-grow-0 justify-center sm:justify-start"> {/* Removed justify-center for mobile to allow centering via flex-grow on parent */}
+            <div className="flex items-center flex-grow sm:flex-grow-0 justify-center sm:justify-start">
               <svg className="w-6 h-6 sm:w-10 sm:h-10 mr-1 sm:mr-3 text-white" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M12 2L2 22h20L12 2zm0 17l-5-10h10l-5 10z"/>
               </svg>
-              <h1 className="text-xl sm:text-3xl font-bold whitespace-nowrap">Track My IPO</h1>
+              <h1 className="text-xl sm:text-3xl font-bold whitespace-nowrap text-center flex-grow">Track My IPO</h1> {/* Added text-center and flex-grow for mobile centering */}
             </div>
 
             {/* Placeholder for desktop buttons to maintain spacing on mobile if needed, but hidden */}
@@ -632,12 +632,12 @@ const App = () => {
 
           {/* Desktop Search Bar & Buttons (Hidden on Mobile) */}
           <div className="hidden sm:flex items-center flex-grow justify-end gap-2"> {/* desktop layout */}
-            <div className="relative flex-grow max-w-sm"> {/* Adjusted max-w for search bar */}
+            <div className="relative flex-grow w-[calc(100% + 50%)] max-w-lg"> {/* Adjusted max-w for search bar and added horizontal expansion */}
               <input
                 type="text"
                 id="searchInputDesktop"
                 placeholder="Search IPOs..."
-                className="w-full p-4 pl-9 rounded-lg bg-white bg-opacity-20 text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-white text-sm" // Increased vertical padding
+                className="w-full py-1.5 pl-9 pr-3 rounded-lg bg-white bg-opacity-20 text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-white text-sm" // Adjusted vertical padding
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />

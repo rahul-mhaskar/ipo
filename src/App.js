@@ -428,8 +428,6 @@ const App = () => {
           ✅ {status}
         </span>
       );
-    } else if (cleanStatus.includes("listed")) {
-      return <span className="text-indigo-700 font-semibold">📈 {status}</span>;
     } else {
       return <span className="text-gray-500 font-semibold">📅 {status}</span>;
     }
@@ -632,7 +630,7 @@ const App = () => {
 
           {/* Desktop Search Bar & Buttons (Hidden on Mobile) */}
           <div className="hidden sm:flex items-center flex-grow justify-end gap-2"> {/* desktop layout */}
-            <div className="relative flex-grow w-[calc(100% + 50%)] max-w-lg"> {/* Adjusted max-w for search bar and added horizontal expansion */}
+            <div className="relative flex-grow max-w-xl"> {/* Adjusted max-w for search bar and added horizontal expansion */}
               <input
                 type="text"
                 id="searchInputDesktop"
@@ -1027,7 +1025,7 @@ const App = () => {
       {/* Collapsible Footer */}
       <footer
         id="broker-section"
-        className={`fixed bottom-0 left-0 w-full bg-white border-t shadow z-40 transition-all duration-[2000ms] ease-in-out
+        className={`fixed bottom-0 left-0 w-full bg-white border-t shadow z-40 transition-all duration-500 ease-in-out
           ${isFooterExpanded ? 'h-auto py-2 sm:py-2 px-2 sm:px-4' : 'h-[40px] sm:h-[40px] py-1 px-2 sm:px-4 overflow-hidden'}`}
         onClick={() => setIsFooterExpanded(!isFooterExpanded)}
       >
@@ -1096,49 +1094,35 @@ const DescriptionWithToggle = ({ description }) => {
   const MAX_LINES = 3; // Set desired max lines for truncation
 
   useEffect(() => {
-    // This effect determines if the text is truncated and needs a "Show More" button.
-    // It runs after the component renders and whenever the description changes.
     if (textRef.current) {
       const element = textRef.current;
       
       // Temporarily remove line-clamp styles to get the full scrollHeight
-      const originalWebkitLineClamp = element.style.webkitLineClamp;
-      const originalDisplay = element.style.display;
-      const originalOverflow = element.style.overflow;
+      element.style.webkitLineClamp = 'unset';
+      element.style.display = 'block';
+      element.style.overflow = 'visible';
 
-      element.style.webkitLineClamp = 'unset'; // Remove line-clamp
-      element.style.display = 'block'; // Ensure it's a block for accurate height
-      element.style.overflow = 'visible'; // Allow content to overflow
+      const fullHeight = element.scrollHeight;
+      const computedLineHeight = parseFloat(window.getComputedStyle(element).lineHeight);
+      const thresholdHeight = computedLineHeight * MAX_LINES + 2; // Add a small buffer for safety
 
-      const fullHeight = element.scrollHeight; // Get height of full content
+      // Check if the full content height exceeds the height of MAX_LINES
+      setIsTruncated(fullHeight > thresholdHeight);
 
-      // Check if the full content height is greater than the height when clamped to MAX_LINES
-      // We'll use a temporary element to measure the height when clamped to MAX_LINES
-      const tempClampedDiv = document.createElement('div');
-      tempClampedDiv.style.visibility = 'hidden';
-      tempClampedDiv.style.position = 'absolute';
-      tempClampedDiv.style.width = element.offsetWidth + 'px'; // Match width
-      tempClampedDiv.style.fontSize = window.getComputedStyle(element).fontSize;
-      tempClampedDiv.style.lineHeight = window.getComputedStyle(element).lineHeight;
-      tempClampedDiv.style.webkitBoxOrient = 'vertical';
-      tempClampedDiv.style.display = '-webkit-box';
-      tempClampedDiv.style.overflow = 'hidden';
-      tempClampedDiv.style.webkitLineClamp = `${MAX_LINES}`;
-      tempClampedDiv.textContent = description;
-      document.body.appendChild(tempClampedDiv);
-
-      const clampedHeight = tempClampedDiv.clientHeight;
-      document.body.removeChild(tempClampedDiv);
-
-      // If full height is significantly greater than clamped height, it's truncated
-      setIsTruncated(fullHeight > clampedHeight + 5); // Add a small buffer
-
-      // Restore original styles for rendering
-      element.style.webkitLineClamp = originalWebkitLineClamp;
-      element.style.display = originalDisplay;
-      element.style.overflow = originalOverflow;
+      // Re-apply line-clamp if not showing full description and it's truncated
+      if (!showFullDescription && fullHeight > thresholdHeight) {
+        element.style.webkitBoxOrient = 'vertical';
+        element.style.display = '-webkit-box';
+        element.style.overflow = 'hidden';
+        element.style.webkitLineClamp = `${MAX_LINES}`;
+      } else {
+        // Ensure no line-clamp if showing full description or not truncated
+        element.style.webkitLineClamp = 'unset';
+        element.style.display = 'block';
+        element.style.overflow = 'visible';
+      }
     }
-  }, [description]); // Only re-run when description changes
+  }, [description, showFullDescription]); // Depend on description and showFullDescription
 
   if (!description) {
     return <p className="text-gray-600 text-sm">N/A</p>;
@@ -1146,10 +1130,7 @@ const DescriptionWithToggle = ({ description }) => {
 
   return (
     <div>
-      <p
-        ref={textRef}
-        className={`text-gray-600 text-sm ${!showFullDescription && isTruncated ? `line-clamp-${MAX_LINES}` : ''}`}
-      >
+      <p ref={textRef} className="text-gray-600 text-sm">
         {description}
       </p>
       {isTruncated && ( // Only show button if text is actually truncated

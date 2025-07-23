@@ -344,6 +344,57 @@ const App = () => {
     };
   }, [ipoData, sortConfig, searchTerm]);
 
+  // This is used for card view and for determining if any IPOs match search
+  const displayedIpoData = useMemo(() => {
+    let filteredItems = [...ipoData];
+    if (searchTerm) {
+      filteredItems = filteredItems.filter(ipo =>
+        ipo.Name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ipo.Status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ipo.Type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ipo.GMP?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ipo.Price?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ipo.Description?.toLowerCase().includes(searchTerm.toLowerCase()) // Include description in search
+      );
+    }
+    // Apply sorting for card view as well
+    if (sortConfig.key) {
+      filteredItems.sort((a, b) => {
+        const aVal = a[sortConfig.key] || "";
+        const bVal = b[sortConfig.key] || "";
+        const numericKeys = ["GMP", "Price", "IPO Size", "Lot"];
+        const dateKeys = ["Open", "Close", "BoA Dt", "Listing"];
+
+        if (numericKeys.includes(sortConfig.key)) {
+          const numA = parseFloat(String(aVal).replace(/[^0-9.-]+/g, ""));
+          const numB = parseFloat(String(bVal).replace(/[^0-9.-]+/g, ""));
+          if (sortConfig.direction === "asc") {
+            return numA - numB;
+          }
+          return numB - numA;
+        } else if (dateKeys.includes(sortConfig.key)) {
+          const dateA = parseDateForSort(aVal);
+          const dateB = parseDateForSort(bVal);
+
+          if (dateA === null && dateB === null) return 0;
+          if (dateA === null) return sortConfig.direction === "asc" ? 1 : -1;
+          if (dateB === null) return sortConfig.direction === "asc" ? -1 : 1;
+
+          if (sortConfig.direction === "asc") {
+            return dateA.getTime() - dateB.getTime();
+          }
+          return dateB.getTime() - dateA.getTime();
+        }
+        // Default to string comparison for other keys
+        if (sortConfig.direction === "asc") {
+          return String(aVal).localeCompare(String(bVal), undefined, { numeric: true });
+        }
+        return String(bVal).localeCompare(String(aVal), undefined, { numeric: true });
+      });
+    }
+    return filteredItems;
+  }, [ipoData, sortConfig, searchTerm]);
+
 
   const handleApplyClick = () => {
     setShowBrokerPopup(true);
@@ -695,7 +746,7 @@ const App = () => {
 
       {/* Main Content - Adjusted padding top to account for fixed header and new bar */}
       {/* Dynamic padding-bottom based on footer state */}
-      <main className={`container mx-auto p-4 flex-grow overflow-y-auto pt-[120px] sm:pt-[100px] ${isFooterExpanded ? 'pb-[180px] sm:pb-28' : 'pb-[40px] sm:pb-28'}`}> {/* Increased pt for mobile to 120px */}
+      <main className={`container mx-auto p-4 flex-grow overflow-y-auto pt-[112px] sm:pt-[100px] ${isFooterExpanded ? 'pb-[180px] sm:pb-28' : 'pb-[40px] sm:pb-28'}`}> {/* pt for mobile: 88px (header) + 24px (sort bar) = 112px */}
         {/* Conditional Rendering for Layout */}
         {layoutMode === 'card' ? (
           <section id="ipo-list" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

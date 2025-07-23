@@ -601,7 +601,7 @@ const App = () => {
       <header className="fixed top-0 w-full z-50 bg-gradient-to-r from-blue-600 to-purple-700 text-white p-2 sm:p-4 shadow-lg rounded-b-xl">
         <div className="container mx-auto flex flex-col sm:flex-row justify-between items-center">
           {/* Mobile Top Row: Hamburger, Logo, Title */}
-          <div className="flex w-full sm:w-auto justify-between items-center mb-2 sm:mb-0">
+          <div className="flex w-full sm:w-auto justify-between items-center sm:mb-0">
             {/* Mobile: Hamburger Icon */}
             <div className="sm:hidden">
               <button
@@ -664,7 +664,7 @@ const App = () => {
           </div>
 
           {/* Mobile Second Row: Search Bar & Switch View Button */}
-          <div className="flex w-full sm:hidden items-center gap-1 mt-2"> {/* Only visible on mobile, added mt-2 */}
+          <div className="flex w-full sm:hidden items-center gap-1 -mt-1 mb-1"> {/* Only visible on mobile, reduced negative margin-top and added margin-bottom */}
             <div className="relative flex-grow">
               <input
                 type="text"
@@ -1025,7 +1025,7 @@ const App = () => {
       {/* Collapsible Footer */}
       <footer
         id="broker-section"
-        className={`fixed bottom-0 left-0 w-full bg-white border-t shadow z-40 transition-all duration-500 ease-in-out
+        className={`fixed bottom-0 left-0 w-full bg-white border-t shadow z-40 transition-all duration-[2000ms] ease-in-out
           ${isFooterExpanded ? 'h-auto py-2 sm:py-2 px-2 sm:px-4' : 'h-[40px] sm:h-[40px] py-1 px-2 sm:px-4 overflow-hidden'}`}
         onClick={() => setIsFooterExpanded(!isFooterExpanded)}
       >
@@ -1098,6 +1098,10 @@ const DescriptionWithToggle = ({ description }) => {
       const element = textRef.current;
       
       // Temporarily remove line-clamp styles to get the full scrollHeight
+      const originalWebkitLineClamp = element.style.webkitLineClamp;
+      const originalDisplay = element.style.display;
+      const originalOverflow = element.style.overflow;
+
       element.style.webkitLineClamp = 'unset';
       element.style.display = 'block';
       element.style.overflow = 'visible';

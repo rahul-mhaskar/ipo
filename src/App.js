@@ -1,12 +1,18 @@
 import React, { useEffect, useState, useMemo, useRef } from "react";
 import Papa from "papaparse";
 
+// Import your website logo from the src folder
+// IMPORTANT: Replace 'websiteLogo.png' with your actual logo file name and path within src/
+import websiteLogo from './Track My IPO - Logo.png'; // Example: if your logo is directly in src/
+
 // IMPORTANT: Replace with your actual Google Sheet CSV URL.
 // It MUST be a "Published to web" CSV link from Google Sheets, NOT an editor link.
 // Example of a CORRECT format:
 // "https://docs.google.com/sheets/d/e/2PACX-1vYOUR_SHEET_ID_HERE/pub?gid=0&single=true&output=csv"
-const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlsMurbsXT2UBQ2ADbyoiQtLUTznQU4vNzw3nS02_StSrFV9pkrnXOrNAjV_Yj-Byc_zw72z_rM0tQ/pub?output=csv";
+const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSHEORz3aArzaDTOWYW6FlC1avk1TYKAhDKfyALmqg2HMDWiD60N6WG2wgMlPkvLWC9d7YzwplhCStb/pub?output=csv";
 
+// Use the imported logo for the main website logo
+const WEBSITE_LOGO_URL = websiteLogo; // Now uses the imported local asset
 
 const App = () => {
   const [ipoData, setIpoData] = useState([]);
@@ -434,6 +440,7 @@ const App = () => {
           ✅ {status}
         </span>
       );
+    );
     } else {
       return <span className="text-gray-500 font-semibold">📅 {status}</span>;
     }
@@ -633,9 +640,13 @@ const App = () => {
 
             {/* Logo and Title - Centered on mobile, left on desktop */}
             <div className="flex items-center flex-grow sm:flex-grow-0 justify-center sm:justify-start">
-              <svg className="w-6 h-6 sm:w-10 sm:h-10 mr-1 sm:mr-3 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2L2 22h20L12 2zm0 17l-5-10h10l-5 10z"/>
-              </svg>
+              {/* Website Logo */}
+              <img
+                src={WEBSITE_LOGO_URL}
+                alt="Website Logo"
+                className="w-6 h-6 sm:w-10 sm:h-10 mr-1 sm:mr-3 object-contain"
+                onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/40x40/000000/FFFFFF?text=Logo"; }} // Fallback logo
+              />
               <h1 className="text-xl sm:text-3xl font-bold whitespace-nowrap text-center flex-grow">Track My IPO</h1> {/* Added text-center and flex-grow for mobile centering */}
             </div>
 
@@ -877,7 +888,7 @@ const App = () => {
               <p className="text-2xl font-bold text-gray-800 mb-4">{message}</p>
               <button
                 onClick={() => setShowMessageBox(false)}
-                className="absolute top-2 right-2 text-gray-600 hover:text-black text-xl font-bold"
+                className="absolute top-2 right-2 text-gray-600 hover:text-black text-xl"
               >
                 X
             </button>

@@ -440,7 +440,6 @@ const App = () => {
           ✅ {status}
         </span>
       );
-    );
     } else {
       return <span className="text-gray-500 font-semibold">📅 {status}</span>;
     }

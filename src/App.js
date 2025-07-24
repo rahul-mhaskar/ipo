@@ -719,7 +719,7 @@ const App = () => {
 
       {/* Main Content - Adjusted padding top to account for fixed header and new bar */}
       {/* Dynamic padding-bottom based on footer state */}
-      <main className={`container mx-auto p-4 flex-grow overflow-y-auto pt-[120px] sm:pt-[100px] ${isFooterExpanded ? 'pb-[180px] sm:pb-28' : 'pb-[40px] sm:pb-28'}`}> {/* Increased pt for mobile to 120px */}
+      <main className={`container mx-auto p-4 flex-grow overflow-y-auto pt-[112px] sm:pt-[100px] ${isFooterExpanded ? 'pb-[180px] sm:pb-28' : 'pb-[40px] sm:pb-28'}`}> {/* pt for mobile: 88px (header) + 24px (sort bar) = 112px */}
         {/* Conditional Rendering for Layout */}
         {layoutMode === 'card' ? (
           <section id="ipo-list" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

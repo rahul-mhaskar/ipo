@@ -645,7 +645,7 @@ const App = () => {
                 alt="Website Logo"
                // className="w-8 h-8 sm:w-12 sm:h-12 mr-2 sm:mr-4 object-contain"
 
-                className="w-16 h-16 sm:w-15 sm:h-15 mr-2 sm:mr-4 object-contain"
+                className="w-12 h-12 sm:w-20 sm:h-20 mr-2 sm:mr-4 object-contain"
 
                 onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/40x40/000000/FFFFFF?text=Logo"; }} // Fallback logo
               />

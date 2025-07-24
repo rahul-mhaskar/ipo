@@ -795,10 +795,7 @@ const App = () => {
                   </div>
                 </div>
               ))
-            ) : (
-              // Only show this message if data is loaded and empty, not while loading
-              !isLoading && <p className="text-center text-gray-600 col-span-full">No IPOs found matching your criteria.</p>
-            )}
+            ) : ( !isLoading && <p className="text-center text-gray-600 col-span-full">No IPOs found matching your criteria.</p> )}
           </section>
         ) : (
           <div>

@@ -5,8 +5,7 @@ import Papa from "papaparse";
 // It MUST be a "Published to web" CSV link from Google Sheets, NOT an editor link.
 // Example of a CORRECT format:
 // "https://docs.google.com/sheets/d/e/2PACX-1vYOUR_SHEET_ID_HERE/pub?gid=0&single=true&output=csv"
-const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlsMurbsXT2UBQ2ADbyoiQtLUTznQU4vNzw3nS02_StSrFV9pkrnXOrNAjV_Yj-Byc_zw72z_rM0tQ/pub?output=csv";
-
+const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSHEORz3aArzaDTOWYW6FlC1avk1TYKAhDKfyALmqg2HMDWiD60N6WG2wgMlPkvLWC9d7YzwplhCStb/pub?output=csv";
 
 
 const App = () => {
@@ -48,6 +47,9 @@ const App = () => {
 
   // State for sidebar (hamburger menu)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // New state for triggering data refresh
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // Google Analytics Page View Tracking
   useEffect(() => {
@@ -184,6 +186,9 @@ const App = () => {
 
     // Function to simulate loading progress
     const startProgressSimulation = () => {
+      // Clear any existing interval to prevent multiple intervals running
+      if (progressInterval) clearInterval(progressInterval);
+      
       progressInterval = setInterval(() => {
         // Simulate progress up to 95% before actual data load completes
         currentProgress = Math.min(currentProgress + Math.random() * 10, 95);
@@ -239,7 +244,7 @@ const App = () => {
     return () => {
       clearInterval(progressInterval); // Clear interval if component unmounts
     };
-  }, []); // Run only once on component mount
+  }, [refreshTrigger]); // Run on mount AND when refreshTrigger changes
 
   const sortBy = (key) => {
     let direction = "asc";
@@ -345,57 +350,6 @@ const App = () => {
     };
   }, [ipoData, sortConfig, searchTerm]);
 
-  // This is used for card view and for determining if any IPOs match search
-  const displayedIpoData = useMemo(() => {
-    let filteredItems = [...ipoData];
-    if (searchTerm) {
-      filteredItems = filteredItems.filter(ipo =>
-        ipo.Name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ipo.Status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ipo.Type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ipo.GMP?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ipo.Price?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ipo.Description?.toLowerCase().includes(searchTerm.toLowerCase()) // Include description in search
-      );
-    }
-    // Apply sorting for card view as well
-    if (sortConfig.key) {
-      filteredItems.sort((a, b) => {
-        const aVal = a[sortConfig.key] || "";
-        const bVal = b[sortConfig.key] || "";
-        const numericKeys = ["GMP", "Price", "IPO Size", "Lot"];
-        const dateKeys = ["Open", "Close", "BoA Dt", "Listing"];
-
-        if (numericKeys.includes(sortConfig.key)) {
-          const numA = parseFloat(String(aVal).replace(/[^0-9.-]+/g, ""));
-          const numB = parseFloat(String(bVal).replace(/[^0-9.-]+/g, ""));
-          if (sortConfig.direction === "asc") {
-            return numA - numB;
-          }
-          return numB - numA;
-        } else if (dateKeys.includes(sortConfig.key)) {
-          const dateA = parseDateForSort(aVal);
-          const dateB = parseDateForSort(bVal);
-
-          if (dateA === null && dateB === null) return 0;
-          if (dateA === null) return sortConfig.direction === "asc" ? 1 : -1;
-          if (dateB === null) return sortConfig.direction === "asc" ? -1 : 1;
-
-          if (sortConfig.direction === "asc") {
-            return dateA.getTime() - dateB.getTime();
-          }
-          return dateB.getTime() - dateA.getTime();
-        }
-        // Default to string comparison for other keys
-        if (sortConfig.direction === "asc") {
-          return String(aVal).localeCompare(String(bVal), undefined, { numeric: true });
-        }
-        return String(bVal).localeCompare(String(aVal), undefined, { numeric: true });
-      });
-    }
-    return filteredItems;
-  }, [ipoData, sortConfig, searchTerm]);
-
 
   const handleApplyClick = () => {
     setShowBrokerPopup(true);
@@ -416,7 +370,7 @@ const App = () => {
     if (cleanStatus.includes("apply")) {
       return (
         <span className="text-blue-600 cursor-pointer hover:underline font-semibold" onClick={handleApplyClick}>
-          🚀 {status}
+          � {status}
         </span>
       );
     } else if (cleanStatus.includes("pre")) {
@@ -645,6 +599,15 @@ const App = () => {
               </svg>
             </div>
             <button
+              onClick={() => {
+                setRefreshTrigger(prev => prev + 1); // Increment to trigger useEffect
+                showMessage("Refreshing IPO data...");
+              }}
+              className="bg-white text-blue-700 font-bold py-1.5 px-3 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out text-sm whitespace-nowrap"
+            >
+              Refresh
+            </button>
+            <button
               onClick={() => setLayoutMode(layoutMode === 'card' ? 'table' : 'card')}
               className="bg-white text-blue-700 font-bold py-1.5 px-3 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out text-sm whitespace-nowrap"
             >
@@ -680,6 +643,15 @@ const App = () => {
               </svg>
             </div>
             <button
+              onClick={() => {
+                setRefreshTrigger(prev => prev + 1); // Increment to trigger useEffect
+                showMessage("Refreshing IPO data...");
+              }}
+              className="flex-shrink-0 bg-white text-blue-700 font-bold py-0.5 px-1.5 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out text-xs whitespace-nowrap"
+            >
+              Refresh
+            </button>
+            <button
               onClick={() => setLayoutMode(layoutMode === 'card' ? 'table' : 'card')}
               className="flex-shrink-0 bg-white text-blue-700 font-bold py-0.5 px-1.5 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out text-xs whitespace-nowrap"
             >
@@ -694,7 +666,7 @@ const App = () => {
         <div className="p-4 flex justify-between items-center border-b border-blue-700">
           <h2 className="text-xl font-bold">Navigation</h2>
           <button onClick={() => setIsSidebarOpen(false)} className="text-white text-2xl">
-            &times;
+            ×
           </button>
         </div>
         <nav className="p-4 space-y-2">
@@ -747,13 +719,19 @@ const App = () => {
 
       {/* Main Content - Adjusted padding top to account for fixed header and new bar */}
       {/* Dynamic padding-bottom based on footer state */}
-      <main className={`container mx-auto p-4 flex-grow overflow-y-auto pt-[112px] sm:pt-[100px] ${isFooterExpanded ? 'pb-[180px] sm:pb-28' : 'pb-[40px] sm:pb-28'}`}> {/* pt for mobile: 88px (header) + 24px (sort bar) = 112px */}
+      <main className={`container mx-auto p-4 flex-grow overflow-y-auto pt-[120px] sm:pt-[100px] ${isFooterExpanded ? 'pb-[180px] sm:pb-28' : 'pb-[40px] sm:pb-28'}`}> {/* Increased pt for mobile to 120px */}
         {/* Conditional Rendering for Layout */}
         {layoutMode === 'card' ? (
           <section id="ipo-list" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Filter displayedIpoData for card view based on search term */}
-            {ipoData.length > 0 && displayedIpoData.length > 0 ? (
-              displayedIpoData.map((ipo, index) => (
+            {ipoData.length > 0 && ipoData.filter(ipo => // Assuming ipoData should be filtered by searchTerm for card view too
+              ipo.Name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              ipo.Status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              ipo.Type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              ipo.GMP?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              ipo.Price?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              ipo.Description?.toLowerCase().includes(searchTerm.toLowerCase())
+            ).map((ipo, index) => (
                 <div key={index} className="card p-6 flex flex-col justify-between relative">
                   {/* IPO Name and Type */}
                   <div className="flex-grow mb-2">
@@ -1053,7 +1031,7 @@ const App = () => {
 
         {/* Content that expands/collapses */}
         <div className={`transition-opacity duration-300 ${isFooterExpanded ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-center sm:justify-between gap-1 sm:gap-2">
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center sm:justify-between gap-1 sm:gap-2">
             {/* WhatsApp Channel Section */}
             <div className="whatsapp-section text-center sm:text-left mb-0.5 sm:mb-1">
               <a

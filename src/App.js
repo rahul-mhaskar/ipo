@@ -45,6 +45,9 @@ const App = () => {
   const footerTimeoutRef = useRef(null); // Ref to store the timeout ID
   const bounceIntervalRef = useRef(null); // Ref for bounce animation interval
 
+  // State for sidebar (hamburger menu)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
   // New state for triggering data refresh
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
@@ -575,6 +578,17 @@ const App = () => {
     }, 5000);
   };
 
+  // Effect to close sidebar if screen size changes to desktop
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 640) { // Tailwind's 'sm' breakpoint
+        setIsSidebarOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
 
   return (
     <div className="min-h-screen bg-gray-100 font-sans flex flex-col">
@@ -771,8 +785,8 @@ const App = () => {
         {/* Conditional Rendering for Layout */}
         {layoutMode === 'card' ? (
           <section id="ipo-list" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Filter displayedIpoData for card view based on search term */}
-            {ipoData.length > 0 && displayedIpoData.length > 0 ? (
+            {/* Display cards if there's data to show, otherwise show a message */}
+            {displayedIpoData.length > 0 ? (
               displayedIpoData.map((ipo, index) => (
                 <div key={index} className="card p-6 flex flex-col justify-between relative">
                   {/* IPO Name and Type */}
@@ -838,8 +852,12 @@ const App = () => {
                 </div>
               ))
             ) : (
-              // Only show this message if data is loaded and empty, not while loading
-              !isLoading && <p className="text-center text-gray-600 col-span-full">No IPOs found matching your criteria.</p>
+              // Show appropriate message if no data or no matching data
+              !isLoading && (
+                <p className="text-center text-gray-600 col-span-full">
+                  {ipoData.length === 0 ? "No IPO data available. Please check the Google Sheet URL." : "No IPOs found matching your criteria."}
+                </p>
+              )
             )}
           </section>
         ) : (
@@ -852,6 +870,9 @@ const App = () => {
             {/* Message if no IPOs found in table view after filtering/categorizing */}
             {ipoData.length > 0 && currentIpos.length === 0 && upcomingIpos.length === 0 && listedIpos.length === 0 && (
               <p className="px-3 py-4 text-center text-gray-600 bg-white rounded-lg shadow-sm">No IPOs found matching your criteria across all categories.</p>
+            )}
+            {ipoData.length === 0 && !isLoading && layoutMode === 'table' && (
+                <p className="px-3 py-4 text-center text-gray-600 bg-white rounded-lg shadow-sm">No IPO data available to display in table view. Please check the Google Sheet URL.</p>
             )}
           </div>
         )}

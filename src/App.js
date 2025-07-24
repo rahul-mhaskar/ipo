@@ -643,7 +643,7 @@ const App = () => {
               <img
                 src={WEBSITE_LOGO_URL}
                 alt="Website Logo"
-                className="w-8 h-8 sm:w-12 sm:h-12 mr-2 sm:mr-4 object-contain" {/* Increased size and margin */}
+                className="w-8 h-8 sm:w-12 sm:h-12 mr-2 sm:mr-4 object-contain"
                 onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/40x40/000000/FFFFFF?text=Logo"; }} // Fallback logo
               />
               <h1 className="text-xl sm:text-3xl font-bold whitespace-nowrap text-center flex-grow">Track My IPO</h1> {/* Added text-center and flex-grow for mobile centering */}

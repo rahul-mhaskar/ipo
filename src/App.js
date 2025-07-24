@@ -370,7 +370,7 @@ const App = () => {
     if (cleanStatus.includes("apply")) {
       return (
         <span className="text-blue-600 cursor-pointer hover:underline font-semibold" onClick={handleApplyClick}>
-          � {status}
+          🚀 {status}
         </span>
       );
     } else if (cleanStatus.includes("pre")) {
@@ -627,8 +627,8 @@ const App = () => {
             </button>
           </div>
 
-          {/* Mobile Second Row: Search Bar & Switch View Button */}
-          <div className="flex w-full sm:hidden items-center gap-1 -mt-1 mb-1"> {/* Only visible on mobile, reduced negative margin-top and added margin-bottom */}
+          {/* Mobile Second Row: Search Bar & Refresh/Switch View Buttons */}
+          <div className="flex w-full sm:hidden items-center gap-1 -mt-1 mb-1"> {/* Reduced negative margin-top and added margin-bottom */}
             <div className="relative flex-grow">
               <input
                 type="text"
@@ -724,14 +724,8 @@ const App = () => {
         {layoutMode === 'card' ? (
           <section id="ipo-list" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Filter displayedIpoData for card view based on search term */}
-            {ipoData.length > 0 && ipoData.filter(ipo => // Assuming ipoData should be filtered by searchTerm for card view too
-              ipo.Name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-              ipo.Status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-              ipo.Type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-              ipo.GMP?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-              ipo.Price?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-              ipo.Description?.toLowerCase().includes(searchTerm.toLowerCase())
-            ).map((ipo, index) => (
+            {ipoData.length > 0 && displayedIpoData.length > 0 ? (
+              displayedIpoData.map((ipo, index) => (
                 <div key={index} className="card p-6 flex flex-col justify-between relative">
                   {/* IPO Name and Type */}
                   <div className="flex-grow mb-2">
@@ -795,7 +789,10 @@ const App = () => {
                   </div>
                 </div>
               ))
-            ) : ( !isLoading && <p className="text-center text-gray-600 col-span-full">No IPOs found matching your criteria.</p> )}
+            ) : (
+              // Only show this message if data is loaded and empty, not while loading
+              !isLoading && <p className="text-center text-gray-600 col-span-full">No IPOs found matching your criteria.</p>
+            )}
           </section>
         ) : (
           <div>
@@ -1028,7 +1025,7 @@ const App = () => {
 
         {/* Content that expands/collapses */}
         <div className={`transition-opacity duration-300 ${isFooterExpanded ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center sm:justify-between gap-1 sm:gap-2">
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-center sm:justify-between gap-1 sm:gap-2">
             {/* WhatsApp Channel Section */}
             <div className="whatsapp-section text-center sm:text-left mb-0.5 sm:mb-1">
               <a

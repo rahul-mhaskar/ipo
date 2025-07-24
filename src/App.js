@@ -639,11 +639,11 @@ const App = () => {
 
             {/* Logo and Title - Centered on mobile, left on desktop */}
             <div className="flex items-center flex-grow sm:flex-grow-0 justify-center sm:justify-start">
-              {/* Website Logo */}
+            {/* Website Logo */}
               <img
                 src={WEBSITE_LOGO_URL}
                 alt="Website Logo"
-                className="w-6 h-6 sm:w-10 sm:h-10 mr-1 sm:mr-3 object-contain"
+                className="w-8 h-8 sm:w-12 sm:h-12 mr-2 sm:mr-4 object-contain" {/* Increased size and margin */}
                 onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/40x40/000000/FFFFFF?text=Logo"; }} // Fallback logo
               />
               <h1 className="text-xl sm:text-3xl font-bold whitespace-nowrap text-center flex-grow">Track My IPO</h1> {/* Added text-center and flex-grow for mobile centering */}

@@ -45,9 +45,6 @@ const App = () => {
   const footerTimeoutRef = useRef(null); // Ref to store the timeout ID
   const bounceIntervalRef = useRef(null); // Ref for bounce animation interval
 
-  // State for sidebar (hamburger menu)
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
   // New state for triggering data refresh
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
@@ -348,6 +345,57 @@ const App = () => {
       currentMainboardCount: currentMainboard,
       currentSmeCount: currentSme
     };
+  }, [ipoData, sortConfig, searchTerm]);
+
+  // This is used for card view and for determining if any IPOs match search
+  const displayedIpoData = useMemo(() => {
+    let filteredItems = [...ipoData];
+    if (searchTerm) {
+      filteredItems = filteredItems.filter(ipo =>
+        ipo.Name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ipo.Status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ipo.Type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ipo.GMP?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ipo.Price?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ipo.Description?.toLowerCase().includes(searchTerm.toLowerCase()) // Include description in search
+      );
+    }
+    // Apply sorting for card view as well
+    if (sortConfig.key) {
+      filteredItems.sort((a, b) => {
+        const aVal = a[sortConfig.key] || "";
+        const bVal = b[sortConfig.key] || "";
+        const numericKeys = ["GMP", "Price", "IPO Size", "Lot"];
+        const dateKeys = ["Open", "Close", "BoA Dt", "Listing"];
+
+        if (numericKeys.includes(sortConfig.key)) {
+          const numA = parseFloat(String(aVal).replace(/[^0-9.-]+/g, ""));
+          const numB = parseFloat(String(bVal).replace(/[^0-9.-]+/g, ""));
+          if (sortConfig.direction === "asc") {
+            return numA - numB;
+          }
+          return numB - numA;
+        } else if (dateKeys.includes(sortConfig.key)) {
+          const dateA = parseDateForSort(aVal);
+          const dateB = parseDateForSort(bVal);
+
+          if (dateA === null && dateB === null) return 0;
+          if (dateA === null) return sortConfig.direction === "asc" ? 1 : -1;
+          if (dateB === null) return sortConfig.direction === "asc" ? -1 : 1;
+
+          if (sortConfig.direction === "asc") {
+            return dateA.getTime() - dateB.getTime();
+          }
+          return dateB.getTime() - dateA.getTime();
+        }
+        // Default to string comparison for other keys
+        if (sortConfig.direction === "asc") {
+          return String(aVal).localeCompare(String(bVal), undefined, { numeric: true });
+        }
+        return String(bVal).localeCompare(String(aVal), undefined, { numeric: true });
+      });
+    }
+    return filteredItems;
   }, [ipoData, sortConfig, searchTerm]);
 
 

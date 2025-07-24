@@ -9,7 +9,7 @@ import websiteLogo from './Track My IPO - Logo.png'; // Example: if your logo is
 // It MUST be a "Published to web" CSV link from Google Sheets, NOT an editor link.
 // Example of a CORRECT format:
 // "https://docs.google.com/sheets/d/e/2PACX-1vYOUR_SHEET_ID_HERE/pub?gid=0&single=true&output=csv"
-const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSHEORz3aArzaDTOWYW6FlC1avk1TYKAhDKfyALmqg2HMDWiD60N6WG2wgMlPkvLWC9d7YzwplhCStb/pub?output=csv";
+const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlsMurbsXT2UBQ2ADbyoiQtLUTznQU4vNzw3nS02_StSrFV9pkrnXOrNAjV_Yj-Byc_zw72z_rM0tQ/pub?output=csv";
 
 // Use the imported logo for the main website logo
 const WEBSITE_LOGO_URL = websiteLogo; // Now uses the imported local asset
@@ -645,7 +645,7 @@ const App = () => {
                 alt="Website Logo"
                // className="w-8 h-8 sm:w-12 sm:h-12 mr-2 sm:mr-4 object-contain"
 
-                className="w-12 h-12 sm:w-20 sm:h-20 mr-2 sm:mr-4 object-contain"
+                className="w-12 h-12 sm:w-12 sm:h-12 mr-2 sm:mr-4 object-contain"
 
                 onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/40x40/000000/FFFFFF?text=Logo"; }} // Fallback logo
               />

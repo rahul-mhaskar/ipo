@@ -661,15 +661,6 @@ const App = () => {
               </svg>
             </div>
             <button
-              onClick={() => {
-                setRefreshTrigger(prev => prev + 1); // Increment to trigger useEffect
-                showMessage("Refreshing IPO data...");
-              }}
-              className="bg-white text-blue-700 font-bold py-1.5 px-3 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out text-sm whitespace-nowrap"
-            >
-              Refresh
-            </button>
-            <button
               onClick={() => setLayoutMode(layoutMode === 'card' ? 'table' : 'card')}
               className="bg-white text-blue-700 font-bold py-1.5 px-3 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out text-sm whitespace-nowrap"
             >
@@ -689,8 +680,8 @@ const App = () => {
             </button>
           </div>
 
-          {/* Mobile Second Row: Search Bar & Refresh/Switch View Buttons */}
-          <div className="flex w-full sm:hidden items-center gap-1 -mt-1 mb-1"> {/* Reduced negative margin-top and added margin-bottom */}
+          {/* Mobile Second Row: Search Bar & Switch View Button */}
+          <div className="flex w-full sm:hidden items-center gap-1 -mt-1 mb-1"> {/* Only visible on mobile, reduced negative margin-top and added margin-bottom */}
             <div className="relative flex-grow">
               <input
                 type="text"
@@ -704,15 +695,6 @@ const App = () => {
                 <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd"></path>
               </svg>
             </div>
-            <button
-              onClick={() => {
-                setRefreshTrigger(prev => prev + 1); // Increment to trigger useEffect
-                showMessage("Refreshing IPO data...");
-              }}
-              className="flex-shrink-0 bg-white text-blue-700 font-bold py-0.5 px-1.5 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out text-xs whitespace-nowrap"
-            >
-              Refresh
-            </button>
             <button
               onClick={() => setLayoutMode(layoutMode === 'card' ? 'table' : 'card')}
               className="flex-shrink-0 bg-white text-blue-700 font-bold py-0.5 px-1.5 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out text-xs whitespace-nowrap"
@@ -764,6 +746,16 @@ const App = () => {
           Total IPOs: {totalIposCount} (Current: {currentIpos.length} | Mainboard: {currentMainboardCount} | SME: {currentSmeCount})
         </div>
         <div className="flex gap-1 sm:gap-2">
+          {/* Refresh button moved here */}
+          <button
+            onClick={() => {
+              setRefreshTrigger(prev => prev + 1); // Increment to trigger useEffect
+              showMessage("Refreshing IPO data...");
+            }}
+            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-0.5 px-2 rounded-lg transition duration-300 ease-in-out text-xs"
+          >
+            Refresh
+          </button>
           <button
             onClick={() => sortBy("Name")}
             className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-0.5 px-2 rounded-lg transition duration-300 ease-in-out text-xs"

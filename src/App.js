@@ -4,6 +4,8 @@ import Papa from "papaparse";
 // Import your website logo from the src folder
 // IMPORTANT: Replace 'websiteLogo.png' with your actual logo file name and path within src/
 import websiteLogo from './Track My IPO - Logo.png'; // Example: if your logo is directly in src/
+
+
 const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlsMurbsXT2UBQ2ADbyoiQtLUTznQU4vNzw3nS02_StSrFV9pkrnXOrNAjV_Yj-Byc_zw72z_rM0tQ/pub?output=csv";
 // Use the imported logo for the main website logo
 const WEBSITE_LOGO_URL = websiteLogo; // Now uses the imported local asset
@@ -637,7 +639,7 @@ const App = () => {
       )}
 
       {/* Header */}
-        <header className="fixed top-0 w-full z-50 bg-gradient-to-r from-blue-600 to-purple-700 text-white p-1 sm:p-2 shadow-lg rounded-b-xl">
+      <header className="fixed top-0 w-full z-50 bg-gradient-to-r from-blue-600 to-purple-700 text-white p-1 sm:p-2 shadow-lg rounded-b-xl">
         <div className="container mx-auto flex flex-col sm:flex-row justify-between items-center">
           {/* Mobile Top Row: Hamburger, Logo, Title */}
           <div className="flex w-full sm:w-auto justify-between items-center sm:mb-0">
@@ -656,13 +658,13 @@ const App = () => {
             {/* Logo and Title - Centered on mobile, left on desktop */}
             <div className="flex items-center flex-grow sm:flex-grow-0 justify-center sm:justify-start">
             {/* Website Logo */}
- <img
-  src={WEBSITE_LOGO_URL}
-  alt="Website Logo"
-  className="w-12 h-12 sm:w-16 sm:h-16 mr-2 sm:mr-4 object-contain" // Reduced size
-  onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/40x40/000000/FFFFFF?text=Logo"; }} // Fallback logo
-/>
-              <h1 className="text-xl sm:text-3xl font-bold whitespace-nowrap text-center flex-grow">Track My IPO</h1> {/* Added text-center and flex-grow for mobile centering */}
+              <img
+                src={WEBSITE_LOGO_URL}
+                alt="Website Logo"
+                className="w-12 h-12 sm:w-16 sm:h-16 mr-2 sm:mr-4 object-contain" // Reduced size
+                onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/40x40/000000/FFFFFF?text=Logo"; }} // Fallback logo
+              />
+              <h1 className="text-lg sm:text-xl font-bold whitespace-nowrap text-center flex-grow">Track My IPO</h1> {/* Reduced font size */}
             </div>
 
             {/* Placeholder for desktop buttons to maintain spacing on mobile if needed, but hidden */}
@@ -765,9 +767,8 @@ const App = () => {
       )}
 
       {/* New Fixed Sort and Total IPOs Bar */}
-      {/* Calculated top for mobile header (64px logo + 2*8px padding = 80px) */}
-      {/* Calculated top for desktop header (96px logo + 2*16px padding = 128px) */}
-       <div className="fixed top-[56px] sm:top-[80px] w-full z-40 bg-gray-200 p-1.5 sm:p-2 shadow-md flex flex-col sm:flex-row justify-between items-center text-gray-700 text-xs sm:text-sm">
+      {/* Adjusted top based on new header height */}
+      <div className="fixed top-[76px] sm:top-[80px] w-full z-40 bg-gray-200 p-1.5 sm:p-2 shadow-md flex flex-col sm:flex-row justify-between items-center text-gray-700 text-xs sm:text-sm">
         <div className="mb-1 sm:mb-0 text-center sm:text-left text-xs sm:text-sm">
           Total IPOs: {totalIposCount} (Current: {currentIpos.length} | Mainboard: {currentMainboardCount} | SME: {currentSmeCount})
         </div>
@@ -778,20 +779,20 @@ const App = () => {
               setRefreshTrigger(prev => prev + 1); // Increment to trigger useEffect
               showMessage("Refreshing IPO data...");
             }}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-0.5 px-2 rounded-lg transition duration-300 ease-in-out text-xs"
+            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-0.5 px-1 rounded-lg transition duration-300 ease-in-out text-[0.65rem] whitespace-nowrap"
           >
             Refresh
           </button>
           {/* Sort Buttons */}
           <button
             onClick={() => sortBy("Name")}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-0.5 px-2 rounded-lg transition duration-300 ease-in-out text-xs"
+            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-0.5 px-1 rounded-lg transition duration-300 ease-in-out text-[0.65rem] whitespace-nowrap"
           >
             Sort by Name {sortConfig.key === "Name" ? (sortConfig.direction === "asc" ? "▲" : "▼") : "⬍"}
           </button>
           <button
             onClick={() => sortBy("Open")}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-0.5 px-2 rounded-lg transition duration-300 ease-in-out text-xs"
+            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-0.5 px-1 rounded-lg transition duration-300 ease-in-out text-[0.65rem] whitespace-nowrap"
           >
             Sort by Open Date {sortConfig.key === "Open" ? (sortConfig.direction === "asc" ? "▲" : "▼") : "⬍"}
           </button>
@@ -837,10 +838,8 @@ const App = () => {
 
       {/* Main Content - Adjusted padding top to account for fixed header and new bar */}
       {/* Dynamic padding-bottom based on footer state */}
-      {/* Mobile: Header (80px) + Sort Bar (36px) = 116px */}
-      {/* Desktop: Header (128px) + Sort Bar (40px) = 168px */}
-<main className={`container mx-auto p-4 flex-grow overflow-y-auto pt-[92px] sm:pt-[120px] ${isFooterExpanded ? 'pb-[180px] sm:pb-28' : 'pb-[40px] sm:pb-28'}`}>
-{/* Conditional Rendering for Layout */}
+      <main className={`container mx-auto p-4 flex-grow overflow-y-auto pt-[104px] sm:pt-[116px] ${isFooterExpanded ? 'pb-[180px] sm:pb-28' : 'pb-[40px] sm:pb-28'}`}>
+        {/* Conditional Rendering for Layout */}
         {layoutMode === 'card' ? (
           <section id="ipo-list" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Display cards if there's data to show, otherwise show a message */}

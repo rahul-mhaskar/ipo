@@ -327,7 +327,7 @@ const App = () => {
       const status = ipo.Status ? String(ipo.Status).toLowerCase() : '';
       if (status.includes("upcoming") || status.includes("pre-open")) {
         upcoming.push(ipo);
-      } else if (status.includes("apply") || status.includes("open") || status.includes("pending") || status.includes("allotted")) {
+      } else if (status.includes("apply") || status.includes("open") || status.includes("pending") || status.includes("Allotment")) {
         current.push(ipo);
       } else if (status.includes("listed") || status.includes("closed")) {
         listed.push(ipo);
@@ -434,7 +434,7 @@ const App = () => {
       return <span className="text-purple-600 font-semibold">🛒 {status}</span>;
     } else if (cleanStatus.includes("pending")) {
       return <span className="text-yellow-600 font-semibold">🕒 {status}</span>;
-    } else if (cleanStatus.includes("allotted")) {
+    } else if (cleanStatus.includes("Allotment")) {
       return (
         <span className="text-green-600 hover:underline cursor-pointer font-semibold" onClick={() => handleAllotmentClick(ipo)}>
           ✅ {status}
@@ -843,7 +843,7 @@ const App = () => {
                   <div className="flex items-center justify-between mt-auto">
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold
                       ${ipo.Status?.toLowerCase().includes('open') || ipo.Status?.toLowerCase().includes('apply') ? 'status-open' :
-                        ipo.Status?.toLowerCase().includes('closed') || ipo.Status?.toLowerCase().includes('listed') || ipo.Status?.toLowerCase().includes('allotted') ? 'status-closed' :
+                        ipo.Status?.toLowerCase().includes('closed') || ipo.Status?.toLowerCase().includes('listed') || ipo.Status?.toLowerCase().includes('Allotment') ? 'status-closed' :
                         'status-upcoming'}`}>
                       {getStatusContent(ipo.Status, ipo)}
                     </span>
@@ -909,7 +909,7 @@ const App = () => {
             >
               ×
             </button>
-            <h3 className="text-lg font-semibold mb-3 text-gray-800">Check allotment from below verified links</h3>
+            <h3 className="text-lg font-semibold mb-3 text-gray-800">Check allotment from the below verified links</h3>
             {allotmentLinks.length > 0 ? (
               <ul className="space-y-2">
                 {allotmentLinks.map((link, idx) => (

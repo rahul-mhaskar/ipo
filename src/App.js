@@ -868,7 +868,7 @@ const App = () => {
         ) : (
           <div>
             {/* Render categorized table sections */}
-            {renderTableSection("Current IPOs (Open & Awaiting Allotment)", currentIpos, showCurrentSection, () => setShowCurrentSection(!showCurrentSection))}
+            {renderTableSection("Current IPOs", currentIpos, showCurrentSection, () => setShowCurrentSection(!showCurrentSection))}
             {renderTableSection("Upcoming IPOs", upcomingIpos, showUpcomingSection, () => setShowUpcomingSection(!showUpcomingSection))}
             {renderTableSection("Listed/Closed IPOs", listedIpos, showListedSection, () => setShowListedSection(!showListedSection))}
 
@@ -909,7 +909,7 @@ const App = () => {
             >
               ×
             </button>
-            <h3 className="text-lg font-semibold mb-3 text-gray-800">Check Allotment Links</h3>
+            <h3 className="text-lg font-semibold mb-3 text-gray-800">Check allotment from below verified links</h3>
             {allotmentLinks.length > 0 ? (
               <ul className="space-y-2">
                 {allotmentLinks.map((link, idx) => (

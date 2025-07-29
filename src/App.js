@@ -4,7 +4,6 @@ import Papa from "papaparse";
 // Import your website logo from the src folder
 // IMPORTANT: Replace 'websiteLogo.png' with your actual logo file name and path within src/
 import websiteLogo from './Track My IPO - Logo.png'; // Example: if your logo is directly in src/
-
 const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlsMurbsXT2UBQ2ADbyoiQtLUTznQU4vNzw3nS02_StSrFV9pkrnXOrNAjV_Yj-Byc_zw72z_rM0tQ/pub?output=csv";
 // Use the imported logo for the main website logo
 const WEBSITE_LOGO_URL = websiteLogo; // Now uses the imported local asset
@@ -766,9 +765,9 @@ const App = () => {
       )}
 
       {/* New Fixed Sort and Total IPOs Bar */}
-      {/* Adjusted top for mobile header (approx 52px for logo/title + 36px for search/switch = 88px) */}
-      {/* Adjusted top for desktop header (approx 76px for full header) */}
-      <div className="fixed top-[88px] sm:top-[76px] w-full z-40 bg-gray-200 p-1.5 sm:p-2 shadow-md flex flex-col sm:flex-row justify-between items-center text-gray-700 text-xs sm:text-sm">
+      {/* Calculated top for mobile header (64px logo + 2*8px padding = 80px) */}
+      {/* Calculated top for desktop header (96px logo + 2*16px padding = 128px) */}
+      <div className="fixed top-[80px] sm:top-[128px] w-full z-40 bg-gray-200 p-1.5 sm:p-2 shadow-md flex flex-col sm:flex-row justify-between items-center text-gray-700 text-xs sm:text-sm">
         <div className="mb-1 sm:mb-0 text-center sm:text-left text-xs sm:text-sm">
           Total IPOs: {totalIposCount} (Current: {currentIpos.length} | Mainboard: {currentMainboardCount} | SME: {currentSmeCount})
         </div>
@@ -838,7 +837,9 @@ const App = () => {
 
       {/* Main Content - Adjusted padding top to account for fixed header and new bar */}
       {/* Dynamic padding-bottom based on footer state */}
-      <main className={`container mx-auto p-4 flex-grow overflow-y-auto pt-[112px] sm:pt-[100px] ${isFooterExpanded ? 'pb-[180px] sm:pb-28' : 'pb-[40px] sm:pb-28'}`}> {/* pt for mobile: 88px (header) + 24px (sort bar) = 112px */}
+      {/* Mobile: Header (80px) + Sort Bar (36px) = 116px */}
+      {/* Desktop: Header (128px) + Sort Bar (40px) = 168px */}
+      <main className={`container mx-auto p-4 flex-grow overflow-y-auto pt-[116px] sm:pt-[168px] ${isFooterExpanded ? 'pb-[180px] sm:pb-28' : 'pb-[40px] sm:pb-28'}`}>
         {/* Conditional Rendering for Layout */}
         {layoutMode === 'card' ? (
           <section id="ipo-list" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

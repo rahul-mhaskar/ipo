@@ -327,7 +327,7 @@ const App = () => {
       const status = ipo.Status ? String(ipo.Status).toLowerCase() : '';
       if (status.includes("upcoming") || status.includes("pre-open")) {
         upcoming.push(ipo);
-      } else if (status.includes("apply") || status.includes("open") || status.includes("pending") || status.includes("Allotment")) {
+      } else if (status.includes("apply") || status.includes("open") || status.includes("pending") || status.includes("allotment")) {
         current.push(ipo);
       } else if (status.includes("listed") || status.includes("closed")) {
         listed.push(ipo);
@@ -434,7 +434,7 @@ const App = () => {
       return <span className="text-purple-600 font-semibold">🛒 {status}</span>;
     } else if (cleanStatus.includes("pending")) {
       return <span className="text-yellow-600 font-semibold">🕒 {status}</span>;
-    } else if (cleanStatus.includes("Allotment")) {
+    } else if (cleanStatus.includes("allotment")) {
       return (
         <span className="text-green-600 hover:underline cursor-pointer font-semibold" onClick={() => handleAllotmentClick(ipo)}>
           ✅ {status}

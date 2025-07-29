@@ -5,6 +5,8 @@ import Papa from "papaparse";
 // IMPORTANT: Replace 'websiteLogo.png' with your actual logo file name and path within src/
 import websiteLogo from './Track My IPO - Logo.png'; // Example: if your logo is directly in src/
 
+
+
 const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlsMurbsXT2UBQ2ADbyoiQtLUTznQU4vNzw3nS02_StSrFV9pkrnXOrNAjV_Yj-Byc_zw72z_rM0tQ/pub?output=csv";
 
 // Use the imported logo for the main website logo
@@ -398,7 +400,7 @@ const App = () => {
 
         if (numericKeys.includes(sortConfig.key)) {
           const numA = parseFloat(String(aVal).replace(/[^0-9.-]+/g, ""));
-          const numB = parseFloat(String(bVal).replace(/[^0-9.-]+/g, ""));
+          const numB = parseFloat(String(bBval).replace(/[^0-9.-]+/g, ""));
           if (sortConfig.direction === "asc") {
             return numA - numB;
           }
@@ -836,7 +838,7 @@ const App = () => {
 
       {/* Main Content - Adjusted padding top to account for fixed header and new bar */}
       {/* Dynamic padding-bottom based on footer state */}
-      <main className={`container mx-auto p-4 flex-grow overflow-y-auto pt-[120px] sm:pt-[116px] ${isFooterExpanded ? 'pb-[180px] sm:pb-28' : 'pb-[40px] sm:pb-28'}`}>
+      <main className={`container mx-auto p-4 flex-grow overflow-y-auto pt-[140px] sm:pt-[128px] ${isFooterExpanded ? 'pb-[180px] sm:pb-28' : 'pb-[40px] sm:pb-28'}`}>
         {/* Conditional Rendering for Layout */}
         {layoutMode === 'card' ? (
           <section id="ipo-list" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

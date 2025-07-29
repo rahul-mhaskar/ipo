@@ -400,7 +400,7 @@ const App = () => {
 
         if (numericKeys.includes(sortConfig.key)) {
           const numA = parseFloat(String(aVal).replace(/[^0-9.-]+/g, ""));
-          const numB = parseFloat(String(bBval).replace(/[^0-9.-]+/g, ""));
+          const numB = parseFloat(String(bVal).replace(/[^0-9.-]+/g, ""));
           if (sortConfig.direction === "asc") {
             return numA - numB;
           }
@@ -672,9 +672,39 @@ const App = () => {
               <h1 className="text-lg sm:text-xl font-bold whitespace-nowrap text-center flex-grow">Track My IPO</h1> {/* Reduced font size */}
             </div>
 
-            {/* Placeholder for desktop buttons to maintain spacing on mobile if needed, but hidden */}
-            <div className="hidden sm:flex w-auto items-center gap-2">
-              {/* These buttons are now moved to the rightmost div for desktop */}
+            {/* Desktop Search Bar & Buttons (Hidden on Mobile) */}
+            <div className="hidden sm:flex items-center flex-grow justify-end gap-2"> {/* desktop layout */}
+              <div className="relative flex-grow max-w-xl"> {/* Adjusted max-w for search bar and added horizontal expansion */}
+                <input
+                  type="text"
+                  id="searchInputDesktop"
+                  placeholder="Search IPOs..."
+                  className="w-full py-1.5 pl-9 pr-3 rounded-lg bg-white bg-opacity-20 text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-white text-sm" // Adjusted vertical padding
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <svg className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-white w-5 h-5" width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd"></path>
+                </svg>
+              </div>
+              <button
+                onClick={() => setLayoutMode(layoutMode === 'card' ? 'table' : 'card')}
+                className="bg-white text-blue-700 font-bold py-1.5 px-3 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out text-sm whitespace-nowrap"
+              >
+                Switch to {layoutMode === 'card' ? 'Table' : 'Card'} View
+              </button>
+              <button
+                onClick={() => setShowAboutUsModal(true)}
+                className="bg-white text-blue-700 font-bold py-1.5 px-3 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out text-sm whitespace-nowrap"
+              >
+                About Us
+              </button>
+              <button
+                onClick={() => setShowContactUsModal(true)}
+                className="bg-white text-blue-700 font-bold py-1.5 px-3 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out text-sm whitespace-nowrap"
+              >
+                Contact Us
+              </button>
             </div>
           </div>
 
@@ -838,7 +868,7 @@ const App = () => {
 
       {/* Main Content - Adjusted padding top to account for fixed header and new bar */}
       {/* Dynamic padding-bottom based on footer state */}
-      <main className={`container mx-auto p-4 flex-grow overflow-y-auto pt-[140px] sm:pt-[128px] ${isFooterExpanded ? 'pb-[180px] sm:pb-28' : 'pb-[40px] sm:pb-28'}`}>
+      <main className={`container mx-auto p-4 flex-grow overflow-y-auto pt-[130px] sm:pt-[128px] ${isFooterExpanded ? 'pb-[180px] sm:pb-28' : 'pb-[40px] sm:pb-28'}`}>
         {/* Conditional Rendering for Layout */}
         {layoutMode === 'card' ? (
           <section id="ipo-list" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

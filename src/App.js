@@ -9,8 +9,6 @@ import websiteLogo from './Track My IPO - Logo.png'; // Example: if your logo is
 
 const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlsMurbsXT2UBQ2ADbyoiQtLUTznQU4vNzw3nS02_StSrFV9pkrnXOrNAjV_Yj-Byc_zw72z_rM0tQ/pub?output=csv";
 
-// Use the imported logo for the main website logo
-const WEBSITE_LOGO_URL = websiteLogo; // Now uses the imported local asset
 
 const App = () => {
   const [ipoData, setIpoData] = useState([]);

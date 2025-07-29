@@ -637,7 +637,7 @@ const App = () => {
       )}
 
       {/* Header */}
-      <header className="fixed top-0 w-full z-50 bg-gradient-to-r from-blue-600 to-purple-700 text-white p-2 sm:p-4 shadow-lg rounded-b-xl">
+        <header className="fixed top-0 w-full z-50 bg-gradient-to-r from-blue-600 to-purple-700 text-white p-1 sm:p-2 shadow-lg rounded-b-xl">
         <div className="container mx-auto flex flex-col sm:flex-row justify-between items-center">
           {/* Mobile Top Row: Hamburger, Logo, Title */}
           <div className="flex w-full sm:w-auto justify-between items-center sm:mb-0">
@@ -656,12 +656,12 @@ const App = () => {
             {/* Logo and Title - Centered on mobile, left on desktop */}
             <div className="flex items-center flex-grow sm:flex-grow-0 justify-center sm:justify-start">
             {/* Website Logo */}
-              <img
-                src={WEBSITE_LOGO_URL}
-                alt="Website Logo"
-                className="w-16 h-16 sm:w-24 sm:h-24 mr-2 sm:mr-4 object-contain" // Doubled size
-                onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/40x40/000000/FFFFFF?text=Logo"; }} // Fallback logo
-              />
+ <img
+  src={WEBSITE_LOGO_URL}
+  alt="Website Logo"
+  className="w-12 h-12 sm:w-16 sm:h-16 mr-2 sm:mr-4 object-contain" // Reduced size
+  onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/40x40/000000/FFFFFF?text=Logo"; }} // Fallback logo
+/>
               <h1 className="text-xl sm:text-3xl font-bold whitespace-nowrap text-center flex-grow">Track My IPO</h1> {/* Added text-center and flex-grow for mobile centering */}
             </div>
 
@@ -767,7 +767,7 @@ const App = () => {
       {/* New Fixed Sort and Total IPOs Bar */}
       {/* Calculated top for mobile header (64px logo + 2*8px padding = 80px) */}
       {/* Calculated top for desktop header (96px logo + 2*16px padding = 128px) */}
-      <div className="fixed top-[80px] sm:top-[128px] w-full z-40 bg-gray-200 p-1.5 sm:p-2 shadow-md flex flex-col sm:flex-row justify-between items-center text-gray-700 text-xs sm:text-sm">
+       <div className="fixed top-[56px] sm:top-[80px] w-full z-40 bg-gray-200 p-1.5 sm:p-2 shadow-md flex flex-col sm:flex-row justify-between items-center text-gray-700 text-xs sm:text-sm">
         <div className="mb-1 sm:mb-0 text-center sm:text-left text-xs sm:text-sm">
           Total IPOs: {totalIposCount} (Current: {currentIpos.length} | Mainboard: {currentMainboardCount} | SME: {currentSmeCount})
         </div>
@@ -839,8 +839,8 @@ const App = () => {
       {/* Dynamic padding-bottom based on footer state */}
       {/* Mobile: Header (80px) + Sort Bar (36px) = 116px */}
       {/* Desktop: Header (128px) + Sort Bar (40px) = 168px */}
-      <main className={`container mx-auto p-4 flex-grow overflow-y-auto pt-[116px] sm:pt-[168px] ${isFooterExpanded ? 'pb-[180px] sm:pb-28' : 'pb-[40px] sm:pb-28'}`}>
-        {/* Conditional Rendering for Layout */}
+<main className={`container mx-auto p-4 flex-grow overflow-y-auto pt-[92px] sm:pt-[120px] ${isFooterExpanded ? 'pb-[180px] sm:pb-28' : 'pb-[40px] sm:pb-28'}`}>
+{/* Conditional Rendering for Layout */}
         {layoutMode === 'card' ? (
           <section id="ipo-list" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Display cards if there's data to show, otherwise show a message */}

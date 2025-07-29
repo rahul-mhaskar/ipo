@@ -23,7 +23,7 @@ const App = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [message, setMessage] = useState("");
   const [showMessageBox, setShowMessageBox] = useState(false);
-  const [layoutMode, setLayoutMode] = useState('card'); // 'card' or 'table'
+  const [layoutMode, setLayoutMode] = useState('table'); // 'card' or 'table'
 
   // States for the new splash screen loading animation
   const [isLoading, setIsLoading] = useState(true); // Controls visibility of the full splash screen

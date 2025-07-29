@@ -1,15 +1,13 @@
-import React, { useEffect, useState, useMemo, useRef } from "react";
+import React, { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import Papa from "papaparse";
 
 // Import your website logo from the src folder
 // IMPORTANT: Replace 'websiteLogo.png' with your actual logo file name and path within src/
 import websiteLogo from './Track My IPO - Logo.png'; // Example: if your logo is directly in src/
 
-// IMPORTANT: Replace with your actual Google Sheet CSV URL.
-// It MUST be a "Published to web" CSV link from Google Sheets, NOT an editor link.
-// Example of a CORRECT format:
-// "https://docs.google.com/sheets/d/e/2PACX-1vYOUR_SHEET_ID_HERE/pub?gid=0&single=true&output=csv"
-const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlsMurbsXT2UBQ2ADbyoiQtLUTznQU4vNzw3nS02_StSrFV9pkrnXOrNAjV_Yj-Byc_zw72z_rM0tQ/pub?output=csv";
+
+
+const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSHEORz3aArzaDTOWYW6FlC1avk1TYKAhDKfyALmqg2HMDWiD60N6WG2wgMlPkvLWC9dYzwplhCStb/pub?output=csv";
 
 // Use the imported logo for the main website logo
 const WEBSITE_LOGO_URL = websiteLogo; // Now uses the imported local asset
@@ -24,6 +22,9 @@ const App = () => {
   const [message, setMessage] = useState("");
   const [showMessageBox, setShowMessageBox] = useState(false);
   const [layoutMode, setLayoutMode] = useState('table'); // 'card' or 'table'
+
+  // NEW STATE: Filter for IPO Type (All, Mainboard, SME)
+  const [ipoTypeFilter, setIpoTypeFilter] = useState('All'); // Default to 'All'
 
   // States for the new splash screen loading animation
   const [isLoading, setIsLoading] = useState(true); // Controls visibility of the full splash screen
@@ -135,7 +136,7 @@ const App = () => {
 
 
   // Function to show a custom message box
-  const showMessage = (msg) => {
+  const showMessage = useCallback((msg) => {
     setMessage(msg);
     setShowMessageBox(true);
     // Auto-hide after 0.5 seconds (reduced from 1.5 seconds)
@@ -143,7 +144,7 @@ const App = () => {
       setShowMessageBox(false);
       setMessage("");
     }, 500); // Reduced delay here
-  };
+  }, []);
 
   // Helper for parsing dates for sorting (DD Month YYYY or DD Month format)
   const monthMap = {
@@ -250,7 +251,7 @@ const App = () => {
     return () => {
       clearInterval(progressInterval); // Clear interval if component unmounts
     };
-  }, [refreshTrigger]); // Run on mount AND when refreshTrigger changes
+  }, [refreshTrigger, showMessage]); // Run on mount AND when refreshTrigger changes
 
   const sortBy = (key) => {
     let direction = "asc";
@@ -264,7 +265,7 @@ const App = () => {
   const { upcomingIpos, currentIpos, listedIpos, totalIposCount, currentMainboardCount, currentSmeCount } = useMemo(() => {
     let sortableItems = [...ipoData];
 
-    // Filter based on search term
+    // Apply search term filter first
     if (searchTerm) {
       sortableItems = sortableItems.filter(ipo =>
         ipo.Name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -272,7 +273,14 @@ const App = () => {
         ipo.Type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         ipo.GMP?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         ipo.Price?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ipo.Description?.toLowerCase().includes(searchTerm.toLowerCase()) // Include description in search
+        ipo.Description?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Apply IPO Type filter
+    if (ipoTypeFilter !== 'All') {
+      sortableItems = sortableItems.filter(ipo =>
+        ipo.Type?.toLowerCase().includes(ipoTypeFilter.toLowerCase())
       );
     }
 
@@ -334,7 +342,7 @@ const App = () => {
       }
     });
 
-    // Calculate Mainboard and SME counts for current IPOs
+    // Calculate Mainboard and SME counts for current IPOs (after all filters)
     let currentMainboard = 0;
     let currentSme = 0;
     current.forEach(ipo => {
@@ -350,15 +358,17 @@ const App = () => {
       upcomingIpos: upcoming,
       currentIpos: current,
       listedIpos: listed,
-      totalIposCount: sortableItems.length, // Total IPOs after search filter
+      totalIposCount: sortableItems.length, // Total IPOs after search and type filter
       currentMainboardCount: currentMainboard,
       currentSmeCount: currentSme
     };
-  }, [ipoData, sortConfig, searchTerm]);
+  }, [ipoData, sortConfig, searchTerm, ipoTypeFilter]); // Added ipoTypeFilter to dependencies
 
   // This is used for card view and for determining if any IPOs match search
   const displayedIpoData = useMemo(() => {
     let filteredItems = [...ipoData];
+
+    // Apply search term filter
     if (searchTerm) {
       filteredItems = filteredItems.filter(ipo =>
         ipo.Name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -366,9 +376,17 @@ const App = () => {
         ipo.Type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         ipo.GMP?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         ipo.Price?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ipo.Description?.toLowerCase().includes(searchTerm.toLowerCase()) // Include description in search
+        ipo.Description?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
+
+    // Apply IPO Type filter for card view
+    if (ipoTypeFilter !== 'All') {
+      filteredItems = filteredItems.filter(ipo =>
+        ipo.Type?.toLowerCase().includes(ipoTypeFilter.toLowerCase())
+      );
+    }
+
     // Apply sorting for card view as well
     if (sortConfig.key) {
       filteredItems.sort((a, b) => {
@@ -405,7 +423,7 @@ const App = () => {
       });
     }
     return filteredItems;
-  }, [ipoData, sortConfig, searchTerm]);
+  }, [ipoData, sortConfig, searchTerm, ipoTypeFilter]); // Added ipoTypeFilter to dependencies
 
 
   const handleApplyClick = () => {
@@ -440,6 +458,8 @@ const App = () => {
           ✅ {status}
         </span>
       );
+    } else if (cleanStatus.includes("listed")) {
+      return <span className="text-indigo-700 font-semibold">📈 {status}</span>;
     } else {
       return <span className="text-gray-500 font-semibold">📅 {status}</span>;
     }
@@ -643,10 +663,7 @@ const App = () => {
               <img
                 src={WEBSITE_LOGO_URL}
                 alt="Website Logo"
-               // className="w-8 h-8 sm:w-12 sm:h-12 mr-2 sm:mr-4 object-contain"
-
-                className="w-12 h-12 sm:w-12 sm:h-12 mr-2 sm:mr-4 object-contain"
-
+                className="w-16 h-16 sm:w-24 sm:h-24 mr-2 sm:mr-4 object-contain" // Doubled size
                 onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/40x40/000000/FFFFFF?text=Logo"; }} // Fallback logo
               />
               <h1 className="text-xl sm:text-3xl font-bold whitespace-nowrap text-center flex-grow">Track My IPO</h1> {/* Added text-center and flex-grow for mobile centering */}
@@ -723,7 +740,7 @@ const App = () => {
         <div className="p-4 flex justify-between items-center border-b border-blue-700">
           <h2 className="text-xl font-bold">Navigation</h2>
           <button onClick={() => setIsSidebarOpen(false)} className="text-white text-2xl">
-            ×
+            &times;
           </button>
         </div>
         <nav className="p-4 space-y-2">
@@ -758,8 +775,8 @@ const App = () => {
         <div className="mb-1 sm:mb-0 text-center sm:text-left text-xs sm:text-sm">
           Total IPOs: {totalIposCount} (Current: {currentIpos.length} | Mainboard: {currentMainboardCount} | SME: {currentSmeCount})
         </div>
-        <div className="flex gap-1 sm:gap-2">
-          {/* Refresh button moved here */}
+        <div className="flex gap-1 sm:gap-2 items-center"> {/* Added items-center for vertical alignment */}
+          {/* Refresh button */}
           <button
             onClick={() => {
               setRefreshTrigger(prev => prev + 1); // Increment to trigger useEffect
@@ -769,6 +786,7 @@ const App = () => {
           >
             Refresh
           </button>
+          {/* Sort Buttons */}
           <button
             onClick={() => sortBy("Name")}
             className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-0.5 px-2 rounded-lg transition duration-300 ease-in-out text-xs"
@@ -781,6 +799,43 @@ const App = () => {
           >
             Sort by Open Date {sortConfig.key === "Open" ? (sortConfig.direction === "asc" ? "▲" : "▼") : "⬍"}
           </button>
+
+          {/* IPO Type Filter Radios */}
+          <div className="flex items-center gap-1 ml-2"> {/* Added margin-left for spacing */}
+            <label className="inline-flex items-center">
+              <input
+                type="radio"
+                className="form-radio text-blue-600"
+                name="ipoType"
+                value="All"
+                checked={ipoTypeFilter === 'All'}
+                onChange={(e) => setIpoTypeFilter(e.target.value)}
+              />
+              <span className="ml-1 text-gray-700 text-xs">All</span>
+            </label>
+            <label className="inline-flex items-center">
+              <input
+                type="radio"
+                className="form-radio text-blue-600"
+                name="ipoType"
+                value="Main Board"
+                checked={ipoTypeFilter === 'Main Board'}
+                onChange={(e) => setIpoTypeFilter(e.target.value)}
+              />
+              <span className="ml-1 text-gray-700 text-xs">Mainboard</span>
+            </label>
+            <label className="inline-flex items-center">
+              <input
+                type="radio"
+                className="form-radio text-blue-600"
+                name="ipoType"
+                value="SME"
+                checked={ipoTypeFilter === 'SME'}
+                onChange={(e) => setIpoTypeFilter(e.target.value)}
+              />
+              <span className="ml-1 text-gray-700 text-xs">SME</span>
+            </label>
+          </div>
         </div>
       </div>
 
@@ -843,7 +898,7 @@ const App = () => {
                   <div className="flex items-center justify-between mt-auto">
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold
                       ${ipo.Status?.toLowerCase().includes('open') || ipo.Status?.toLowerCase().includes('apply') ? 'status-open' :
-                        ipo.Status?.toLowerCase().includes('closed') || ipo.Status?.toLowerCase().includes('listed') || ipo.Status?.toLowerCase().includes('Allotment') ? 'status-closed' :
+                        ipo.Status?.toLowerCase().includes('closed') || ipo.Status?.toLowerCase().includes('listed') || ipo.Status?.toLowerCase().includes('allotted') ? 'status-closed' :
                         'status-upcoming'}`}>
                       {getStatusContent(ipo.Status, ipo)}
                     </span>
@@ -890,7 +945,7 @@ const App = () => {
               <p className="text-2xl font-bold text-gray-800 mb-4">{message}</p>
               <button
                 onClick={() => setShowMessageBox(false)}
-                className="absolute top-2 right-2 text-gray-600 hover:text-black text-xl"
+                className="absolute top-2 right-2 text-gray-600 hover:text-black text-xl font-bold"
               >
                 X
             </button>

@@ -3,7 +3,7 @@ import Papa from "papaparse";
 
 // Import your website logo from the src folder
 // IMPORTANT: Replace 'websiteLogo.png' with your actual logo file name and path within src/
-import websiteLogo from './Track My IPO - Logo.png'; // Example: if your logo is directly in src/
+import websiteLogo from './Track My IPO - Logo.svg'; // Example: if your logo is directly in src/
 
 
 

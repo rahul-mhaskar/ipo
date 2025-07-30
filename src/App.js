@@ -6,7 +6,6 @@ import Papa from "papaparse";
 import websiteLogo from './Track My IPO - Logo.png'; // Example: if your logo is directly in src/
 
 
-
 const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlsMurbsXT2UBQ2ADbyoiQtLUTznQU4vNzw3nS02_StSrFV9pkrnXOrNAjV_Yj-Byc_zw72z_rM0tQ/pub?output=csv";
 
 // Use the imported logo for the main website logo
@@ -434,11 +433,12 @@ const App = () => {
   };
 
   const handleAllotmentClick = (ipo) => {
-    const links = [
-      ipo.AllotmentLink1,
-      ipo.AllotmentLink2,
-      ipo.AllotmentLink3
-    ].filter(Boolean); // Filter out undefined/null/empty strings
+    const links = [];
+    if (ipo.AllotmentLink1) { // Assuming Column O is AllotmentLink3
+      links.push({ name: "BSE", url: "https://www.bseindia.com/investors/appli_check.aspx" });
+      links.push({ name: "NSE", url: "https://www.nseindia.com/products/dynaContent/equities/ipos/ipo_login.jsp" });
+      links.push({ name: "Registrar Link", url: ipo.AllotmentLink1 }); // Use a more descriptive name for the third link
+    }
     setAllotmentLinks(links);
     setShowAllotmentPopup(true);
   };
@@ -925,7 +925,7 @@ const App = () => {
                   <div className="flex items-center justify-between mt-auto">
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold
                       ${ipo.Status?.toLowerCase().includes('open') || ipo.Status?.toLowerCase().includes('apply') ? 'status-open' :
-                        ipo.Status?.toLowerCase().includes('closed') || ipo.Status?.toLowerCase().includes('listed') || ipo.Status?.toLowerCase().includes('allotted') ? 'status-closed' :
+                        ipo.Status?.toLowerCase().includes('closed') || ipo.Status?.toLowerCase().includes('listed') || ipo.Status?.toLowerCase().includes('allotment') ? 'status-closed' :
                         'status-upcoming'}`}>
                       {getStatusContent(ipo.Status, ipo)}
                     </span>
@@ -997,12 +997,12 @@ const App = () => {
                 {allotmentLinks.map((link, idx) => (
                   <li key={idx}>
                     <a
-                      href={link}
+                      href={link.url}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-blue-600 underline hover:text-blue-800 break-all"
                     >
-                      🔗 Check allotment link {idx + 1}
+                      🔗 {link.name}
                     </a>
                   </li>
                 ))}

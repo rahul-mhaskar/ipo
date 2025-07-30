@@ -435,7 +435,7 @@ const App = () => {
 
   const handleAllotmentClick = (ipo) => {
     const links = [];
-    if (ipo.AllotmentLink3) { // Assuming Column O is AllotmentLink3
+    if (ipo.AllotmentLink1) { 
       links.push({ name: "BSE", url: "https://www.bseindia.com/investors/appli_check.aspx" });
       links.push({ name: "NSE", url: "https://www.nseindia.com/products/dynaContent/equities/ipos/ipo_login.jsp" });
       links.push({ name: "Registrar Link", url: ipo.AllotmentLink3 }); // Use a more descriptive name for the third link

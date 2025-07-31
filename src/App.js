@@ -7,7 +7,6 @@ import websiteLogo from './Track My IPO - Logo.png'; // Example: if your logo is
 
 
 const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlsMurbsXT2UBQ2ADbyoiQtLUTznQU4vNzw3nS02_StSrFV9pkrnXOrNAjV_Yj-Byc_zw72z_rM0tQ/pub?output=csv";
-
 // Use the imported logo for the main website logo
 const WEBSITE_LOGO_URL = websiteLogo; // Now uses the imported local asset
 
@@ -24,6 +23,8 @@ const App = () => {
 
   // NEW STATE: Filter for IPO Type (All, Mainboard, SME)
   const [ipoTypeFilter, setIpoTypeFilter] = useState('All'); // Default to 'All'
+  // NEW STATE: Filter for IPO Status (All, Current, Upcoming)
+  const [statusFilter, setStatusFilter] = useState('All'); // Default to 'All'
 
   // States for the new splash screen loading animation
   const [isLoading, setIsLoading] = useState(true); // Controls visibility of the full splash screen
@@ -59,6 +60,11 @@ const App = () => {
 
   // State for controlling the mobile sort dropdown visibility
   const [showSortDropdown, setShowSortDropdown] = useState(false);
+
+  // State for IPO Details Modal
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedIpoDetails, setSelectedIpoDetails] = useState(null);
+
 
   // Google Analytics Page View Tracking
   useEffect(() => {
@@ -368,30 +374,29 @@ const App = () => {
 
   // This is used for card view and for determining if any IPOs match search
   const displayedIpoData = useMemo(() => {
-    let filteredItems = [...ipoData];
+    let filteredAndSortedItems = [...ipoData];
 
-    // Apply search term filter
+    // Apply search term filter first
     if (searchTerm) {
-      filteredItems = filteredItems.filter(ipo =>
+      filteredAndSortedItems = filteredAndSortedItems.filter(ipo =>
         ipo.Name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         ipo.Status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         ipo.Type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         ipo.GMP?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ipo.Price?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ipo.Description?.toLowerCase().includes(searchTerm.toLowerCase())
+        ipo.Price?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
-    // Apply IPO Type filter for card view
+    // Apply IPO Type filter (Mainboard/SME)
     if (ipoTypeFilter !== 'All') {
-      filteredItems = filteredItems.filter(ipo =>
+      filteredAndSortedItems = filteredAndSortedItems.filter(ipo =>
         ipo.Type?.toLowerCase().includes(ipoTypeFilter.toLowerCase())
       );
     }
 
-    // Apply sorting for card view as well
+    // Apply sorting
     if (sortConfig.key) {
-      filteredItems.sort((a, b) => {
+      filteredAndSortedItems.sort((a, b) => {
         const aVal = a[sortConfig.key] || "";
         const bVal = b[sortConfig.key] || "";
         const numericKeys = ["GMP", "Price", "IPO Size", "Lot"];
@@ -424,8 +429,33 @@ const App = () => {
         return String(bVal).localeCompare(String(aVal), undefined, { numeric: true });
       });
     }
-    return filteredItems;
-  }, [ipoData, sortConfig, searchTerm, ipoTypeFilter]); // Added ipoTypeFilter to dependencies
+
+    // Apply status filter for card view
+    let finalDisplayedItems = [];
+    if (layoutMode === 'card') {
+      if (statusFilter === 'All') {
+        // For card view, 'All' means Current + Upcoming, excluding Listed
+        finalDisplayedItems = filteredAndSortedItems.filter(ipo => {
+          const status = ipo.Status ? String(ipo.Status).toLowerCase() : '';
+          return !status.includes("listed") && !status.includes("closed");
+        });
+      } else if (statusFilter === 'Current') {
+        finalDisplayedItems = filteredAndSortedItems.filter(ipo => {
+          const status = ipo.Status ? String(ipo.Status).toLowerCase() : '';
+          return status.includes("apply") || status.includes("open") || status.includes("pending") || status.includes("allotment");
+        });
+      } else if (statusFilter === 'Upcoming') {
+        finalDisplayedItems = filteredAndSortedItems.filter(ipo => {
+          const status = ipo.Status ? String(ipo.Status).toLowerCase() : '';
+          return status.includes("upcoming") || status.includes("pre-open");
+        });
+      }
+    } else { // For table view, no status filtering is applied here, it's handled by sections
+      finalDisplayedItems = filteredAndSortedItems;
+    }
+
+    return finalDisplayedItems;
+  }, [ipoData, sortConfig, searchTerm, ipoTypeFilter, statusFilter, layoutMode]); // Added statusFilter and layoutMode to dependencies
 
 
   const handleApplyClick = () => {
@@ -434,13 +464,18 @@ const App = () => {
 
   const handleAllotmentClick = (ipo) => {
     const links = [];
-    if (ipo.AllotmentLink1) { // Assuming Column O is AllotmentLink3
+    if (ipo.AllotmentLink1) { 
       links.push({ name: "BSE", url: "https://www.bseindia.com/investors/appli_check.aspx" });
       links.push({ name: "NSE", url: "https://www.nseindia.com/products/dynaContent/equities/ipos/ipo_login.jsp" });
       links.push({ name: "Registrar Link", url: ipo.AllotmentLink1 }); // Use a more descriptive name for the third link
     }
     setAllotmentLinks(links);
     setShowAllotmentPopup(true);
+  };
+
+  const handleViewDetailsClick = (ipo) => {
+    setSelectedIpoDetails(ipo);
+    setShowDetailsModal(true);
   };
 
   const getStatusContent = (status, ipo) => {
@@ -863,6 +898,44 @@ const App = () => {
               <span className="ml-1 text-gray-700 text-xs whitespace-nowrap">SME</span>
             </label>
           </div>
+
+          {/* IPO Status Filter Radios */}
+          <div className="flex items-center gap-1 ml-2 flex-wrap sm:flex-nowrap">
+            <label className="inline-flex items-center">
+              <input
+                type="radio"
+                className="form-radio text-blue-600"
+                name="statusFilter"
+                value="All"
+                checked={statusFilter === 'All'}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              />
+              <span className="ml-1 text-gray-700 text-xs whitespace-nowrap">All</span>
+            </label>
+            <label className="inline-flex items-center">
+              <input
+                type="radio"
+                className="form-radio text-blue-600"
+                name="statusFilter"
+                value="Current"
+                checked={statusFilter === 'Current'}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              />
+              <span className="ml-1 text-gray-700 text-xs whitespace-nowrap">Current</span>
+            </label>
+            <label className="inline-flex items-center">
+              <input
+                type="radio"
+                className="form-radio text-blue-600"
+                name="statusFilter"
+                value="Upcoming"
+                checked={statusFilter === 'Upcoming'}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              />
+              <span className="ml-1 text-gray-700 text-xs whitespace-nowrap">Upcoming</span>
+            </label>
+          </div>
+
         </div>
       </div>
 
@@ -875,7 +948,7 @@ const App = () => {
             {/* Display cards if there's data to show, otherwise show a message */}
             {displayedIpoData.length > 0 ? (
               displayedIpoData.map((ipo, index) => (
-                <div key={index} className="card p-6 flex flex-col justify-between relative">
+                <div key={index} className="card p-6 flex flex-col justify-between relative border border-gray-200"> {/* Added border */}
                   {/* IPO Name and Type */}
                   <div className="flex-grow mb-2">
                     <h2 className="text-xl font-semibold text-blue-700">{ipo.Name} ({ipo.Type})</h2>
@@ -908,13 +981,6 @@ const App = () => {
                     </div>
                   </div>
 
-                  {/* Description with Show More/Read Less */}
-                  {ipo.Description && (
-                    <div className="mb-4">
-                      <DescriptionWithToggle description={ipo.Description} />
-                    </div>
-                  )}
-                  
                   {/* GMP/Est Listing/IPO Size - below the image/price block */}
                   <p className="text-gray-600 text-sm mb-4">
                     <strong>GMP:</strong> {ipo.GMP || 'N/A'} |
@@ -930,7 +996,7 @@ const App = () => {
                       {getStatusContent(ipo.Status, ipo)}
                     </span>
                     <button
-                      onClick={() => showMessage(`Details for ${ipo.Name}`)}
+                      onClick={() => handleViewDetailsClick(ipo)} // Changed to open details modal
                       className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out"
                     >
                       View Details
@@ -981,6 +1047,38 @@ const App = () => {
         )}
       </main>
 
+      {/* IPO Details Modal */}
+      {showDetailsModal && selectedIpoDetails && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full relative">
+            <button
+              className="absolute top-2 right-2 text-gray-600 hover:text-black text-lg"
+              onClick={() => { setShowDetailsModal(false); setSelectedIpoDetails(null); }}
+            >
+              ×
+            </button>
+            <h3 className="text-2xl font-bold text-gray-800 mb-4 text-center">{selectedIpoDetails.Name} Details</h3>
+            <div className="space-y-2 text-gray-700 text-sm max-h-96 overflow-y-auto pr-2"> {/* Added max-h and overflow for scrollability */}
+              <p><strong>Type:</strong> {selectedIpoDetails.Type || 'N/A'}</p>
+              <p><strong>Status:</strong> {getStatusContent(selectedIpoDetails.Status, selectedIpoDetails)}</p>
+              <p><strong>GMP:</strong> {selectedIpoDetails.GMP || 'N/A'}</p>
+              <p><strong>Subscription:</strong> {selectedIpoDetails.Subscription || 'N/A'}</p>
+              <p><strong>Price:</strong> {selectedIpoDetails.Price || 'N/A'}</p>
+              <p><strong>Est. Listing:</strong> {selectedIpoDetails["Est Listing"] || 'N/A'}</p>
+              <p><strong>IPO Size:</strong> {selectedIpoDetails["IPO Size"] || 'N/A'}</p>
+              <p><strong>Lot Size:</strong> {selectedIpoDetails.Lot || 'N/A'}</p>
+              <p><strong>Open Date:</strong> {selectedIpoDetails.Open || 'N/A'}</p>
+              <p><strong>Close Date:</strong> {selectedIpoDetails.Close || 'N/A'}</p>
+              <p><strong>BoA Date:</strong> {selectedIpoDetails["BoA Dt"] || 'N/A'}</p>
+              <p><strong>Listing Date:</strong> {selectedIpoDetails.Listing || 'N/A'}</p>
+              {selectedIpoDetails.Description && (
+                <p><strong>Description:</strong> {selectedIpoDetails.Description}</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Allotment Popup */}
       {showAllotmentPopup && (
         <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex justify-center items-center p-4">
@@ -1002,7 +1100,7 @@ const App = () => {
                       rel="noopener noreferrer"
                       className="text-blue-600 underline hover:text-blue-800 break-all"
                     >
-                      🔗 {link.name}
+                      � {link.name}
                     </a>
                   </li>
                 ))}
@@ -1214,69 +1312,5 @@ const App = () => {
     </div>
   );
 };
-
-// New component for Description with Show More/Read Less
-const DescriptionWithToggle = ({ description }) => {
-  const [showFullDescription, setShowFullDescription] = useState(false);
-  const textRef = useRef(null);
-  const [isTruncated, setIsTruncated] = useState(false);
-  const MAX_LINES = 3; // Set desired max lines for truncation
-
-  useEffect(() => {
-    if (textRef.current) {
-      const element = textRef.current;
-      
-      // Temporarily remove line-clamp styles to get the full scrollHeight
-      const originalWebkitLineClamp = element.style.webkitLineClamp;
-      const originalDisplay = element.style.display;
-      const originalOverflow = element.style.overflow;
-
-      element.style.webkitLineClamp = 'unset';
-      element.style.display = 'block';
-      element.style.overflow = 'visible';
-
-      const fullHeight = element.scrollHeight;
-      const computedLineHeight = parseFloat(window.getComputedStyle(element).lineHeight);
-      const thresholdHeight = computedLineHeight * MAX_LINES + 2; // Add a small buffer for safety
-
-      // Check if the full content height exceeds the height of MAX_LINES
-      setIsTruncated(fullHeight > thresholdHeight);
-
-      // Re-apply line-clamp if not showing full description and it's truncated
-      if (!showFullDescription && fullHeight > thresholdHeight) {
-        element.style.webkitBoxOrient = 'vertical';
-        element.style.display = '-webkit-box';
-        element.style.overflow = 'hidden';
-        element.style.webkitLineClamp = `${MAX_LINES}`;
-      } else {
-        // Ensure no line-clamp if showing full description or not truncated
-        element.style.webkitLineClamp = 'unset';
-        element.style.display = 'block';
-        element.style.overflow = 'visible';
-      }
-    }
-  }, [description, showFullDescription]); // Depend on description and showFullDescription
-
-  if (!description) {
-    return <p className="text-gray-600 text-sm">N/A</p>;
-  }
-
-  return (
-    <div>
-      <p ref={textRef} className="text-gray-600 text-sm">
-        {description}
-      </p>
-      {isTruncated && ( // Only show button if text is actually truncated
-        <button
-          onClick={() => setShowFullDescription(!showFullDescription)}
-          className="text-blue-500 hover:underline text-xs mt-1"
-        >
-          {showFullDescription ? 'Read Less' : 'Show More'}
-        </button>
-      )}
-    </div>
-  );
-};
-
 
 export default App;

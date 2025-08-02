@@ -3,7 +3,7 @@ import { parseDateForSort, getStatusContent } from '../utils/utils';
 
 // This is a placeholder URL for the Google Sheet. You should replace this with your actual sheet URL.
 // The URL should be for the published CSV version of the sheet.
-const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRlsMurbsXT2UBQ2ADbyoiQtLUTznQU4vNzw3nS02_StSrFV9pkrnXOrNAjV_Yj-Byc_zw72z_rM0tQ/pub?output=csv';
+ const GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSHEORz3aArzaDTOWYW6FlC1avk1TYKAhDKfyALmqg2HMDWiD60N6WG2wgMlPkvLWC9d7YzwplhCStb/pub?output=csv';
 
 const useIpoData = ({
   searchTerm,

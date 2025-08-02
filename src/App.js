@@ -26,8 +26,8 @@ const App = () => {
     layoutMode,
     displayedIpoData,
     state,
-    actions,
-  } = useIpoData;
+    actions
+  } = useIpoData();
 
   return (
     <div className="min-h-screen bg-gray-100 font-sans flex flex-col">

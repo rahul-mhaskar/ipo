@@ -1,0 +1,22 @@
+import React from 'react';
+
+const LayoutSwitcher = ({
+  ipoCounts,
+  sortConfig,
+  sortBy,
+  ipoTypeFilter,
+  setIpoTypeFilter,
+  statusFilter,
+  setStatusFilter,
+  setRefreshTrigger,
+  showMessage
+}) => {
+  return (
+    <div className="p-4 bg-gray-200 text-sm">
+      <div>Total IPOs: {ipoCounts.total} (Current: {ipoCounts.current})</div>
+      {/* Add UI for sort buttons and filters here */}
+    </div>
+  );
+};
+
+export default LayoutSwitcher;

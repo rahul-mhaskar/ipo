@@ -178,8 +178,12 @@ const App = () => {
                 <p className="text-sm"><strong>Price:</strong> {ipo.Price}</p>
                 <p className="text-sm"><strong>Open:</strong> {ipo.Open} | <strong>Close:</strong> {ipo.Close}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <a href={ipo.ApplyURL || "#"} target="_blank" rel="noreferrer" className="px-2 py-1 bg-green-500 text-white rounded">Apply Now</a>
-                  <a href={ipo.AllotmentURL || "#"} target="_blank" rel="noreferrer" className="px-2 py-1 bg-blue-500 text-white rounded">Check Allotment</a>
+                  {ipo.Status === "Open - Apply Now" && (
+                    <a href={ipo.ApplyURL || "#"} target="_blank" rel="noreferrer" className="px-2 py-1 bg-green-500 text-white rounded">Apply Now</a>
+                  )}
+                  {ipo.Status?.includes("Allotment Out") && (
+                    <a href={ipo.AllotmentLink1 || "#"} target="_blank" rel="noreferrer" className="px-2 py-1 bg-blue-500 text-white rounded">Check Allotment</a>
+                  )}
                 </div>
               </div>
             ))}
@@ -187,45 +191,23 @@ const App = () => {
         ) : (
           <table className="w-full text-left mt-4 bg-white shadow rounded">
             <thead className="bg-gray-100">
-  <tr>
-    <th className="p-2 cursor-pointer" onClick={() => sortBy("Name")}>Name</th>
-    <th className="p-2 cursor-pointer" onClick={() => sortBy("Status")}>Status</th>
-    <th className="p-2 cursor-pointer" onClick={() => sortBy("Type")}>Type</th>
-    <th className="p-2 cursor-pointer" onClick={() => sortBy("Price")}>Price</th>
-    <th className="p-2 cursor-pointer" onClick={() => sortBy("GMP")}>GMP</th>
-    <th className="p-2 cursor-pointer" onClick={() => sortBy("Subscription")}>Subscription</th>
-    <th className="p-2 cursor-pointer" onClick={() => sortBy("IPO Size")}>IPO Size</th>
-    <th className="p-2 cursor-pointer" onClick={() => sortBy("Lot")}>Lot</th>
-    <th className="p-2 cursor-pointer" onClick={() => sortBy("Open")}>Open</th>
-    <th className="p-2 cursor-pointer" onClick={() => sortBy("Close")}>Close</th>
-    <th className="p-2 cursor-pointer" onClick={() => sortBy("BoA Dt")}>BoA Dt</th>
-    <th className="p-2 cursor-pointer" onClick={() => sortBy("Listing")}>Listing</th>
-    <th className="p-2">Apply</th>
-    <th className="p-2">Allotment</th>
-  </tr>
-</thead>
-
-// [Rest of the code stays the same — just ensures all headers have clickable sorting]
-
-// 🔁 Also: Ensure Apply Now only shows if Status is "Open - Apply Now"
-// and AllotmentLink only appears if Status includes "Allotment Out"
-
-<a
-  href={ipo.ApplyURL || "#"}
-  target="_blank"
-  rel="noreferrer"
-  className={`px-2 py-1 bg-green-500 text-white rounded ${ipo.Status !== "Open - Apply Now" ? "hidden" : ""}`}
->
-  Apply Now
-</a>
-<a
-  href={ipo.AllotmentLink1 || "#"}
-  target="_blank"
-  rel="noreferrer"
-  className={`px-2 py-1 bg-blue-500 text-white rounded ${!ipo.Status?.includes("Allotment Out") ? "hidden" : ""}`}
->
-  Check Allotment
-</a>
+              <tr>
+                <th className="p-2 cursor-pointer" onClick={() => sortBy("Name")}>Name</th>
+                <th className="p-2 cursor-pointer" onClick={() => sortBy("Status")}>Status</th>
+                <th className="p-2 cursor-pointer" onClick={() => sortBy("Type")}>Type</th>
+                <th className="p-2 cursor-pointer" onClick={() => sortBy("Price")}>Price</th>
+                <th className="p-2 cursor-pointer" onClick={() => sortBy("GMP")}>GMP</th>
+                <th className="p-2 cursor-pointer" onClick={() => sortBy("Subscription")}>Subscription</th>
+                <th className="p-2 cursor-pointer" onClick={() => sortBy("IPO Size")}>IPO Size</th>
+                <th className="p-2 cursor-pointer" onClick={() => sortBy("Lot")}>Lot</th>
+                <th className="p-2 cursor-pointer" onClick={() => sortBy("Open")}>Open</th>
+                <th className="p-2 cursor-pointer" onClick={() => sortBy("Close")}>Close</th>
+                <th className="p-2 cursor-pointer" onClick={() => sortBy("BoA Dt")}>BoA Dt</th>
+                <th className="p-2 cursor-pointer" onClick={() => sortBy("Listing")}>Listing</th>
+                <th className="p-2">Apply</th>
+                <th className="p-2">Allotment</th>
+              </tr>
+            </thead>
             <tbody>
               {filteredSortedIpoData.map((ipo, i) => (
                 <tr key={i} className="border-t">
@@ -233,10 +215,24 @@ const App = () => {
                   <td className="p-2">{ipo.Status}</td>
                   <td className="p-2">{ipo.Type}</td>
                   <td className="p-2">{ipo.Price}</td>
+                  <td className="p-2">{ipo.GMP}</td>
+                  <td className="p-2">{ipo.Subscription}</td>
+                  <td className="p-2">{ipo["IPO Size"]}</td>
+                  <td className="p-2">{ipo.Lot}</td>
                   <td className="p-2">{ipo.Open}</td>
                   <td className="p-2">{ipo.Close}</td>
-                  <td className="p-2"><a href={ipo.ApplyURL || "#"} className="text-green-600">Apply</a></td>
-                  <td className="p-2"><a href={ipo.AllotmentURL || "#"} className="text-blue-600">Check</a></td>
+                  <td className="p-2">{ipo["BoA Dt"]}</td>
+                  <td className="p-2">{ipo.Listing}</td>
+                  <td className="p-2">
+                    {ipo.Status === "Open - Apply Now" && (
+                      <a href={ipo.ApplyURL || "#"} className="text-green-600" target="_blank" rel="noreferrer">Apply</a>
+                    )}
+                  </td>
+                  <td className="p-2">
+                    {ipo.Status?.includes("Allotment Out") && (
+                      <a href={ipo.AllotmentLink1 || "#"} className="text-blue-600" target="_blank" rel="noreferrer">Check</a>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>

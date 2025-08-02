@@ -1,4 +1,3 @@
-// src/components/IPOTable.js
 import React, { useState } from 'react';
 import { getStatusContent, getSortDirection } from '../utils/utils';
 

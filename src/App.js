@@ -27,7 +27,7 @@ const App = () => {
     displayedIpoData,
     state,
     actions,
-  } = useIpoData();
+  } = useIpoData;
 
   return (
     <div className="min-h-screen bg-gray-100 font-sans flex flex-col">

@@ -1,11 +1,10 @@
-// ✅ Optimized, Enhanced Version (Mobile-First, Vibrant UI)
+// ✅ Optimized, Enhanced Version (Card/Table Toggle, Apply/Allotment, Filters, SEO-Ready)
 
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import Papa from "papaparse";
-import websiteLogo from './Track My IPO - Logo.png';
+import logo from './0db721b3-956b-492d-843d-80e9ebd69083.png';
 
 const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSHEORz3aArzaDTOWYW6FlC1avk1TYKAhDKfyALmqg2HMDWiD60N6WG2wgMlPkvLWC9d7YzwplhCStb/pub?output=csv";
-const WEBSITE_LOGO_URL = websiteLogo;
 
 const App = () => {
   const [ipoData, setIpoData] = useState([]);
@@ -15,7 +14,8 @@ const App = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [loadingText, setLoadingText] = useState("Initializing...");
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [viewType, setViewType] = useState("card");
+  const [statusFilter, setStatusFilter] = useState("All");
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearchTerm(searchTerm), 300);
@@ -65,7 +65,7 @@ const App = () => {
     });
 
     return () => clearInterval(progressInterval);
-  }, [refreshTrigger]);
+  }, []);
 
   const sortBy = useCallback((key) => {
     setSortConfig(prev => ({
@@ -90,6 +90,10 @@ const App = () => {
           (field) => ipo[field]?.toLowerCase().includes(term)
         )
       );
+    }
+
+    if (statusFilter !== "All") {
+      items = items.filter((ipo) => ipo.Status?.toLowerCase() === statusFilter.toLowerCase());
     }
 
     if (sortConfig.key) {
@@ -118,16 +122,13 @@ const App = () => {
       });
     }
     return items;
-  }, [ipoData, sortConfig, debouncedSearchTerm]);
+  }, [ipoData, sortConfig, debouncedSearchTerm, statusFilter]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-100 text-gray-800">
       {isLoading && (
         <div className="fixed inset-0 bg-gradient-to-br from-blue-600 to-purple-700 text-white flex flex-col items-center justify-center z-50">
-          <svg className="animate-spin h-16 w-16 text-white mb-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
+          <img src={logo} alt="Logo" className="h-20 w-auto mb-4 rounded-full border border-white" />
           <h2 className="text-4xl font-bold mb-4">Track My IPO</h2>
           <p className="text-xl mb-2">{loadingText}</p>
           <div className="w-64 bg-white bg-opacity-30 rounded-full h-2.5 mb-4">
@@ -137,54 +138,91 @@ const App = () => {
         </div>
       )}
 
-      <header className="p-4 bg-gradient-to-r from-indigo-500 to-blue-500 text-white shadow flex justify-between items-center sticky top-0 z-30">
+      <header className="p-4 bg-gradient-to-r from-indigo-500 to-blue-500 text-white shadow flex flex-wrap gap-2 justify-between items-center sticky top-0 z-30">
         <div className="flex items-center">
-          <img
-            src={WEBSITE_LOGO_URL}
-            alt="Logo"
-            className="h-10 w-10 object-contain mr-3 rounded-full border border-white"
-            onError={(e) => (e.target.src = "https://placehold.co/40x40")}
-          />
+          <img src={logo} alt="Logo" className="h-10 w-auto mr-3 rounded-full border border-white" />
           <h1 className="text-xl font-bold">Track My IPO</h1>
         </div>
-        <input
-          type="text"
-          placeholder="Search IPOs..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="bg-white text-gray-800 border border-gray-300 p-2 rounded w-48 sm:w-64"
-        />
+        <div className="flex flex-wrap gap-2 items-center">
+          <input
+            type="text"
+            placeholder="Search IPOs..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="bg-white text-gray-800 border border-gray-300 p-2 rounded w-40 sm:w-64"
+          />
+          <select
+            className="text-black p-2 rounded border"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option>All</option>
+            <option>Open</option>
+            <option>Closed</option>
+            <option>Upcoming</option>
+          </select>
+          <button onClick={() => setViewType(viewType === 'card' ? 'table' : 'card')} className="bg-white text-blue-600 px-3 py-1 rounded font-semibold">
+            {viewType === 'card' ? 'Table View' : 'Card View'}
+          </button>
+        </div>
       </header>
 
-      <main className="p-4 grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
-        {filteredSortedIpoData.map((ipo, i) => (
-          <div
-            key={i}
-            className="bg-white rounded-xl p-4 shadow-md hover:shadow-lg transition duration-300 border border-gray-200"
-          >
-            <h2 className="text-lg font-bold text-indigo-700 mb-2">{ipo.Name}</h2>
-            <p className="text-sm"><span className="font-semibold text-gray-600">Type:</span> {ipo.Type}</p>
-            <p className="text-sm"><span className="font-semibold text-gray-600">Status:</span> {ipo.Status}</p>
-            <p className="text-sm"><span className="font-semibold text-gray-600">Price:</span> {ipo.Price}</p>
-            <p className="text-sm"><span className="font-semibold text-gray-600">Open:</span> {ipo.Open} | <span className="font-semibold text-gray-600">Close:</span> {ipo.Close}</p>
+      <main className="p-4">
+        {viewType === 'card' ? (
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
+            {filteredSortedIpoData.map((ipo, i) => (
+              <div key={i} className="bg-white rounded-xl p-4 shadow hover:shadow-md transition border border-gray-200">
+                <h2 className="text-lg font-bold text-indigo-700 mb-2">{ipo.Name}</h2>
+                <p className="text-sm"><strong>Type:</strong> {ipo.Type}</p>
+                <p className="text-sm"><strong>Status:</strong> {ipo.Status}</p>
+                <p className="text-sm"><strong>Price:</strong> {ipo.Price}</p>
+                <p className="text-sm"><strong>Open:</strong> {ipo.Open} | <strong>Close:</strong> {ipo.Close}</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <a href={ipo.ApplyURL || "#"} target="_blank" rel="noreferrer" className="px-2 py-1 bg-green-500 text-white rounded">Apply Now</a>
+                  <a href={ipo.AllotmentURL || "#"} target="_blank" rel="noreferrer" className="px-2 py-1 bg-blue-500 text-white rounded">Check Allotment</a>
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
+        ) : (
+          <table className="w-full text-left mt-4 bg-white shadow rounded">
+            <thead className="bg-gray-100">
+              <tr>
+                <th className="p-2 cursor-pointer" onClick={() => sortBy("Name")}>Name</th>
+                <th className="p-2">Status</th>
+                <th className="p-2">Type</th>
+                <th className="p-2">Price</th>
+                <th className="p-2">Open</th>
+                <th className="p-2">Close</th>
+                <th className="p-2">Apply</th>
+                <th className="p-2">Allotment</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredSortedIpoData.map((ipo, i) => (
+                <tr key={i} className="border-t">
+                  <td className="p-2 font-medium text-indigo-700">{ipo.Name}</td>
+                  <td className="p-2">{ipo.Status}</td>
+                  <td className="p-2">{ipo.Type}</td>
+                  <td className="p-2">{ipo.Price}</td>
+                  <td className="p-2">{ipo.Open}</td>
+                  <td className="p-2">{ipo.Close}</td>
+                  <td className="p-2"><a href={ipo.ApplyURL || "#"} className="text-green-600">Apply</a></td>
+                  <td className="p-2"><a href={ipo.AllotmentURL || "#"} className="text-blue-600">Check</a></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </main>
 
-      <div className="fixed bottom-4 right-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg p-3 rounded-xl flex gap-2">
-        <button
-          className="px-3 py-1 rounded bg-white text-blue-600 font-semibold hover:bg-blue-100"
-          onClick={() => sortBy("Name")}
-        >
-          Sort by Name
-        </button>
-        <button
-          className="px-3 py-1 rounded bg-white text-blue-600 font-semibold hover:bg-blue-100"
-          onClick={() => sortBy("Open")}
-        >
-          Sort by Open
-        </button>
-      </div>
+      <footer className="text-center p-4 text-sm text-gray-600">
+        <div className="mt-4">
+          <a href="/about" className="mr-4 underline">About Us</a>
+          <a href="/contact" className="underline">Contact Us</a>
+        </div>
+        <p className="mt-2">&copy; {new Date().getFullYear()} Track My IPO</p>
+      </footer>
     </div>
   );
 };

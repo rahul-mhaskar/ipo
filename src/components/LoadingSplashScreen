@@ -1,4 +1,3 @@
-// src/components/LoadingSplashScreen.js
 import React from 'react';
 
 const LoadingSplashScreen = ({ progress, text }) => {

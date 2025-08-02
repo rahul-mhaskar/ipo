@@ -1,0 +1,34 @@
+import React from "react";
+
+const AboutUsModal = ({ onClose }) => {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm z-50 flex justify-center items-center p-4">
+      <div className="bg-white max-w-md w-full p-6 rounded-xl shadow-lg relative">
+        <button
+          onClick={() => onClose(false)}
+          className="absolute top-2 right-3 text-gray-500 hover:text-red-500"
+        >
+          &times;
+        </button>
+
+        <h2 className="text-xl font-bold text-blue-700 mb-4 text-center">
+          About Track My IPO
+        </h2>
+
+        <p className="text-sm text-gray-700 leading-relaxed">
+          Track My IPO is a simple and efficient tool to help investors monitor
+          the latest IPOs in the Indian stock market. Our platform aggregates data
+          from publicly available sources and presents it in a user-friendly way,
+          enabling you to make better-informed decisions.
+        </p>
+
+        <p className="text-sm text-gray-700 mt-3">
+          <strong>Disclaimer:</strong> We do not provide financial advice. The
+          data shown here is for informational purposes only.
+        </p>
+      </div>
+    </div>
+  );
+};
+
+export default AboutUsModal;

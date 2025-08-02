@@ -16,7 +16,7 @@ const App = () => {
   const [statusFilter, setStatusFilter] = useState("All");
 
   useEffect(() => {
-    const handler = setTimeout(() => setDebouncedSearchTerm(searchTerm), 300);
+    const handler = setTimeout(() => setDebouncedSearchTerm(searchTerm), 300);// check
     return () => clearTimeout(handler);
   }, [searchTerm]);
 

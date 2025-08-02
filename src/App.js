@@ -6,7 +6,7 @@ import Papa from "papaparse";
 import websiteLogo from './Track My IPO - Logo.png'; // Example: if your logo is directly in src/
 
 
-const GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSHEORz3aArzaDTOWYW6FlC1avk1TYKAhDKfyALmqg2HMDWiD60N6WG2wgMlPkvLWC9d7YzwplhCStb/pub?output=csv';
+const GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSHEORz3aArzaDTOWYW6FlC1avk1TYKAhDKfyALmqg2HMDWiD60N6WG2wgMlPkvLWC9d7YzwplhCStb/pub?output=csv";
 // Use the imported logo for the main website logo
 const WEBSITE_LOGO_URL = websiteLogo; // Now uses the imported local asset
 

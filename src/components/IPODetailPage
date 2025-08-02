@@ -1,0 +1,97 @@
+// src/components/IPODetailPage.js
+import React from 'react';
+import DescriptionWithToggle from './DescriptionWithToggle';
+import { getStatusContent } from '../utils/utils';
+
+const IPODetailPage = ({ ipo }) => {
+  const handleBackClick = () => {
+    window.location.hash = '';
+  };
+
+  if (!ipo) {
+    return (
+      <div className="text-center text-gray-600">
+        <h2 className="text-2xl font-bold mb-4">IPO Not Found</h2>
+        <p>The IPO you are looking for could not be found.</p>
+        <button onClick={handleBackClick} className="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
+          Back to Home
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-lg">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-3xl font-bold text-gray-800">{ipo.Name}</h2>
+        <button onClick={handleBackClick} className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg transition-colors duration-200">
+          ← Back to IPOs
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+        <div className="flex flex-col items-center p-4 border border-gray-200 rounded-lg">
+          {ipo.ImageURL ? (
+            <img
+              src={ipo.ImageURL}
+              alt={`${ipo.Name} Logo`}
+              className="w-40 h-40 object-contain mb-4"
+              onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/160x160/e0e0e0/555555?text=No+Image"; }}
+            />
+          ) : (
+            <img
+              src="https://placehold.co/160x160/e0e0e0/555555?text=No+Image"
+              alt="No Image Available"
+              className="w-40 h-40 object-contain mb-4"
+            />
+          )}
+          <span className="text-lg font-semibold text-blue-700">{ipo.Type}</span>
+        </div>
+
+        <div className="space-y-3 text-gray-700 text-lg">
+          <p><strong>Status:</strong> {getStatusContent(ipo.Status, ipo, () => {}, () => {})}</p>
+          <p><strong>Price:</strong> {ipo.Price || 'N/A'}</p>
+          <p><strong>GMP:</strong> {ipo.GMP || 'N/A'}</p>
+          <p><strong>Subscription:</strong> {ipo.Subscription || 'N/A'}</p>
+          <p><strong>IPO Size:</strong> {ipo["IPO Size"] || 'N/A'}</p>
+          <p><strong>Lot Size:</strong> {ipo.Lot || 'N/A'}</p>
+        </div>
+      </div>
+
+      <div className="mt-6 border-t pt-6">
+        <h3 className="text-xl font-bold text-gray-800 mb-4">Key Dates</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-gray-700">
+          <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
+            <p className="font-bold">Open Date</p>
+            <p>{ipo.Open || 'N/A'}</p>
+          </div>
+          <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
+            <p className="font-bold">Close Date</p>
+            <p>{ipo.Close || 'N/A'}</p>
+          </div>
+          <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
+            <p className="font-bold">BoA Date</p>
+            <p>{ipo["BoA Dt"] || 'N/A'}</p>
+          </div>
+          <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
+            <p className="font-bold">Listing Date</p>
+            <p>{ipo.Listing || 'N/A'}</p>
+          </div>
+          <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
+            <p className="font-bold">Est. Listing</p>
+            <p>{ipo["Est Listing"] || 'N/A'}</p>
+          </div>
+        </div>
+      </div>
+
+      {ipo.Description && (
+        <div className="mt-6 border-t pt-6">
+          <h3 className="text-xl font-bold text-gray-800 mb-4">About the Company</h3>
+          <DescriptionWithToggle description={ipo.Description} />
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default IPODetailPage;

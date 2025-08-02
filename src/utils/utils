@@ -1,5 +1,3 @@
-// src/utils/utils.js
-// This file will contain shared utility functions
 const monthMap = {
   "jan": 0, "feb": 1, "mar": 2, "apr": 3, "may": 4, "jun": 5,
   "jul": 6, "aug": 7, "sep": 8, "oct": 9, "nov": 10, "dec": 11

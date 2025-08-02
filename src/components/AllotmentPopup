@@ -1,0 +1,42 @@
+import React from "react";
+
+const AllotmentPopup = ({ onClose, allotmentLinks = [] }) => {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm z-50 flex justify-center items-center">
+      <div className="bg-white w-full max-w-sm mx-4 p-6 rounded-xl shadow-lg relative">
+        <button
+          onClick={() => onClose(false)}
+          className="absolute top-2 right-3 text-gray-500 hover:text-red-500"
+        >
+          &times;
+        </button>
+        <h2 className="text-xl font-bold text-center text-green-700 mb-4">
+          Check Allotment Status
+        </h2>
+
+        {allotmentLinks.length > 0 ? (
+          <ul className="space-y-3">
+            {allotmentLinks.map((link, index) => (
+              <li key={index}>
+                <a
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block bg-green-100 hover:bg-green-200 text-green-800 text-center py-2 px-4 rounded-lg font-medium shadow"
+                >
+                  {link.name}
+                </a>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-gray-600 text-sm text-center">
+            No allotment links available.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default AllotmentPopup;

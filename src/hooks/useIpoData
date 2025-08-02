@@ -1,189 +1,186 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import Papa from 'papaparse';
-import { getStatusContent, parseDateForSort } from '../utils/utils';
+import { useState, useEffect, useMemo } from 'react';
+import { parseDateForSort, getStatusContent } from '../utils/utils';
 
+// This is a placeholder URL for the Google Sheet. You should replace this with your actual sheet URL.
+// The URL should be for the published CSV version of the sheet.
 const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlsMurbsXT2UBQ2ADbyoiQtLUTznQU4vNzw3nS02_StSrFV9pkrnXOrNAjV_Yj-Byc_zw72z_rM0tQ/pub?output=csv";
-const useIpoData = ({ searchTerm, ipoTypeFilter, statusFilter, layoutMode, sortConfig, setAllotmentLinks, setShowAllotmentPopup, setShowBrokerPopup, showMessage }) => {
+
+const useIpoData = ({
+  searchTerm,
+  ipoTypeFilter,
+  statusFilter,
+  layoutMode,
+  sortConfig,
+  setAllotmentLinks,
+  setShowAllotmentPopup,
+  setShowBrokerPopup,
+}) => {
+  // State for the hook
   const [ipoData, setIpoData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadingProgress, setLoadingProgress] = useState(0);
-  const [loadingText, setLoadingText] = useState('Initializing...');
+  const [loadingText, setLoadingText] = useState('Fetching IPO data...');
   const [message, setMessage] = useState('');
   const [showMessageBox, setShowMessageBox] = useState(false);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  const localShowMessage = useCallback((msg) => {
-    setMessage(msg);
+  // A function to show a temporary message box
+  const showMessage = (text) => {
+    setMessage(text);
     setShowMessageBox(true);
-    setTimeout(() => {
-      setShowMessageBox(false);
-      setMessage('');
-    }, 500);
-  }, []);
+  };
 
-  const refreshData = useCallback(() => {
-    setRefreshTrigger(prev => prev + 1);
-    localShowMessage('Refreshing IPO data...');
-  }, [localShowMessage]);
-
-  useEffect(() => {
-    let progressInterval;
-    let currentProgress = 0;
-
-    const startProgressSimulation = () => {
-      if (progressInterval) clearInterval(progressInterval);
-      progressInterval = setInterval(() => {
-        currentProgress = Math.min(currentProgress + Math.random() * 10, 95);
-        setLoadingProgress(Math.floor(currentProgress));
-        if (currentProgress < 30) {
-          setLoadingText('Connecting to data source...');
-        } else if (currentProgress < 70) {
-          setLoadingText('Fetching IPO records...');
-        } else {
-          setLoadingText('Processing data...');
-        }
-      }, 200);
-    };
-
+  // Function to refresh data from Google Sheets
+  const refreshData = async () => {
     setIsLoading(true);
     setLoadingProgress(0);
-    setLoadingText('Loading IPO data...');
-    startProgressSimulation();
+    setLoadingText('Fetching the latest IPO data...');
+    try {
+      const response = await fetch(GOOGLE_SHEET_URL);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const text = await response.text();
+      const rows = text.split('\n').slice(1).filter(row => row.trim() !== '');
+      const headers = text.split('\n')[0].split(',').map(header => header.trim().replace(/"/g, ''));
+      const parsedData = rows.map(row => {
+        const values = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+        const ipo = {};
+        headers.forEach((header, index) => {
+          ipo[header] = values[index] ? values[index].replace(/"/g, '').trim() : '';
+        });
+        return ipo;
+      });
 
-    Papa.parse(GOOGLE_SHEET_CSV_URL, {
-      download: true,
-      header: true,
-      complete: (result) => {
-        clearInterval(progressInterval);
-        const cleanedData = result.data.filter(row => row.Name && row.Name.trim() !== '');
-        setIpoData(cleanedData);
-        setLoadingProgress(100);
-        setLoadingText('Data loaded successfully!');
-        setTimeout(() => {
-          setIsLoading(false);
-          localShowMessage('IPO data loaded successfully!');
-        }, 100);
-      },
-      error: (error) => {
-        clearInterval(progressInterval);
-        console.error('Error parsing CSV:', error);
-        setLoadingProgress(0);
-        setLoadingText(`Error: ${error.message}. Please check URL.`);
-        setTimeout(() => {
-          setIsLoading(false);
-          localShowMessage(`Failed to load IPO data: ${error.message}. Please check the CSV URL and ensure it's publicly accessible.`);
-        }, 2000);
-      },
-    });
+      // Filter out invalid data (e.g., rows with missing 'Name')
+      const validData = parsedData.filter(ipo => ipo.Name);
 
-    return () => clearInterval(progressInterval);
-  }, [refreshTrigger, localShowMessage]);
+      setIpoData(validData);
+      setLoadingProgress(100);
+      setLoadingText('Data loaded!');
+      setTimeout(() => setIsLoading(false), 500); // Hide splash screen after a short delay
+      showMessage('IPO data refreshed successfully!');
+    } catch (error) {
+      console.error("Failed to fetch IPO data:", error);
+      showMessage('Failed to fetch data. Please check your network and sheet URL.');
+      setLoadingText('Failed to load data.');
+      setTimeout(() => setIsLoading(false), 500);
+    }
+  };
 
-  const { upcomingIpos, currentIpos, listedIpos, totalIposCount, currentMainboardCount, currentSmeCount, displayedIpoData } = useMemo(() => {
-    let sortableItems = [...ipoData];
+  useEffect(() => {
+    refreshData();
+  }, []);
 
+  // Filter and sort the IPO data
+  const displayedIpoData = useMemo(() => {
+    let filteredData = ipoData;
+
+    // Search term filter
     if (searchTerm) {
-      sortableItems = sortableItems.filter(ipo =>
-        Object.values(ipo).some(value => String(value).toLowerCase().includes(searchTerm.toLowerCase()))
+      filteredData = filteredData.filter(ipo =>
+        Object.values(ipo).some(value =>
+          String(value).toLowerCase().includes(searchTerm.toLowerCase())
+        )
       );
     }
 
+    // IPO Type Filter
     if (ipoTypeFilter !== 'All') {
-      sortableItems = sortableItems.filter(ipo => ipo.Type?.toLowerCase().includes(ipoTypeFilter.toLowerCase()));
-    }
-
-    if (sortConfig.key) {
-      sortableItems.sort((a, b) => {
-        const aVal = a[sortConfig.key] || '';
-        const bVal = b[sortConfig.key] || '';
-        const numericKeys = ["GMP", "Price", "IPO Size", "Lot"];
-        const dateKeys = ["Open", "Close", "BoA Dt", "Listing"];
-
-        if (numericKeys.includes(sortConfig.key)) {
-          const numA = parseFloat(String(aVal).replace(/[^0-9.-]+/g, ''));
-          const numB = parseFloat(String(bVal).replace(/[^0-9.-]+/g, ''));
-          return (sortConfig.direction === 'asc' ? numA - numB : numB - numA);
-        }
-
-        if (dateKeys.includes(sortConfig.key)) {
-          const dateA = parseDateForSort(aVal);
-          const dateB = parseDateForSort(bVal);
-          if (dateA === null && dateB === null) return 0;
-          if (dateA === null) return sortConfig.direction === 'asc' ? 1 : -1;
-          if (dateB === null) return sortConfig.direction === 'asc' ? -1 : 1;
-          return (sortConfig.direction === 'asc' ? dateA.getTime() - dateB.getTime() : dateB.getTime() - dateA.getTime());
-        }
-
-        return (sortConfig.direction === 'asc' ? String(aVal).localeCompare(String(bVal), undefined, { numeric: true }) : String(bVal).localeCompare(String(aVal), undefined, { numeric: true }));
+      filteredData = filteredData.filter(ipo => {
+        const type = ipo['IPO Type'] ? ipo['IPO Type'].toLowerCase() : '';
+        return ipoTypeFilter.toLowerCase() === type;
       });
     }
 
+    // Status Filter
+    if (statusFilter !== 'All') {
+      filteredData = filteredData.filter(ipo => {
+        const status = ipo.Status ? ipo.Status.toLowerCase() : '';
+        const statusText = getStatusContent(status);
+        return statusText.toLowerCase() === statusFilter.toLowerCase();
+      });
+    }
+
+    // Sort the data
+    if (sortConfig.key) {
+      filteredData = [...filteredData].sort((a, b) => {
+        const aValue = a[sortConfig.key];
+        const bValue = b[sortConfig.key];
+
+        // Handle numeric and date sorting
+        let compareValue;
+        if (sortConfig.key.includes('Date')) {
+          compareValue = parseDateForSort(aValue) - parseDateForSort(bValue);
+        } else if (!isNaN(parseFloat(aValue)) && !isNaN(parseFloat(bValue))) {
+          compareValue = parseFloat(aValue) - parseFloat(bValue);
+        } else {
+          compareValue = String(aValue).localeCompare(String(bValue));
+        }
+
+        return sortConfig.direction === 'asc' ? compareValue : -compareValue;
+      });
+    }
+
+    return filteredData;
+  }, [ipoData, searchTerm, ipoTypeFilter, statusFilter, sortConfig]);
+
+  // Separate IPOs into categories for table view
+  const { upcomingIpos, currentIpos, listedIpos } = useMemo(() => {
     const upcoming = [];
     const current = [];
     const listed = [];
+    const now = new Date();
 
-    sortableItems.forEach(ipo => {
-      const status = ipo.Status ? String(ipo.Status).toLowerCase() : '';
-      if (status.includes('upcoming') || status.includes('pre-open')) {
+    displayedIpoData.forEach(ipo => {
+      const openDate = new Date(ipo['Open Date']);
+      const closeDate = new Date(ipo['Close Date']);
+      const status = ipo.Status ? ipo.Status.toLowerCase() : '';
+
+      if (status.includes('listed')) {
+        listed.push(ipo);
+      } else if (openDate > now) {
         upcoming.push(ipo);
-      } else if (status.includes('apply') || status.includes('open') || status.includes('pending') || status.includes('allotment')) {
+      } else if (closeDate >= now) {
         current.push(ipo);
-      } else if (status.includes('listed') || status.includes('closed')) {
+      } else {
         listed.push(ipo);
       }
     });
 
-    let currentMainboard = 0;
-    let currentSme = 0;
-    current.forEach(ipo => {
-      if (ipo.Type && ipo.Type.toLowerCase().includes('main board')) currentMainboard++;
-      else if (ipo.Type && ipo.Type.toLowerCase().includes('sme')) currentSme++;
-    });
+    return { upcomingIpos: upcoming, currentIpos: current, listedIpos: listed };
+  }, [displayedIpoData]);
 
-    let finalDisplayedItems = [];
-    if (layoutMode === 'card') {
-      if (statusFilter === 'All') {
-        finalDisplayedItems = sortableItems.filter(ipo => {
-          const status = ipo.Status ? String(ipo.Status).toLowerCase() : '';
-          return !status.includes('listed') && !status.includes('closed');
-        });
-      } else if (statusFilter === 'Current') {
-        finalDisplayedItems = current;
-      } else if (statusFilter === 'Upcoming') {
-        finalDisplayedItems = upcoming;
-      }
+  // Handle various click actions
+  const handleApplyClick = (ipo) => {
+    if (ipo['Apply Link']) {
+      window.open(ipo['Apply Link'], '_blank');
     } else {
-      finalDisplayedItems = sortableItems;
+      setShowBrokerPopup(true);
     }
-
-    return {
-      upcomingIpos: upcoming,
-      currentIpos: current,
-      listedIpos: listed,
-      totalIposCount: sortableItems.length,
-      currentMainboardCount: currentMainboard,
-      currentSmeCount: currentSme,
-      displayedIpoData: finalDisplayedItems,
-    };
-  }, [ipoData, searchTerm, ipoTypeFilter, statusFilter, layoutMode, sortConfig]);
-
-  const handleApplyClick = () => setShowBrokerPopup(true);
+  };
 
   const handleAllotmentClick = (ipo) => {
     const links = [];
-    if (ipo.AllotmentLink3) {
-      links.push({ name: 'BSE', url: '[https://www.bseindia.com/investors/appli_check.aspx](https://www.bseindia.com/investors/appli_check.aspx)' });
-      links.push({ name: 'NSE', url: '[https://www.nseindia.com/products/dynaContent/equities/ipos/ipo_login.jsp](https://www.nseindia.com/products/dynaContent/equities/ipos/ipo_login.jsp)' });
-      links.push({ name: 'Registrar Link', url: ipo.AllotmentLink3 });
+    if (ipo['Allotment Link 1']) links.push(ipo['Allotment Link 1']);
+    if (ipo['Allotment Link 2']) links.push(ipo['Allotment Link 2']);
+    if (ipo['Allotment Link 3']) links.push(ipo['Allotment Link 3']);
+    if (links.length > 0) {
+      setAllotmentLinks(links);
+      setShowAllotmentPopup(true);
+    } else {
+      showMessage('No allotment link available for this IPO yet.');
     }
-    setAllotmentLinks(links);
-    setShowAllotmentPopup(true);
+  };
+  
+  const handleViewDetailsClick = (ipoName) => {
+    window.location.hash = `#/ipo/${encodeURIComponent(ipoName.replace(/\s/g, '-'))}`;
   };
 
-  const handleViewDetailsClick = (ipo) => {
-    window.location.hash = `#ipo/${ipo.Name.replace(/\s/g, '-')}`;
-  };
+  const totalIposCount = ipoData.length;
+  const currentMainboardCount = currentIpos.filter(ipo => ipo['IPO Type'].toLowerCase() === 'mainboard').length;
+  const currentSmeCount = currentIpos.filter(ipo => ipo['IPO Type'].toLowerCase() === 'sme').length;
 
+  // Return all the state and functions for the App component to use
   return {
     ipoData,
     isLoading,
@@ -191,7 +188,8 @@ const useIpoData = ({ searchTerm, ipoTypeFilter, statusFilter, layoutMode, sortC
     loadingText,
     message,
     showMessageBox,
-    showMessage: localShowMessage,
+    showMessage,
+    setShowMessageBox,
     refreshData,
     upcomingIpos,
     currentIpos,

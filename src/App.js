@@ -86,17 +86,48 @@ const App = () => {
             tableHeaders={state.tableHeaders}
           />
         )}
-        {state.showMessageBox && <MessageBox message={state.message} onClose={actions.hideMessage} />}
+        {state.showMessageBox && (
+          <MessageBox
+            message={state.message}
+            onClose={() => actions.showMessage("")}
+          />
+        )}
       </main>
 
-      {state.showBrokerPopup && <BrokerPopup onClose={actions.setShowBrokerPopup} showMessage={actions.showMessage} />}
-      {state.showAllotmentPopup && <AllotmentPopup links={state.allotmentLinks} onClose={actions.setShowAllotmentPopup} />}
-      {state.showDetailsModal && <DetailsModal ipo={state.selectedIpoDetails} onClose={actions.closeDetailsModal} getStatusContent={actions.getStatusContent} />}
-      {state.showContactUsModal && <ContactUsModal state={state.contactForm} onChange={actions.handleContactFormChange} onSubmit={actions.handleContactFormSubmit} message={state.contactFormMessage} />}
-      {state.showAboutUsModal && <AboutUsModal onClose={actions.setShowAboutUsModal} />}
+      {state.showBrokerPopup && (
+        <BrokerPopup
+          onClose={actions.setShowBrokerPopup}
+          showMessage={actions.showMessage}
+        />
+      )}
+      {state.showAllotmentPopup && (
+        <AllotmentPopup
+          allotmentLinks={state.allotmentLinks}
+          onClose={actions.setShowAllotmentPopup}
+        />
+      )}
+      {state.showDetailsModal && (
+        <DetailsModal
+          ipo={state.selectedIpoDetails}
+          onClose={actions.closeDetailsModal}
+          getStatusContent={actions.getStatusContent}
+        />
+      )}
+      {state.showContactUsModal && (
+        <ContactUsModal
+          onClose={actions.setShowContactUsModal}
+          showMessage={actions.showMessage}
+        />
+      )}
+      {state.showAboutUsModal && (
+        <AboutUsModal onClose={actions.setShowAboutUsModal} />
+      )}
+
       <Footer
         isFooterExpanded={state.isFooterExpanded}
-        onToggle={() => actions.setIsFooterExpanded(!state.isFooterExpanded)}
+        onToggle={() =>
+          actions.setIsFooterExpanded(!state.isFooterExpanded)
+        }
         renderBrokerLinks={actions.renderBrokerLinks}
       />
     </div>

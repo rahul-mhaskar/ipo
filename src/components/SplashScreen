@@ -1,0 +1,19 @@
+import React from "react";
+
+const SplashScreen = ({ loadingProgress, loadingText }) => {
+  return (
+    <div className="fixed inset-0 bg-white z-50 flex flex-col justify-center items-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-opacity-50 mb-4" />
+      <p className="text-gray-700 text-sm font-medium mb-2">{loadingText}</p>
+      <div className="w-64 h-2 bg-gray-200 rounded-full overflow-hidden">
+        <div
+          className="h-full bg-blue-500 transition-all duration-300"
+          style={{ width: `${loadingProgress}%` }}
+        />
+      </div>
+      <p className="text-xs text-gray-400 mt-2">Loading IPO data...</p>
+    </div>
+  );
+};
+
+export default SplashScreen;

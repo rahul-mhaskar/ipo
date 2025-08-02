@@ -226,34 +226,31 @@ const App = () => {
     startProgressSimulation(); // Start progress simulation
 
     Papa.parse(GOOGLE_SHEET_CSV_URL, {
-      download: true,
-      header: true,
-      complete: (result) => {
-        clearInterval(progressInterval); // Stop the progress simulation
-        const cleanedData = result.data.filter(row => row.Name && row.Name.trim() !== '');
-        setIpoData(cleanedData);
+  download: true,
+  header: true,
+  complete: (result) => {
+    clearInterval(progressInterval);
 
-        setLoadingProgress(100); // Set progress to 100% immediately
-        setLoadingText("Data loaded successfully!"); // Final success message on splash
+    const cleanedData = result.data.filter(row => row.Name && row.Name.trim() !== '');
+    setIpoData(cleanedData);
 
-        setTimeout(() => { // Briefly show 100% and success message before hiding splash
-          setIsLoading(false); // Hide the splash screen
-          showMessage("IPO data loaded successfully!"); // Show confirmation in the main message box
-        }, 100); // Reduced delay here (from 500ms to 100ms)
+    setLoadingProgress(100);
+    setLoadingText("Data loaded successfully!");
 
-      },
-      error: (error) => {
-        clearInterval(progressInterval); // Stop the progress simulation
-        console.error("Error parsing CSV:", error);
-        setLoadingProgress(0); // Reset progress on error
-        setLoadingText(`Error: ${error.message}. Please check URL.`); // Display error on splash
-        
-        setTimeout(() => { // Show error message briefly on splash, then hide splash
-            setIsLoading(false); // Hide the splash screen
-            showMessage(`Failed to load IPO data: ${error.message}. Please check the CSV URL and ensure it's publicly accessible.`);
-        }, 2000); // Show error on splash for 2 seconds before hiding
-      }
-    });
+    setTimeout(() => {
+      setIsLoading(false);
+      showMessage("IPO data loaded successfully!");
+    }, 300); // Slightly longer delay for UX
+  },
+  error: (err) => {
+    clearInterval(progressInterval);
+    setLoadingText("Failed to load data.");
+    console.error("PapaParse Error:", err);
+    showMessage("Failed to load IPO data.");
+    setIsLoading(false);
+  }
+});
+
 
     // Cleanup function for the effect
     return () => {

@@ -1,0 +1,36 @@
+// src/components/BrokerPopup.js
+import React from 'react';
+
+const BrokerPopup = ({ isOpen, onClose }) => {
+  const renderBrokerLinks = () => {
+    const brokers = [
+      { name: "Zerodha", href: "[https://zerodha.com/open-account?c=VCB643](https://zerodha.com/open-account?c=VCB643)", logo: "[https://zerodha.com/static/images/logo.svg](https://zerodha.com/static/images/logo.svg)" },
+      { name: "Upstox", href: "[https://upstox.onelink.me/0H1s/4LAYGW](https://upstox.onelink.me/0H1s/4LAYGW)", logo: "[https://assets.upstox.com/website/images/upstox-new-logo.svg](https://assets.upstox.com/website/images/upstox-new-logo.svg)" },
+      { name: "Paytm Money", href: "[https://paytmmoney.page.link/DSwSvdhoasovQYLz9](https://paytmmoney.page.link/DSwSvdhoasovQYLz9)", logo: "[https://play-lh.googleusercontent.com/nXCY9Did341stoQEhCEH5wJW2FBybZYbpiYl2J-eCajYOXZ_XXXHX1ptjATuA0zayg](https://play-lh.googleusercontent.com/nXCY9Did341stoQEhCEH5wJW2FBybZYbpiYl2J-eCajYOXZ_XXXHX1ptjATuA0zayg)" },
+    ];
+    return brokers.map((broker, idx) => (
+      <a key={idx} href={broker.href} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center w-20 sm:w-24 text-center hover:scale-105 hover:shadow-lg transition-all p-1 sm:p-2 bg-gray-50 rounded-lg">
+        <img src={broker.logo} alt={broker.name} className="h-6 sm:h-8 mb-0.5 object-contain" />
+        <span className="text-xs text-gray-600">{broker.name}</span>
+      </a>
+    ));
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex justify-center items-center p-4">
+      <div className="bg-white p-4 rounded-lg shadow-lg w-full max-w-3xl relative">
+        <button onClick={onClose} className="absolute top-2 right-2 text-gray-600 hover:text-black text-lg">×</button>
+        <h2 className="text-lg font-semibold mb-4 text-center text-gray-800">
+          🛡️ Open Demat account securely with verified investment brokers.
+        </h2>
+        <div className="flex flex-wrap justify-center gap-4">
+          {renderBrokerLinks()}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default BrokerPopup;

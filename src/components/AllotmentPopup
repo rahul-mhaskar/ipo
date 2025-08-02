@@ -1,0 +1,28 @@
+// src/components/AllotmentPopup.js
+import React from 'react';
+
+const AllotmentPopup = ({ isOpen, onClose, allotmentLinks }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex justify-center items-center p-4">
+      <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full relative">
+        <button className="absolute top-2 right-2 text-gray-600 hover:text-black text-lg" onClick={onClose}>×</button>
+        <h3 className="text-lg font-semibold mb-3 text-gray-800">Check allotment from the below verified links</h3>
+        {allotmentLinks.length > 0 ? (
+          <ul className="space-y-2">
+            {allotmentLinks.map((link, idx) => (
+              <li key={idx}>
+                <a href={link.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800 break-all">🔗 {link.name}</a>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-gray-600">No allotment links available for this IPO.</p>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default AllotmentPopup;

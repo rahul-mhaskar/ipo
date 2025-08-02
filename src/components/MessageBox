@@ -1,0 +1,16 @@
+import React from "react";
+
+const MessageBox = ({ message, onClose }) => {
+  return (
+    <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-4 py-2 rounded-md shadow-lg z-50 animate-bounce-once">
+      <div className="flex items-center gap-2">
+        <span>{message}</span>
+        <button onClick={onClose} className="text-white hover:text-gray-300">
+          &times;
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default MessageBox;

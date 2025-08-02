@@ -8,18 +8,46 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .scrollable-table-wrapper {
+            max-height: 50vh; /* Adjust height as needed */
+            overflow-y: auto;
+        }
+    </style>
 </head>
 <body class="bg-gray-100 font-sans">
-
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useMemo } = React;
+        const { useState, useEffect, useMemo, useRef } = React;
         const { createRoot } = ReactDOM;
 
         // =========================================================
-        // === UTILITY FUNCTIONS - AVOID CIRCULAR DEPENDENCY ISSUES
+        // === UTILITY FUNCTIONS
         // =========================================================
+        /**
+         * Parses a date string in DD-MM-YYYY format into a Date object.
+         * @param {string} dateString
+         * @returns {Date|null}
+         */
+        const parseDate = (dateString) => {
+            if (!dateString) return null;
+            const [day, month, year] = dateString.split('-');
+            // Re-order to YYYY-MM-DD for consistent Date object creation
+            const date = new Date(`${year}-${month}-${day}`);
+            // Check for valid date
+            return isNaN(date.getTime()) ? null : date;
+        };
+
+        const parseDateForSort = (dateString) => {
+            const date = parseDate(dateString);
+            return date ? date.getTime() : 0;
+        };
+
         const getStatusContent = (status) => {
             const statusLower = status ? status.toLowerCase() : '';
             if (statusLower.includes('listed')) return 'Listed';
@@ -27,25 +55,165 @@
             return 'Open';
         };
 
-        const parseDateForSort = (dateString) => {
-            if (!dateString) return 0;
-            const [day, month, year] = dateString.split('-');
-            if (!day || !month || !year) return 0;
-            return new Date(`${year}-${month}-${day}`).getTime();
+        // =========================================================
+        // === COMPONENT PLACEHOLDERS
+        // =========================================================
+        const LoadingSplashScreen = ({ progress, text }) => (
+            <div className="fixed inset-0 flex flex-col items-center justify-center bg-white z-50">
+                <div className="w-64 h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div className="h-full bg-blue-500 transition-all duration-300 ease-in-out" style={{ width: `${progress}%` }}></div>
+                </div>
+                <p className="mt-4 text-gray-700">{text}</p>
+            </div>
+        );
+
+        const MessageBox = ({ message, showMessageBox, setShowMessageBox }) => (
+            showMessageBox && (
+                <div className="fixed bottom-4 left-1/2 -translate-x-1/2 p-4 bg-gray-800 text-white rounded-lg shadow-lg z-50 transition-all duration-300 ease-in-out transform scale-100 opacity-100">
+                    <p>{message}</p>
+                    <button onClick={() => setShowMessageBox(false)} className="absolute top-1 right-1 text-white p-1 rounded-full hover:bg-gray-700">&times;</button>
+                </div>
+            )
+        );
+
+        const Header = ({
+            searchTerm, setSearchTerm, refreshData, ipoTypeFilter, setIpoTypeFilter, statusFilter, setStatusFilter, sortConfig, sortBy
+        }) => {
+            const getSortIcon = (key) => {
+                if (sortConfig.key !== key) return null;
+                return sortConfig.direction === 'asc' ? '▲' : '▼';
+            };
+
+            return (
+                <header className="bg-white shadow-md fixed top-0 w-full z-10 p-4">
+                    <div className="container mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+                        <h1 className="text-3xl font-bold text-gray-800">IPO Tracker</h1>
+                        <div className="flex-grow flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto">
+                            <input
+                                type="text"
+                                placeholder="Search IPOs..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full sm:w-64 p-2 rounded-lg border-2 border-gray-300 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                            />
+                            <select
+                                value={ipoTypeFilter}
+                                onChange={(e) => setIpoTypeFilter(e.target.value)}
+                                className="w-full sm:w-auto p-2 rounded-lg border-2 border-gray-300 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                            >
+                                <option value="All">All Types</option>
+                                <option value="Mainboard">Mainboard</option>
+                                <option value="SME">SME</option>
+                            </select>
+                            <select
+                                value={statusFilter}
+                                onChange={(e) => setStatusFilter(e.target.value)}
+                                className="w-full sm:w-auto p-2 rounded-lg border-2 border-gray-300 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                            >
+                                <option value="All">All Statuses</option>
+                                <option value="Open">Open</option>
+                                <option value="Closed">Closed</option>
+                                <option value="Listed">Listed</option>
+                            </select>
+                            <button
+                                onClick={refreshData}
+                                className="w-full sm:w-auto px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition duration-200"
+                            >
+                                Refresh
+                            </button>
+                        </div>
+                    </div>
+                </header>
+            );
         };
 
+        const Footer = () => (
+            <footer className="bg-gray-800 text-white text-center p-4 fixed bottom-0 w-full">
+                &copy; 2024 IPO Tracker
+            </footer>
+        );
+
+        const IPOTable = ({ title, ipoList, sortConfig, sortBy, handleAllotmentClick, handleViewDetailsClick, handleApplyClick }) => {
+            const getSortIcon = (key) => {
+                if (sortConfig.key !== key) return null;
+                return sortConfig.direction === 'asc' ? '▲' : '▼';
+            };
+
+            return (
+                <section className="my-6">
+                    <h2 className="text-2xl font-bold mb-2 text-gray-800">{title}</h2>
+                    <div className="bg-white rounded-lg shadow-md overflow-hidden scrollable-table-wrapper">
+                        <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50 sticky top-0">
+                                <tr>
+                                    {['Name', 'Status', 'Open Date', 'Close Date', 'IPO Type', 'Size (₹ Cr)', 'Price (₹)'].map(header => (
+                                        <th key={header} onClick={() => sortBy(header)} className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer select-none">
+                                            {header} {getSortIcon(header)}
+                                        </th>
+                                    ))}
+                                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                                {ipoList.length > 0 ? ipoList.map((ipo, index) => (
+                                    <tr key={index} className="hover:bg-gray-50 transition duration-150 ease-in-out">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{ipo.Name || 'N/A'}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{ipo.Status || 'N/A'}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{ipo['Open Date'] || 'N/A'}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{ipo['Close Date'] || 'N/A'}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{ipo['IPO Type'] || 'N/A'}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{ipo['Size (₹ Cr)'] || 'N/A'}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{ipo['Price (₹)'] || 'N/A'}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <div className="flex space-x-2">
+                                                <button onClick={() => handleViewDetailsClick(ipo.Name)} className="text-blue-600 hover:text-blue-900">View</button>
+                                                {ipo.Status && ipo.Status.toLowerCase().includes('open') && (
+                                                    <button onClick={() => handleApplyClick(ipo)} className="text-green-600 hover:text-green-900">Apply</button>
+                                                )}
+                                                {ipo.Status && (ipo.Status.toLowerCase().includes('listed') || ipo.Status.toLowerCase().includes('closed')) && (
+                                                    <button onClick={() => handleAllotmentClick(ipo)} className="text-yellow-600 hover:text-yellow-900">Allotment</button>
+                                                )}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )) : (
+                                    <tr>
+                                        <td colSpan="8" className="px-6 py-4 text-center text-gray-500">No IPOs available.</td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            );
+        };
+
+        const AllotmentPopup = ({ isOpen, onClose, allotmentLinks }) => isOpen && (
+            <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center p-4 z-50">
+                <div className="bg-white p-6 rounded-lg shadow-xl max-w-lg w-full">
+                    <h2 className="text-2xl font-bold text-gray-800 mb-4">Allotment Links</h2>
+                    {allotmentLinks.length > 0 ? (
+                        <ul className="list-disc list-inside space-y-2 text-gray-700">
+                            {allotmentLinks.map((link, index) => (
+                                <li key={index}>
+                                    <a href={link} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                                        Allotment Link {index + 1}
+                                    </a>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <p className="text-gray-500">No allotment links available yet.</p>
+                    )}
+                    <button onClick={onClose} className="mt-6 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Close</button>
+                </div>
+            </div>
+        );
+
         // =========================================================
-        // === CUSTOM HOOK: useIpoData
+        // === MAIN APP COMPONENT
         // =========================================================
-        const useIpoData = ({
-            searchTerm,
-            ipoTypeFilter,
-            statusFilter,
-            sortConfig,
-            setAllotmentLinks,
-            setShowAllotmentPopup,
-            setShowBrokerPopup,
-        }) => {
+        const App = () => {
             const GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSHEORz3aArzaDTOWYW6FlC1avk1TYKAhDKfyALmqg2HMDWiD60N6WG2wgMlPkvLWC9d7YzwplhCStb/pub?output=csv';
 
             const [ipoData, setIpoData] = useState([]);
@@ -54,10 +222,18 @@
             const [loadingText, setLoadingText] = useState('Fetching IPO data...');
             const [message, setMessage] = useState('');
             const [showMessageBox, setShowMessageBox] = useState(false);
+            const [showAllotmentPopup, setShowAllotmentPopup] = useState(false);
+            const [allotmentLinks, setAllotmentLinks] = useState([]);
+            const [showBrokerPopup, setShowBrokerPopup] = useState(false);
+            const [searchTerm, setSearchTerm] = useState('');
+            const [ipoTypeFilter, setIpoTypeFilter] = useState('All');
+            const [statusFilter, setStatusFilter] = useState('All');
+            const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
             const showMessage = (text) => {
                 setMessage(text);
                 setShowMessageBox(true);
+                setTimeout(() => setShowMessageBox(false), 5000);
             };
 
             const refreshData = async () => {
@@ -69,6 +245,8 @@
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`);
                     }
+                    setLoadingProgress(50);
+                    setLoadingText('Parsing data...');
                     const text = await response.text();
                     const rows = text.split('\n').slice(1).filter(row => row.trim() !== '');
                     const headers = text.split('\n')[0].split(',').map(header => header.trim().replace(/"/g, ''));
@@ -80,9 +258,7 @@
                         });
                         return ipo;
                     });
-
                     const validData = parsedData.filter(ipo => ipo.Name);
-
                     setIpoData(validData);
                     setLoadingProgress(100);
                     setLoadingText('Data loaded!');
@@ -101,27 +277,14 @@
             }, []);
 
             const displayedIpoData = useMemo(() => {
-                let filteredData = ipoData;
-                if (searchTerm) {
-                    filteredData = filteredData.filter(ipo =>
-                        Object.values(ipo).some(value =>
-                            String(value).toLowerCase().includes(searchTerm.toLowerCase())
-                        )
-                    );
-                }
-                if (ipoTypeFilter !== 'All') {
-                    filteredData = filteredData.filter(ipo => {
-                        const type = ipo['IPO Type'] ? ipo['IPO Type'].toLowerCase() : '';
-                        return ipoTypeFilter.toLowerCase() === type;
-                    });
-                }
-                if (statusFilter !== 'All') {
-                    filteredData = filteredData.filter(ipo => {
-                        const status = ipo.Status ? ipo.Status.toLowerCase() : '';
-                        const statusText = getStatusContent(status);
-                        return statusText.toLowerCase() === statusFilter.toLowerCase();
-                    });
-                }
+                let filteredData = ipoData.filter(ipo =>
+                    (searchTerm === '' || Object.values(ipo).some(value =>
+                        String(value).toLowerCase().includes(searchTerm.toLowerCase())
+                    )) &&
+                    (ipoTypeFilter === 'All' || (ipo['IPO Type'] && ipo['IPO Type'].toLowerCase() === ipoTypeFilter.toLowerCase())) &&
+                    (statusFilter === 'All' || (ipo.Status && getStatusContent(ipo.Status).toLowerCase() === statusFilter.toLowerCase()))
+                );
+
                 if (sortConfig.key) {
                     filteredData = [...filteredData].sort((a, b) => {
                         const aValue = a[sortConfig.key];
@@ -145,17 +308,21 @@
                 const current = [];
                 const listed = [];
                 const now = new Date();
+                now.setHours(0, 0, 0, 0);
+
                 displayedIpoData.forEach(ipo => {
-                    const openDate = new Date(ipo['Open Date']);
-                    const closeDate = new Date(ipo['Close Date']);
+                    const openDate = parseDate(ipo['Open Date']);
+                    const closeDate = parseDate(ipo['Close Date']);
                     const status = ipo.Status ? ipo.Status.toLowerCase() : '';
-                    if (status.includes('listed')) {
+
+                    if (status.includes('listed') || status.includes('closed') || (closeDate && closeDate.getTime() < now.getTime())) {
                         listed.push(ipo);
-                    } else if (openDate > now) {
+                    } else if (openDate && openDate.getTime() > now.getTime()) {
                         upcoming.push(ipo);
-                    } else if (closeDate >= now) {
+                    } else if (openDate && openDate.getTime() <= now.getTime() && closeDate && closeDate.getTime() >= now.getTime()) {
                         current.push(ipo);
                     } else {
+                        // Catch all for any other cases, e.g., dates are invalid or past
                         listed.push(ipo);
                     }
                 });
@@ -166,7 +333,7 @@
                 if (ipo['Apply Link']) {
                     window.open(ipo['Apply Link'], '_blank');
                 } else {
-                    setShowBrokerPopup(true);
+                    showMessage('No direct apply link available. Please use your broker\'s platform.');
                 }
             };
 
@@ -182,332 +349,70 @@
                     showMessage('No allotment link available for this IPO yet.');
                 }
             };
-            
+
             const handleViewDetailsClick = (ipoName) => {
-                window.location.hash = `#/ipo/${encodeURIComponent(ipoName.replace(/\s/g, '-'))}`;
+                showMessage(`Viewing details for ${ipoName}`);
+                // In a full application, this would change the view to a detail page
+                // window.location.hash = `#/ipo/${encodeURIComponent(ipoName)}`;
             };
 
-            const totalIposCount = ipoData.length;
-            const currentMainboardCount = currentIpos.filter(ipo => ipo['IPO Type'].toLowerCase() === 'mainboard').length;
-            const currentSmeCount = currentIpos.filter(ipo => ipo['IPO Type'].toLowerCase() === 'sme').length;
-
-            return {
-                ipoData,
-                isLoading,
-                loadingProgress,
-                loadingText,
-                message,
-                showMessageBox,
-                showMessage,
-                setShowMessageBox,
-                refreshData,
-                upcomingIpos,
-                currentIpos,
-                listedIpos,
-                totalIposCount,
-                currentMainboardCount,
-                currentSmeCount,
-                displayedIpoData,
-                handleApplyClick,
-                handleAllotmentClick,
-                handleViewDetailsClick,
+            const sortBy = (key) => {
+                let direction = 'asc';
+                if (sortConfig.key === key && sortConfig.direction === 'asc') {
+                    direction = 'desc';
+                }
+                setSortConfig({ key, direction });
             };
-        };
-
-        // =========================================================
-        // === COMPONENT PLACEHOLDERS
-        // =========================================================
-        // To make this a single file, we'll use simplified placeholders for the components.
-        // The error is not in these components, but in the main App logic.
-        const LoadingSplashScreen = ({ progress, text }) => (
-            <div className="fixed inset-0 flex flex-col items-center justify-center bg-white z-50">
-                <div className="w-64 h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div className="h-full bg-blue-500 transition-all duration-300" style={{ width: `${progress}%` }}></div>
-                </div>
-                <p className="mt-4 text-gray-700">{text}</p>
-            </div>
-        );
-
-        const MessageBox = ({ message, showMessageBox, setShowMessageBox }) => (
-            showMessageBox && (
-                <div className="fixed bottom-4 left-1/2 -translate-x-1/2 p-4 bg-gray-800 text-white rounded-lg shadow-lg z-50">
-                    <p>{message}</p>
-                    <button onClick={() => setShowMessageBox(false)} className="absolute top-1 right-1 text-white p-1 rounded-full hover:bg-gray-700">&times;</button>
-                </div>
-            )
-        );
-
-        const Header = (props) => (
-            <header className="bg-white shadow-sm fixed top-0 w-full z-10 p-4">
-                <h1 className="text-2xl font-bold text-center">IPO Tracker</h1>
-                <p className="text-center text-gray-500">Total IPOs: {props.totalIposCount}</p>
-            </header>
-        );
-
-        const Footer = () => (
-            <footer className="bg-gray-800 text-white text-center p-4 fixed bottom-0 w-full">
-                &copy; 2024 IPO Tracker
-            </footer>
-        );
-
-        const IPOCard = ({ ipo }) => (
-            <div className="bg-white p-4 rounded-lg shadow-md">
-                <h2 className="text-xl font-bold">{ipo.Name}</h2>
-                <p className="text-gray-600">Status: {ipo.Status}</p>
-            </div>
-        );
-
-        const IPOTable = ({ title, ipoList }) => (
-            <section className="mt-6">
-                <h2 className="text-2xl font-semibold mb-2">{title}</h2>
-                <div className="bg-white rounded-lg shadow-md overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead>
-                            <tr>
-                                <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                                <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                            {ipoList.length > 0 ? ipoList.map((ipo, index) => (
-                                <tr key={index}>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{ipo.Name}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{ipo.Status}</td>
-                                </tr>
-                            )) : (
-                                <tr>
-                                    <td colSpan="2" className="px-6 py-4 text-center text-gray-500">No IPOs available.</td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-        );
-
-        const AboutUsModal = ({ isOpen, onClose }) => isOpen && (
-            <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center p-4 z-50">
-                <div className="bg-white p-6 rounded-lg shadow-xl max-w-lg w-full">
-                    <h2 className="text-2xl font-bold">About Us</h2>
-                    <p className="mt-4">This is a placeholder for the About Us modal.</p>
-                    <button onClick={onClose} className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md">Close</button>
-                </div>
-            </div>
-        );
-
-        const AllotmentPopup = ({ isOpen, onClose, allotmentLinks }) => isOpen && (
-            <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center p-4 z-50">
-                <div className="bg-white p-6 rounded-lg shadow-xl max-w-lg w-full">
-                    <h2 className="text-2xl font-bold">Allotment Links</h2>
-                    <p className="mt-4">This is a placeholder for the allotment links popup.</p>
-                    <button onClick={onClose} className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md">Close</button>
-                </div>
-            </div>
-        );
-
-        const BrokerPopup = ({ isOpen, onClose }) => isOpen && (
-            <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center p-4 z-50">
-                <div className="bg-white p-6 rounded-lg shadow-xl max-w-lg w-full">
-                    <h2 className="text-2xl font-bold">Broker Info</h2>
-                    <p className="mt-4">This is a placeholder for the broker popup.</p>
-                    <button onClick={onClose} className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md">Close</button>
-                </div>
-            </div>
-        );
-
-        const IPODetailPage = ({ ipo }) => (
-             <div className="bg-white p-6 rounded-lg shadow-md">
-                <h1 className="text-3xl font-bold">{ipo.Name}</h1>
-                <p className="mt-2 text-gray-600">Details for this IPO will go here.</p>
-             </div>
-        );
-
-        const PushNotificationPrompt = ({ isOpen, onSubscribe, onDismiss }) => isOpen && (
-            <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center p-4 z-50">
-                <div className="bg-white p-6 rounded-lg shadow-xl max-w-lg w-full">
-                    <h2 className="text-2xl font-bold">Enable Notifications?</h2>
-                    <p className="mt-4">This is a placeholder for the notification prompt.</p>
-                    <div className="mt-4 flex gap-2">
-                        <button onClick={onSubscribe} className="px-4 py-2 bg-blue-500 text-white rounded-md">Subscribe</button>
-                        <button onClick={onDismiss} className="px-4 py-2 bg-gray-500 text-white rounded-md">Dismiss</button>
-                    </div>
-                </div>
-            </div>
-        );
-
-        // =========================================================
-        // === MAIN APP COMPONENT
-        // =========================================================
-        const App = () => {
-            const [searchTerm, setSearchTerm] = useState('');
-            const [ipoTypeFilter, setIpoTypeFilter] = useState('All');
-            const [statusFilter, setStatusFilter] = useState('All');
-            const [layoutMode, setLayoutMode] = useState('table');
-            const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-            const [showAboutUsModal, setShowAboutUsModal] = useState(false);
-            const [showAllotmentPopup, setShowAllotmentPopup] = useState(false);
-            const [allotmentLinks, setAllotmentLinks] = useState([]);
-            const [showBrokerPopup, setShowBrokerPopup] = useState(false);
-            const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
-            const [contactFormMessage, setContactFormMessage] = useState('');
-            const [contactForm, setContactForm] = useState({ name: '', contactNumber: '', locality: '', email: '' });
-            const [selectedIpoName, setSelectedIpoName] = useState(null);
-            const [showPushNotificationPrompt, setShowPushNotificationPrompt] = useState(false);
-
-            const {
-                ipoData,
-                isLoading,
-                loadingProgress,
-                loadingText,
-                message,
-                showMessageBox,
-                showMessage,
-                setShowMessageBox,
-                refreshData,
-                upcomingIpos,
-                currentIpos,
-                listedIpos,
-                totalIposCount,
-                currentMainboardCount,
-                currentSmeCount,
-                displayedIpoData,
-                handleApplyClick,
-                handleAllotmentClick,
-                handleViewDetailsClick,
-            } = useIpoData({
-                searchTerm,
-                ipoTypeFilter,
-                statusFilter,
-                sortConfig,
-                setAllotmentLinks,
-                setShowAllotmentPopup,
-                setShowBrokerPopup,
-            });
-
-            const handleContactFormChange = (e) => {
-                const { name, value } = e.target;
-                setContactForm(prevState => ({ ...prevState, [name]: value }));
-            };
-
-            const handleContactFormSubmit = (e) => {
-                e.preventDefault();
-                if (!contactForm.name || !contactForm.contactNumber || !contactForm.locality || !contactForm.email) {
-                    setContactFormMessage('Please fill in all mandatory fields.');
-                    return;
-                }
-                if (!/^[A-Za-z\s]+$/.test(contactForm.name)) {
-                    setContactFormMessage('Name can only contain alphabets and spaces.');
-                    return;
-                }
-                if (!/^\S+@\S+\.\S+$/.test(contactForm.email)) {
-                    setContactFormMessage('Please enter a valid email address.');
-                    return;
-                }
-                if (!/^\d{10}$/.test(contactForm.contactNumber)) {
-                    setContactFormMessage('Please enter a valid 10-digit contact number.');
-                    return;
-                }
-                console.log("Contact Form Submitted:", contactForm);
-                setContactFormMessage('We are experiencing technical difficulties. Please write us at trackmyipo@outlook.com');
-                setTimeout(() => {
-                    setContactForm({ name: '', contactNumber: '', locality: '', email: '' });
-                    setContactFormMessage('');
-                    setShowAboutUsModal(false);
-                }, 5000);
-            };
-
-            useEffect(() => {
-                const handleHashChange = () => {
-                    const hash = window.location.hash.substring(1);
-                    const parts = hash.split('/');
-                    if (parts[0] === 'ipo' && parts[1]) {
-                        setSelectedIpoName(decodeURIComponent(parts[1]));
-                    } else {
-                        setSelectedIpoName(null);
-                    }
-                };
-                window.addEventListener('hashchange', handleHashChange);
-                handleHashChange();
-                return () => window.removeEventListener('hashchange', handleHashChange);
-            }, []);
-
-            const selectedIpo = ipoData.find(ipo => ipo.Name.replace(/\s/g, '-') === selectedIpoName);
 
             if (isLoading) {
                 return <LoadingSplashScreen progress={loadingProgress} text={loadingText} />;
             }
 
-            if (selectedIpo && selectedIpoName) {
-                return (
-                    <div className="min-h-screen bg-gray-100 font-sans flex flex-col">
-                        <Header totalIposCount={totalIposCount} />
-                        <main className="container mx-auto p-4 flex-grow overflow-y-auto pt-[130px] sm:pt-[128px] pb-[180px] sm:pb-28">
-                            <IPODetailPage ipo={selectedIpo} />
-                        </main>
-                        <Footer />
-                        <MessageBox message={message} showMessageBox={showMessageBox} setShowMessageBox={setShowMessageBox} />
-                    </div>
-                );
-            }
-
             return (
-                <div className="min-h-screen bg-gray-100 font-sans flex flex-col">
+                <div className="min-h-screen bg-gray-100 font-sans flex flex-col pt-24 pb-24">
                     <Header
                         searchTerm={searchTerm}
                         setSearchTerm={setSearchTerm}
-                        layoutMode={layoutMode}
-                        setLayoutMode={setLayoutMode}
-                        setShowAboutUsModal={setShowAboutUsModal}
-                        setIsSidebarOpen={setIsSidebarOpen}
-                        isSidebarOpen={isSidebarOpen}
-                        totalIposCount={totalIposCount}
-                        currentMainboardCount={currentMainboardCount}
-                        currentSmeCount={currentSmeCount}
-                        refreshData={refreshData}
-                        sortConfig={sortConfig}
-                        sortBy={(key) => {
-                            let direction = 'asc';
-                            if (sortConfig.key === key && sortConfig.direction === 'asc') {
-                                direction = 'desc';
-                            }
-                            setSortConfig({ key, direction });
-                        }}
                         ipoTypeFilter={ipoTypeFilter}
                         setIpoTypeFilter={setIpoTypeFilter}
                         statusFilter={statusFilter}
                         setStatusFilter={setStatusFilter}
+                        refreshData={refreshData}
+                        sortConfig={sortConfig}
+                        sortBy={sortBy}
                     />
-                    <main className="container mx-auto p-4 flex-grow overflow-y-auto pt-[130px] sm:pt-[128px] pb-[180px] sm:pb-28">
-                        {layoutMode === 'card' ? (
-                            <section id="ipo-list" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {displayedIpoData.length > 0 ? (
-                                    displayedIpoData.map((ipo, index) => (
-                                        <IPOCard key={index} ipo={ipo} />
-                                    ))
-                                ) : (
-                                    <p className="text-center text-gray-600 col-span-full">No IPOs found matching your criteria.</p>
-                                )}
-                            </section>
-                        ) : (
-                            <div>
-                                <IPOTable title="Current IPOs" ipoList={currentIpos} />
-                                <IPOTable title="Upcoming IPOs" ipoList={upcomingIpos} />
-                                <IPOTable title="Listed/Closed IPOs" ipoList={listedIpos} />
-                                {ipoData.length > 0 && currentIpos.length === 0 && upcomingIpos.length === 0 && listedIpos.length === 0 && (
-                                    <p className="px-3 py-4 text-center text-gray-600 bg-white rounded-lg shadow-sm">No IPOs found matching your criteria across all categories.</p>
-                                )}
-                                {ipoData.length === 0 && !isLoading && (
-                                    <p className="px-3 py-4 text-center text-gray-600 bg-white rounded-lg shadow-sm">No IPO data available to display in table view. Please check the Google Sheet URL.</p>
-                                )}
-                            </div>
-                        )}
+                    <main className="container mx-auto p-4 flex-grow">
+                        <IPOTable
+                            title="Current IPOs"
+                            ipoList={currentIpos}
+                            sortConfig={sortConfig}
+                            sortBy={sortBy}
+                            handleAllotmentClick={handleAllotmentClick}
+                            handleViewDetailsClick={handleViewDetailsClick}
+                            handleApplyClick={handleApplyClick}
+                        />
+                        <IPOTable
+                            title="Upcoming IPOs"
+                            ipoList={upcomingIpos}
+                            sortConfig={sortConfig}
+                            sortBy={sortBy}
+                            handleAllotmentClick={handleAllotmentClick}
+                            handleViewDetailsClick={handleViewDetailsClick}
+                            handleApplyClick={handleApplyClick}
+                        />
+                        <IPOTable
+                            title="Listed/Closed IPOs"
+                            ipoList={listedIpos}
+                            sortConfig={sortConfig}
+                            sortBy={sortBy}
+                            handleAllotmentClick={handleAllotmentClick}
+                            handleViewDetailsClick={handleViewDetailsClick}
+                            handleApplyClick={handleApplyClick}
+                        />
                     </main>
                     <Footer />
-                    <AboutUsModal isOpen={showAboutUsModal} onClose={() => setShowAboutUsModal(false)} />
                     <AllotmentPopup isOpen={showAllotmentPopup} onClose={() => setShowAllotmentPopup(false)} allotmentLinks={allotmentLinks} />
-                    <BrokerPopup isOpen={showBrokerPopup} onClose={() => setShowBrokerPopup(false)} />
                     <MessageBox message={message} showMessageBox={showMessageBox} setShowMessageBox={setShowMessageBox} />
-                    <PushNotificationPrompt isOpen={showPushNotificationPrompt} onSubscribe={() => {}} onDismiss={() => {}} />
                 </div>
             );
         };
@@ -515,7 +420,6 @@
         const container = document.getElementById('root');
         const root = createRoot(container);
         root.render(<App />);
-
     </script>
 </body>
 </html>

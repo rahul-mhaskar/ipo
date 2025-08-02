@@ -1,0 +1,211 @@
+// src/hooks/useIpoData.js
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import Papa from 'papaparse';
+import { getStatusContent, parseDateForSort } from '../utils/utils';
+
+const GOOGLE_SHEET_CSV_URL = "[https://docs.google.com/spreadsheets/d/e/2PACX-1vSHEORz3aArzaDTOWYW6FlC1avk1TYKAhDKfyALmqg2HMDWiD60N6WG2wgMlPkvLWC9dYzwplhCStb/pub?output=csv](https://docs.google.com/spreadsheets/d/e/2PACX-1vSHEORz3aArzaDTOWYW6FlC1avk1TYKAhDKfyALmqg2HMDWiD60N6WG2wgMlPkvLWC9dYzwplhCStb/pub?output=csv)";
+
+const useIpoData = ({ searchTerm, ipoTypeFilter, statusFilter, layoutMode, sortConfig, setAllotmentLinks, setShowAllotmentPopup, setShowBrokerPopup, showMessage }) => {
+  const [ipoData, setIpoData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [loadingText, setLoadingText] = useState('Initializing...');
+  const [message, setMessage] = useState('');
+  const [showMessageBox, setShowMessageBox] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const localShowMessage = useCallback((msg) => {
+    setMessage(msg);
+    setShowMessageBox(true);
+    setTimeout(() => {
+      setShowMessageBox(false);
+      setMessage('');
+    }, 500);
+  }, []);
+
+  const refreshData = useCallback(() => {
+    setRefreshTrigger(prev => prev + 1);
+    localShowMessage('Refreshing IPO data...');
+  }, [localShowMessage]);
+
+  useEffect(() => {
+    let progressInterval;
+    let currentProgress = 0;
+
+    const startProgressSimulation = () => {
+      if (progressInterval) clearInterval(progressInterval);
+      progressInterval = setInterval(() => {
+        currentProgress = Math.min(currentProgress + Math.random() * 10, 95);
+        setLoadingProgress(Math.floor(currentProgress));
+        if (currentProgress < 30) {
+          setLoadingText('Connecting to data source...');
+        } else if (currentProgress < 70) {
+          setLoadingText('Fetching IPO records...');
+        } else {
+          setLoadingText('Processing data...');
+        }
+      }, 200);
+    };
+
+    setIsLoading(true);
+    setLoadingProgress(0);
+    setLoadingText('Loading IPO data...');
+    startProgressSimulation();
+
+    Papa.parse(GOOGLE_SHEET_CSV_URL, {
+      download: true,
+      header: true,
+      complete: (result) => {
+        clearInterval(progressInterval);
+        const cleanedData = result.data.filter(row => row.Name && row.Name.trim() !== '');
+        setIpoData(cleanedData);
+        setLoadingProgress(100);
+        setLoadingText('Data loaded successfully!');
+        setTimeout(() => {
+          setIsLoading(false);
+          localShowMessage('IPO data loaded successfully!');
+        }, 100);
+      },
+      error: (error) => {
+        clearInterval(progressInterval);
+        console.error('Error parsing CSV:', error);
+        setLoadingProgress(0);
+        setLoadingText(`Error: ${error.message}. Please check URL.`);
+        setTimeout(() => {
+          setIsLoading(false);
+          localShowMessage(`Failed to load IPO data: ${error.message}. Please check the CSV URL and ensure it's publicly accessible.`);
+        }, 2000);
+      },
+    });
+
+    return () => clearInterval(progressInterval);
+  }, [refreshTrigger, localShowMessage]);
+
+  const { upcomingIpos, currentIpos, listedIpos, totalIposCount, currentMainboardCount, currentSmeCount, displayedIpoData } = useMemo(() => {
+    let sortableItems = [...ipoData];
+
+    if (searchTerm) {
+      sortableItems = sortableItems.filter(ipo =>
+        Object.values(ipo).some(value => String(value).toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+    }
+
+    if (ipoTypeFilter !== 'All') {
+      sortableItems = sortableItems.filter(ipo => ipo.Type?.toLowerCase().includes(ipoTypeFilter.toLowerCase()));
+    }
+
+    if (sortConfig.key) {
+      sortableItems.sort((a, b) => {
+        const aVal = a[sortConfig.key] || '';
+        const bVal = b[sortConfig.key] || '';
+        const numericKeys = ["GMP", "Price", "IPO Size", "Lot"];
+        const dateKeys = ["Open", "Close", "BoA Dt", "Listing"];
+
+        if (numericKeys.includes(sortConfig.key)) {
+          const numA = parseFloat(String(aVal).replace(/[^0-9.-]+/g, ''));
+          const numB = parseFloat(String(bVal).replace(/[^0-9.-]+/g, ''));
+          return (sortConfig.direction === 'asc' ? numA - numB : numB - numA);
+        }
+
+        if (dateKeys.includes(sortConfig.key)) {
+          const dateA = parseDateForSort(aVal);
+          const dateB = parseDateForSort(bVal);
+          if (dateA === null && dateB === null) return 0;
+          if (dateA === null) return sortConfig.direction === 'asc' ? 1 : -1;
+          if (dateB === null) return sortConfig.direction === 'asc' ? -1 : 1;
+          return (sortConfig.direction === 'asc' ? dateA.getTime() - dateB.getTime() : dateB.getTime() - dateA.getTime());
+        }
+
+        return (sortConfig.direction === 'asc' ? String(aVal).localeCompare(String(bVal), undefined, { numeric: true }) : String(bVal).localeCompare(String(aVal), undefined, { numeric: true }));
+      });
+    }
+
+    const upcoming = [];
+    const current = [];
+    const listed = [];
+
+    sortableItems.forEach(ipo => {
+      const status = ipo.Status ? String(ipo.Status).toLowerCase() : '';
+      if (status.includes('upcoming') || status.includes('pre-open')) {
+        upcoming.push(ipo);
+      } else if (status.includes('apply') || status.includes('open') || status.includes('pending') || status.includes('allotment')) {
+        current.push(ipo);
+      } else if (status.includes('listed') || status.includes('closed')) {
+        listed.push(ipo);
+      }
+    });
+
+    let currentMainboard = 0;
+    let currentSme = 0;
+    current.forEach(ipo => {
+      if (ipo.Type && ipo.Type.toLowerCase().includes('main board')) currentMainboard++;
+      else if (ipo.Type && ipo.Type.toLowerCase().includes('sme')) currentSme++;
+    });
+
+    let finalDisplayedItems = [];
+    if (layoutMode === 'card') {
+      if (statusFilter === 'All') {
+        finalDisplayedItems = sortableItems.filter(ipo => {
+          const status = ipo.Status ? String(ipo.Status).toLowerCase() : '';
+          return !status.includes('listed') && !status.includes('closed');
+        });
+      } else if (statusFilter === 'Current') {
+        finalDisplayedItems = current;
+      } else if (statusFilter === 'Upcoming') {
+        finalDisplayedItems = upcoming;
+      }
+    } else {
+      finalDisplayedItems = sortableItems;
+    }
+
+    return {
+      upcomingIpos: upcoming,
+      currentIpos: current,
+      listedIpos: listed,
+      totalIposCount: sortableItems.length,
+      currentMainboardCount: currentMainboard,
+      currentSmeCount: currentSme,
+      displayedIpoData: finalDisplayedItems,
+    };
+  }, [ipoData, searchTerm, ipoTypeFilter, statusFilter, layoutMode, sortConfig]);
+
+  const handleApplyClick = () => setShowBrokerPopup(true);
+
+  const handleAllotmentClick = (ipo) => {
+    const links = [];
+    if (ipo.AllotmentLink3) {
+      links.push({ name: 'BSE', url: '[https://www.bseindia.com/investors/appli_check.aspx](https://www.bseindia.com/investors/appli_check.aspx)' });
+      links.push({ name: 'NSE', url: '[https://www.nseindia.com/products/dynaContent/equities/ipos/ipo_login.jsp](https://www.nseindia.com/products/dynaContent/equities/ipos/ipo_login.jsp)' });
+      links.push({ name: 'Registrar Link', url: ipo.AllotmentLink3 });
+    }
+    setAllotmentLinks(links);
+    setShowAllotmentPopup(true);
+  };
+
+  const handleViewDetailsClick = (ipo) => {
+    window.location.hash = `#ipo/${ipo.Name.replace(/\s/g, '-')}`;
+  };
+
+  return {
+    ipoData,
+    isLoading,
+    loadingProgress,
+    loadingText,
+    message,
+    showMessageBox,
+    showMessage: localShowMessage,
+    refreshData,
+    upcomingIpos,
+    currentIpos,
+    listedIpos,
+    totalIposCount,
+    currentMainboardCount,
+    currentSmeCount,
+    displayedIpoData,
+    handleApplyClick,
+    handleAllotmentClick,
+    handleViewDetailsClick,
+  };
+};
+
+export default useIpoData;

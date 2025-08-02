@@ -3,7 +3,6 @@ import useIpoData from "./hooks/useIpoData";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import LayoutSwitcher from "./components/LayoutSwitcher";
-import SearchBar from "./components/SearchBar";
 import TableView from "./components/TableView";
 import CardView from "./components/CardView";
 import SplashScreen from "./components/SplashScreen";

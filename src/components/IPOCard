@@ -1,0 +1,41 @@
+// src/components/IPOCard.js
+import React from 'react';
+import { getStatusContent, getIpoStatusClass } from '../utils/utils';
+
+const IPOCard = ({ ipo, onApplyClick, onAllotmentClick, onViewDetailsClick }) => {
+  return (
+    <div className="card p-6 flex flex-col justify-between relative border border-gray-200">
+      <div className="flex-grow mb-2">
+        <h2 className="text-xl font-semibold text-blue-700">{ipo.Name} ({ipo.Type})</h2>
+      </div>
+      <div className="flex items-start gap-4 mb-4">
+        <div className="flex-grow">
+          <p className="text-gray-700 text-sm mb-0.5"><strong>Price:</strong> {ipo.Price || 'N/A'}</p>
+          <p className="text-gray-700 text-sm mb-0.5"><strong>Lot Size:</strong> {ipo.Lot || 'N/A'}</p>
+          <p className="text-gray-700 text-sm mb-0.5"><strong>Open Date:</strong> {ipo.Open || 'N/A'}</p>
+          <p className="text-gray-700 text-sm mb-0.5"><strong>Close Date:</strong> {ipo.Close || 'N/A'}</p>
+        </div>
+        <div className="flex-shrink-0">
+          {ipo.ImageURL ? (
+            <img src={ipo.ImageURL} alt={`${ipo.Name} Logo`} className="w-16 h-16 object-contain rounded-lg border p-1 bg-white shadow-sm" onError={(e) => { e.target.onerror = null; e.target.src = "[https://placehold.co/80x80/e0e0e0/555555?text=No+Image](https://placehold.co/80x80/e0e0e0/555555?text=No+Image)"; }} />
+          ) : (
+            <img src="[https://placehold.co/80x80/e0e0e0/555555?text=No+Image](https://placehold.co/80x80/e0e0e0/555555?text=No+Image)" alt="No Image Available" className="w-16 h-16 object-contain rounded-lg border p-1 bg-white shadow-sm" />
+          )}
+        </div>
+      </div>
+      <p className="text-gray-600 text-sm mb-4">
+        <strong>GMP:</strong> {ipo.GMP || 'N/A'} | <strong>Est. Listing:</strong> {ipo["Est Listing"] || 'N/A'} | <strong>IPO Size:</strong> {ipo["IPO Size"] || 'N/A'}
+      </p>
+      <div className="flex items-center justify-between mt-auto">
+        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getIpoStatusClass(ipo.Status)}`}>
+          {getStatusContent(ipo.Status, ipo, onApplyClick, onAllotmentClick)}
+        </span>
+        <button onClick={() => onViewDetailsClick(ipo)} className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out">
+          View Details
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default IPOCard;

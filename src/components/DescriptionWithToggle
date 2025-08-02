@@ -1,4 +1,3 @@
-// src/components/DescriptionWithToggle.js
 import React, { useState } from 'react';
 
 const DescriptionWithToggle = ({ description }) => {

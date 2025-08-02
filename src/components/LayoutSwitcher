@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 const LayoutSwitcher = ({
   ipoCounts,
@@ -9,12 +9,73 @@ const LayoutSwitcher = ({
   statusFilter,
   setStatusFilter,
   setRefreshTrigger,
-  showMessage
+  showMessage,
 }) => {
   return (
-    <div className="p-4 bg-gray-200 text-sm">
-      <div>Total IPOs: {ipoCounts.total} (Current: {ipoCounts.current})</div>
-      {/* Add UI for sort buttons and filters here */}
+    <div className="fixed top-[92px] sm:top-[80px] w-full z-40 bg-gray-200 p-1.5 sm:p-2 shadow-md flex flex-col sm:flex-row justify-between items-center text-gray-700 text-xs sm:text-sm">
+      <div className="mb-1 sm:mb-0 text-center sm:text-left">
+        Total IPOs: {ipoCounts.total} (Current: {ipoCounts.current} | Mainboard: {ipoCounts.mainboard} | SME: {ipoCounts.sme})
+      </div>
+
+      <div className="flex gap-2 flex-wrap justify-center sm:flex-nowrap">
+        <button
+          onClick={() => {
+            setRefreshTrigger((prev) => prev + 1);
+            showMessage("Refreshing IPO data...");
+          }}
+          className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-2 rounded-lg text-xs"
+        >
+          Refresh
+        </button>
+
+        <button
+          onClick={() => sortBy("Name")}
+          className="hidden sm:block bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-2 rounded-lg text-xs"
+        >
+          Sort by Name {sortConfig.key === "Name" ? (sortConfig.direction === "asc" ? "▲" : "▼") : "⬍"}
+        </button>
+
+        <button
+          onClick={() => sortBy("Open")}
+          className="hidden sm:block bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-2 rounded-lg text-xs"
+        >
+          Sort by Open Date {sortConfig.key === "Open" ? (sortConfig.direction === "asc" ? "▲" : "▼") : "⬍"}
+        </button>
+
+        {/* IPO Type Filter */}
+        <div className="flex items-center gap-1">
+          {["All", "Main Board", "SME"].map((type) => (
+            <label key={type} className="inline-flex items-center">
+              <input
+                type="radio"
+                className="form-radio text-blue-600"
+                name="ipoType"
+                value={type}
+                checked={ipoTypeFilter === type}
+                onChange={(e) => setIpoTypeFilter(e.target.value)}
+              />
+              <span className="ml-1 text-xs">{type}</span>
+            </label>
+          ))}
+        </div>
+
+        {/* Status Filter */}
+        <div className="flex items-center gap-1">
+          {["All", "Current", "Upcoming"].map((status) => (
+            <label key={status} className="inline-flex items-center">
+              <input
+                type="radio"
+                className="form-radio text-blue-600"
+                name="statusFilter"
+                value={status}
+                checked={statusFilter === status}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              />
+              <span className="ml-1 text-xs">{status}</span>
+            </label>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };

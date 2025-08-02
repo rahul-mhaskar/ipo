@@ -1,4 +1,3 @@
-// src/components/BrokerPopup.js
 import React from 'react';
 
 const BrokerPopup = ({ isOpen, onClose }) => {

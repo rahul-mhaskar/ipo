@@ -1,20 +1,521 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>IPO Track</title>
-    <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-15P7TBEYDG"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPO Tracker</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
 
-  gtag('config', 'G-15P7TBEYDG');
-</script> 
-  </head>
-  <body>
     <div id="root"></div>
-  </body>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+        const { createRoot } = ReactDOM;
+
+        // =========================================================
+        // === UTILITY FUNCTIONS - AVOID CIRCULAR DEPENDENCY ISSUES
+        // =========================================================
+        const getStatusContent = (status) => {
+            const statusLower = status ? status.toLowerCase() : '';
+            if (statusLower.includes('listed')) return 'Listed';
+            if (statusLower.includes('closed')) return 'Closed';
+            return 'Open';
+        };
+
+        const parseDateForSort = (dateString) => {
+            if (!dateString) return 0;
+            const [day, month, year] = dateString.split('-');
+            if (!day || !month || !year) return 0;
+            return new Date(`${year}-${month}-${day}`).getTime();
+        };
+
+        // =========================================================
+        // === CUSTOM HOOK: useIpoData
+        // =========================================================
+        const useIpoData = ({
+            searchTerm,
+            ipoTypeFilter,
+            statusFilter,
+            sortConfig,
+            setAllotmentLinks,
+            setShowAllotmentPopup,
+            setShowBrokerPopup,
+        }) => {
+            const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlsMurbsXT2UBQ2ADbyoiQtLUTznQU4vNzw3nS02_StSrFV9pkrnXOrNAjV_Yj-Byc_zw72z_rM0tQ/pub?output=csv";
+
+            const [ipoData, setIpoData] = useState([]);
+            const [isLoading, setIsLoading] = useState(true);
+            const [loadingProgress, setLoadingProgress] = useState(0);
+            const [loadingText, setLoadingText] = useState('Fetching IPO data...');
+            const [message, setMessage] = useState('');
+            const [showMessageBox, setShowMessageBox] = useState(false);
+
+            const showMessage = (text) => {
+                setMessage(text);
+                setShowMessageBox(true);
+            };
+
+            const refreshData = async () => {
+                setIsLoading(true);
+                setLoadingProgress(0);
+                setLoadingText('Fetching the latest IPO data...');
+                try {
+                    const response = await fetch(GOOGLE_SHEET_URL);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const text = await response.text();
+                    const rows = text.split('\n').slice(1).filter(row => row.trim() !== '');
+                    const headers = text.split('\n')[0].split(',').map(header => header.trim().replace(/"/g, ''));
+                    const parsedData = rows.map(row => {
+                        const values = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                        const ipo = {};
+                        headers.forEach((header, index) => {
+                            ipo[header] = values[index] ? values[index].replace(/"/g, '').trim() : '';
+                        });
+                        return ipo;
+                    });
+
+                    const validData = parsedData.filter(ipo => ipo.Name);
+
+                    setIpoData(validData);
+                    setLoadingProgress(100);
+                    setLoadingText('Data loaded!');
+                    setTimeout(() => setIsLoading(false), 500);
+                    showMessage('IPO data refreshed successfully!');
+                } catch (error) {
+                    console.error("Failed to fetch IPO data:", error);
+                    showMessage('Failed to fetch data. Please check your network and sheet URL.');
+                    setLoadingText('Failed to load data.');
+                    setTimeout(() => setIsLoading(false), 500);
+                }
+            };
+
+            useEffect(() => {
+                refreshData();
+            }, []);
+
+            const displayedIpoData = useMemo(() => {
+                let filteredData = ipoData;
+                if (searchTerm) {
+                    filteredData = filteredData.filter(ipo =>
+                        Object.values(ipo).some(value =>
+                            String(value).toLowerCase().includes(searchTerm.toLowerCase())
+                        )
+                    );
+                }
+                if (ipoTypeFilter !== 'All') {
+                    filteredData = filteredData.filter(ipo => {
+                        const type = ipo['IPO Type'] ? ipo['IPO Type'].toLowerCase() : '';
+                        return ipoTypeFilter.toLowerCase() === type;
+                    });
+                }
+                if (statusFilter !== 'All') {
+                    filteredData = filteredData.filter(ipo => {
+                        const status = ipo.Status ? ipo.Status.toLowerCase() : '';
+                        const statusText = getStatusContent(status);
+                        return statusText.toLowerCase() === statusFilter.toLowerCase();
+                    });
+                }
+                if (sortConfig.key) {
+                    filteredData = [...filteredData].sort((a, b) => {
+                        const aValue = a[sortConfig.key];
+                        const bValue = b[sortConfig.key];
+                        let compareValue;
+                        if (sortConfig.key.includes('Date')) {
+                            compareValue = parseDateForSort(aValue) - parseDateForSort(bValue);
+                        } else if (!isNaN(parseFloat(aValue)) && !isNaN(parseFloat(bValue))) {
+                            compareValue = parseFloat(aValue) - parseFloat(bValue);
+                        } else {
+                            compareValue = String(aValue).localeCompare(String(bValue));
+                        }
+                        return sortConfig.direction === 'asc' ? compareValue : -compareValue;
+                    });
+                }
+                return filteredData;
+            }, [ipoData, searchTerm, ipoTypeFilter, statusFilter, sortConfig]);
+
+            const { upcomingIpos, currentIpos, listedIpos } = useMemo(() => {
+                const upcoming = [];
+                const current = [];
+                const listed = [];
+                const now = new Date();
+                displayedIpoData.forEach(ipo => {
+                    const openDate = new Date(ipo['Open Date']);
+                    const closeDate = new Date(ipo['Close Date']);
+                    const status = ipo.Status ? ipo.Status.toLowerCase() : '';
+                    if (status.includes('listed')) {
+                        listed.push(ipo);
+                    } else if (openDate > now) {
+                        upcoming.push(ipo);
+                    } else if (closeDate >= now) {
+                        current.push(ipo);
+                    } else {
+                        listed.push(ipo);
+                    }
+                });
+                return { upcomingIpos: upcoming, currentIpos: current, listedIpos: listed };
+            }, [displayedIpoData]);
+
+            const handleApplyClick = (ipo) => {
+                if (ipo['Apply Link']) {
+                    window.open(ipo['Apply Link'], '_blank');
+                } else {
+                    setShowBrokerPopup(true);
+                }
+            };
+
+            const handleAllotmentClick = (ipo) => {
+                const links = [];
+                if (ipo['Allotment Link 1']) links.push(ipo['Allotment Link 1']);
+                if (ipo['Allotment Link 2']) links.push(ipo['Allotment Link 2']);
+                if (ipo['Allotment Link 3']) links.push(ipo['Allotment Link 3']);
+                if (links.length > 0) {
+                    setAllotmentLinks(links);
+                    setShowAllotmentPopup(true);
+                } else {
+                    showMessage('No allotment link available for this IPO yet.');
+                }
+            };
+            
+            const handleViewDetailsClick = (ipoName) => {
+                window.location.hash = `#/ipo/${encodeURIComponent(ipoName.replace(/\s/g, '-'))}`;
+            };
+
+            const totalIposCount = ipoData.length;
+            const currentMainboardCount = currentIpos.filter(ipo => ipo['IPO Type'].toLowerCase() === 'mainboard').length;
+            const currentSmeCount = currentIpos.filter(ipo => ipo['IPO Type'].toLowerCase() === 'sme').length;
+
+            return {
+                ipoData,
+                isLoading,
+                loadingProgress,
+                loadingText,
+                message,
+                showMessageBox,
+                showMessage,
+                setShowMessageBox,
+                refreshData,
+                upcomingIpos,
+                currentIpos,
+                listedIpos,
+                totalIposCount,
+                currentMainboardCount,
+                currentSmeCount,
+                displayedIpoData,
+                handleApplyClick,
+                handleAllotmentClick,
+                handleViewDetailsClick,
+            };
+        };
+
+        // =========================================================
+        // === COMPONENT PLACEHOLDERS
+        // =========================================================
+        // To make this a single file, we'll use simplified placeholders for the components.
+        // The error is not in these components, but in the main App logic.
+        const LoadingSplashScreen = ({ progress, text }) => (
+            <div className="fixed inset-0 flex flex-col items-center justify-center bg-white z-50">
+                <div className="w-64 h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div className="h-full bg-blue-500 transition-all duration-300" style={{ width: `${progress}%` }}></div>
+                </div>
+                <p className="mt-4 text-gray-700">{text}</p>
+            </div>
+        );
+
+        const MessageBox = ({ message, showMessageBox, setShowMessageBox }) => (
+            showMessageBox && (
+                <div className="fixed bottom-4 left-1/2 -translate-x-1/2 p-4 bg-gray-800 text-white rounded-lg shadow-lg z-50">
+                    <p>{message}</p>
+                    <button onClick={() => setShowMessageBox(false)} className="absolute top-1 right-1 text-white p-1 rounded-full hover:bg-gray-700">&times;</button>
+                </div>
+            )
+        );
+
+        const Header = (props) => (
+            <header className="bg-white shadow-sm fixed top-0 w-full z-10 p-4">
+                <h1 className="text-2xl font-bold text-center">IPO Tracker</h1>
+                <p className="text-center text-gray-500">Total IPOs: {props.totalIposCount}</p>
+            </header>
+        );
+
+        const Footer = () => (
+            <footer className="bg-gray-800 text-white text-center p-4 fixed bottom-0 w-full">
+                &copy; 2024 IPO Tracker
+            </footer>
+        );
+
+        const IPOCard = ({ ipo }) => (
+            <div className="bg-white p-4 rounded-lg shadow-md">
+                <h2 className="text-xl font-bold">{ipo.Name}</h2>
+                <p className="text-gray-600">Status: {ipo.Status}</p>
+            </div>
+        );
+
+        const IPOTable = ({ title, ipoList }) => (
+            <section className="mt-6">
+                <h2 className="text-2xl font-semibold mb-2">{title}</h2>
+                <div className="bg-white rounded-lg shadow-md overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                        <thead>
+                            <tr>
+                                <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                                <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                            {ipoList.length > 0 ? ipoList.map((ipo, index) => (
+                                <tr key={index}>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{ipo.Name}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{ipo.Status}</td>
+                                </tr>
+                            )) : (
+                                <tr>
+                                    <td colSpan="2" className="px-6 py-4 text-center text-gray-500">No IPOs available.</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        );
+
+        const AboutUsModal = ({ isOpen, onClose }) => isOpen && (
+            <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center p-4 z-50">
+                <div className="bg-white p-6 rounded-lg shadow-xl max-w-lg w-full">
+                    <h2 className="text-2xl font-bold">About Us</h2>
+                    <p className="mt-4">This is a placeholder for the About Us modal.</p>
+                    <button onClick={onClose} className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md">Close</button>
+                </div>
+            </div>
+        );
+
+        const AllotmentPopup = ({ isOpen, onClose, allotmentLinks }) => isOpen && (
+            <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center p-4 z-50">
+                <div className="bg-white p-6 rounded-lg shadow-xl max-w-lg w-full">
+                    <h2 className="text-2xl font-bold">Allotment Links</h2>
+                    <p className="mt-4">This is a placeholder for the allotment links popup.</p>
+                    <button onClick={onClose} className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md">Close</button>
+                </div>
+            </div>
+        );
+
+        const BrokerPopup = ({ isOpen, onClose }) => isOpen && (
+            <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center p-4 z-50">
+                <div className="bg-white p-6 rounded-lg shadow-xl max-w-lg w-full">
+                    <h2 className="text-2xl font-bold">Broker Info</h2>
+                    <p className="mt-4">This is a placeholder for the broker popup.</p>
+                    <button onClick={onClose} className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md">Close</button>
+                </div>
+            </div>
+        );
+
+        const IPODetailPage = ({ ipo }) => (
+             <div className="bg-white p-6 rounded-lg shadow-md">
+                <h1 className="text-3xl font-bold">{ipo.Name}</h1>
+                <p className="mt-2 text-gray-600">Details for this IPO will go here.</p>
+             </div>
+        );
+
+        const PushNotificationPrompt = ({ isOpen, onSubscribe, onDismiss }) => isOpen && (
+            <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center p-4 z-50">
+                <div className="bg-white p-6 rounded-lg shadow-xl max-w-lg w-full">
+                    <h2 className="text-2xl font-bold">Enable Notifications?</h2>
+                    <p className="mt-4">This is a placeholder for the notification prompt.</p>
+                    <div className="mt-4 flex gap-2">
+                        <button onClick={onSubscribe} className="px-4 py-2 bg-blue-500 text-white rounded-md">Subscribe</button>
+                        <button onClick={onDismiss} className="px-4 py-2 bg-gray-500 text-white rounded-md">Dismiss</button>
+                    </div>
+                </div>
+            </div>
+        );
+
+        // =========================================================
+        // === MAIN APP COMPONENT
+        // =========================================================
+        const App = () => {
+            const [searchTerm, setSearchTerm] = useState('');
+            const [ipoTypeFilter, setIpoTypeFilter] = useState('All');
+            const [statusFilter, setStatusFilter] = useState('All');
+            const [layoutMode, setLayoutMode] = useState('table');
+            const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+            const [showAboutUsModal, setShowAboutUsModal] = useState(false);
+            const [showAllotmentPopup, setShowAllotmentPopup] = useState(false);
+            const [allotmentLinks, setAllotmentLinks] = useState([]);
+            const [showBrokerPopup, setShowBrokerPopup] = useState(false);
+            const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+            const [contactFormMessage, setContactFormMessage] = useState('');
+            const [contactForm, setContactForm] = useState({ name: '', contactNumber: '', locality: '', email: '' });
+            const [selectedIpoName, setSelectedIpoName] = useState(null);
+            const [showPushNotificationPrompt, setShowPushNotificationPrompt] = useState(false);
+
+            const {
+                ipoData,
+                isLoading,
+                loadingProgress,
+                loadingText,
+                message,
+                showMessageBox,
+                showMessage,
+                setShowMessageBox,
+                refreshData,
+                upcomingIpos,
+                currentIpos,
+                listedIpos,
+                totalIposCount,
+                currentMainboardCount,
+                currentSmeCount,
+                displayedIpoData,
+                handleApplyClick,
+                handleAllotmentClick,
+                handleViewDetailsClick,
+            } = useIpoData({
+                searchTerm,
+                ipoTypeFilter,
+                statusFilter,
+                sortConfig,
+                setAllotmentLinks,
+                setShowAllotmentPopup,
+                setShowBrokerPopup,
+            });
+
+            const handleContactFormChange = (e) => {
+                const { name, value } = e.target;
+                setContactForm(prevState => ({ ...prevState, [name]: value }));
+            };
+
+            const handleContactFormSubmit = (e) => {
+                e.preventDefault();
+                if (!contactForm.name || !contactForm.contactNumber || !contactForm.locality || !contactForm.email) {
+                    setContactFormMessage('Please fill in all mandatory fields.');
+                    return;
+                }
+                if (!/^[A-Za-z\s]+$/.test(contactForm.name)) {
+                    setContactFormMessage('Name can only contain alphabets and spaces.');
+                    return;
+                }
+                if (!/^\S+@\S+\.\S+$/.test(contactForm.email)) {
+                    setContactFormMessage('Please enter a valid email address.');
+                    return;
+                }
+                if (!/^\d{10}$/.test(contactForm.contactNumber)) {
+                    setContactFormMessage('Please enter a valid 10-digit contact number.');
+                    return;
+                }
+                console.log("Contact Form Submitted:", contactForm);
+                setContactFormMessage('We are experiencing technical difficulties. Please write us at trackmyipo@outlook.com');
+                setTimeout(() => {
+                    setContactForm({ name: '', contactNumber: '', locality: '', email: '' });
+                    setContactFormMessage('');
+                    setShowAboutUsModal(false);
+                }, 5000);
+            };
+
+            useEffect(() => {
+                const handleHashChange = () => {
+                    const hash = window.location.hash.substring(1);
+                    const parts = hash.split('/');
+                    if (parts[0] === 'ipo' && parts[1]) {
+                        setSelectedIpoName(decodeURIComponent(parts[1]));
+                    } else {
+                        setSelectedIpoName(null);
+                    }
+                };
+                window.addEventListener('hashchange', handleHashChange);
+                handleHashChange();
+                return () => window.removeEventListener('hashchange', handleHashChange);
+            }, []);
+
+            const selectedIpo = ipoData.find(ipo => ipo.Name.replace(/\s/g, '-') === selectedIpoName);
+
+            if (isLoading) {
+                return <LoadingSplashScreen progress={loadingProgress} text={loadingText} />;
+            }
+
+            if (selectedIpo && selectedIpoName) {
+                return (
+                    <div className="min-h-screen bg-gray-100 font-sans flex flex-col">
+                        <Header totalIposCount={totalIposCount} />
+                        <main className="container mx-auto p-4 flex-grow overflow-y-auto pt-[130px] sm:pt-[128px] pb-[180px] sm:pb-28">
+                            <IPODetailPage ipo={selectedIpo} />
+                        </main>
+                        <Footer />
+                        <MessageBox message={message} showMessageBox={showMessageBox} setShowMessageBox={setShowMessageBox} />
+                    </div>
+                );
+            }
+
+            return (
+                <div className="min-h-screen bg-gray-100 font-sans flex flex-col">
+                    <Header
+                        searchTerm={searchTerm}
+                        setSearchTerm={setSearchTerm}
+                        layoutMode={layoutMode}
+                        setLayoutMode={setLayoutMode}
+                        setShowAboutUsModal={setShowAboutUsModal}
+                        setIsSidebarOpen={setIsSidebarOpen}
+                        isSidebarOpen={isSidebarOpen}
+                        totalIposCount={totalIposCount}
+                        currentMainboardCount={currentMainboardCount}
+                        currentSmeCount={currentSmeCount}
+                        refreshData={refreshData}
+                        sortConfig={sortConfig}
+                        sortBy={(key) => {
+                            let direction = 'asc';
+                            if (sortConfig.key === key && sortConfig.direction === 'asc') {
+                                direction = 'desc';
+                            }
+                            setSortConfig({ key, direction });
+                        }}
+                        ipoTypeFilter={ipoTypeFilter}
+                        setIpoTypeFilter={setIpoTypeFilter}
+                        statusFilter={statusFilter}
+                        setStatusFilter={setStatusFilter}
+                    />
+                    <main className="container mx-auto p-4 flex-grow overflow-y-auto pt-[130px] sm:pt-[128px] pb-[180px] sm:pb-28">
+                        {layoutMode === 'card' ? (
+                            <section id="ipo-list" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {displayedIpoData.length > 0 ? (
+                                    displayedIpoData.map((ipo, index) => (
+                                        <IPOCard key={index} ipo={ipo} />
+                                    ))
+                                ) : (
+                                    <p className="text-center text-gray-600 col-span-full">No IPOs found matching your criteria.</p>
+                                )}
+                            </section>
+                        ) : (
+                            <div>
+                                <IPOTable title="Current IPOs" ipoList={currentIpos} />
+                                <IPOTable title="Upcoming IPOs" ipoList={upcomingIpos} />
+                                <IPOTable title="Listed/Closed IPOs" ipoList={listedIpos} />
+                                {ipoData.length > 0 && currentIpos.length === 0 && upcomingIpos.length === 0 && listedIpos.length === 0 && (
+                                    <p className="px-3 py-4 text-center text-gray-600 bg-white rounded-lg shadow-sm">No IPOs found matching your criteria across all categories.</p>
+                                )}
+                                {ipoData.length === 0 && !isLoading && (
+                                    <p className="px-3 py-4 text-center text-gray-600 bg-white rounded-lg shadow-sm">No IPO data available to display in table view. Please check the Google Sheet URL.</p>
+                                )}
+                            </div>
+                        )}
+                    </main>
+                    <Footer />
+                    <AboutUsModal isOpen={showAboutUsModal} onClose={() => setShowAboutUsModal(false)} />
+                    <AllotmentPopup isOpen={showAllotmentPopup} onClose={() => setShowAllotmentPopup(false)} allotmentLinks={allotmentLinks} />
+                    <BrokerPopup isOpen={showBrokerPopup} onClose={() => setShowBrokerPopup(false)} />
+                    <MessageBox message={message} showMessageBox={showMessageBox} setShowMessageBox={setShowMessageBox} />
+                    <PushNotificationPrompt isOpen={showPushNotificationPrompt} onSubscribe={() => {}} onDismiss={() => {}} />
+                </div>
+            );
+        };
+
+        const container = document.getElementById('root');
+        const root = createRoot(container);
+        root.render(<App />);
+
+    </script>
+</body>
 </html>

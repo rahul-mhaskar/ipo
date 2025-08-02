@@ -4,7 +4,7 @@ import Papa from "papaparse";
 const GOOGLE_SHEET_URL =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlsMurbsXT2UBQ2ADbyoiQtLUTznQU4vNzw3nS02_StSrFV9pkrnXOrNAjV_Yj-Byc_zw72z_rM0tQ/pub?output=csv";
 
-const useIpoData = () => {
+const useIpoData() => {
   const [ipoData, setIpoData] = useState([]);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
   const [searchTerm, setSearchTerm] = useState("");

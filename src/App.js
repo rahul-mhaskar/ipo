@@ -13,8 +13,18 @@ import PushNotificationPrompt from './components/PushNotificationPrompt';
 import useIpoData from './hooks/useIpoData';
 import { getStatusContent, getIpoStatusClass, getSortDirection, parseDateForSort } from './utils/utils';
 
-// Main App component
+// --- Firestore Imports ---
+import { initializeApp } from 'firebase/app';
+import { getAuth, signInAnonymously, signInWithCustomToken } from 'firebase/auth';
+import { getFirestore, collection, addDoc } from 'firebase/firestore';
+
+// --- Main App component ---
 const App = () => {
+  // Global Firebase variables provided by the Canvas environment
+  const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+  const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+  const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
   // State for the main application
   const [searchTerm, setSearchTerm] = useState('');
   const [ipoTypeFilter, setIpoTypeFilter] = useState('All');
@@ -36,7 +46,7 @@ const App = () => {
     message,
     showMessageBox,
     showMessage,
-    setShowMessageBox, 
+    setShowMessageBox,
     refreshData,
     upcomingIpos,
     currentIpos,
@@ -72,6 +82,46 @@ const App = () => {
 
   // New state for push notification prompt visibility
   const [showPushNotificationPrompt, setShowPushNotificationPrompt] = useState(false);
+
+  // Firestore state variables
+  const [db, setDb] = useState(null);
+  const [auth, setAuth] = useState(null);
+  const [userId, setUserId] = useState(null);
+
+  // --- Firebase Initialization ---
+  useEffect(() => {
+    const initializeFirebase = async () => {
+      try {
+        const app = initializeApp(firebaseConfig);
+        const firestore = getFirestore(app);
+        const authInstance = getAuth(app);
+
+        // Sign in using the provided token or anonymously
+        if (initialAuthToken) {
+          await signInWithCustomToken(authInstance, initialAuthToken);
+        } else {
+          await signInAnonymously(authInstance);
+        }
+
+        const currentUser = authInstance.currentUser;
+        if (currentUser) {
+          setUserId(currentUser.uid);
+        } else {
+          setUserId(crypto.randomUUID()); // Fallback for unauthenticated users
+        }
+
+        setDb(firestore);
+        setAuth(authInstance);
+      } catch (error) {
+        console.error("Error initializing Firebase:", error);
+      }
+    };
+
+    if (Object.keys(firebaseConfig).length > 0) {
+      initializeFirebase();
+    }
+  }, [firebaseConfig, initialAuthToken]);
+
 
   // --- Push Notification Logic ---
   const setupNotifications = async () => {
@@ -130,7 +180,8 @@ const App = () => {
     setContactForm(prevState => ({ ...prevState, [name]: value }));
   };
 
-  const handleContactFormSubmit = (e) => {
+  // --- Updated Contact Form Submission with Firestore ---
+  const handleContactFormSubmit = async (e) => {
     e.preventDefault();
     if (!contactForm.name || !contactForm.contactNumber || !contactForm.locality || !contactForm.email) {
       setContactFormMessage('Please fill in all mandatory fields.');
@@ -148,18 +199,45 @@ const App = () => {
       setContactFormMessage('Please enter a valid 10-digit contact number.');
       return;
     }
-    console.log("Contact Form Submitted:", contactForm);
-    setContactFormMessage('We are experiencing technical difficulties. Please write us at trackmyipo@outlook.com');
-    setTimeout(() => {
-      setContactForm({ name: '', contactNumber: '', locality: '', email: '' });
-      setContactFormMessage('');
-      setShowAboutUsModal(false); // Close modal
-    }, 5000);
+
+    setContactFormMessage('Submitting...');
+
+    try {
+      if (db && userId) {
+        // Save the form data to a private collection in Firestore
+        const contactSubmissionsRef = collection(db, 'artifacts', appId, 'users', userId, 'contactSubmissions');
+        await addDoc(contactSubmissionsRef, {
+          ...contactForm,
+          timestamp: new Date(),
+        });
+        setContactFormMessage('Thank you for your message! We will get back to you shortly.');
+        setTimeout(() => {
+          setContactForm({ name: '', contactNumber: '', locality: '', email: '' });
+          setContactFormMessage('');
+          setShowAboutUsModal(false); // Close modal on success
+        }, 3000);
+      } else {
+        setContactFormMessage('Database not ready. Please try again later.');
+      }
+    } catch (error) {
+      console.error("Error submitting contact form:", error);
+      setContactFormMessage('We are experiencing technical difficulties. Please try again later.');
+    }
   };
 
   if (isLoading) {
     return <LoadingSplashScreen progress={loadingProgress} text={loadingText} />;
   }
+
+  // --- Refactored sortBy function to avoid redundancy ---
+  const handleSortBy = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
 
   // Render the selected IPO detail page if a hash is set
   if (selectedIpo && selectedIpoName) {
@@ -179,7 +257,7 @@ const App = () => {
           currentSmeCount={currentSmeCount}
           refreshData={refreshData}
           sortConfig={sortConfig}
-          sortBy={() => {}} // Sorting not needed on detail page
+          sortBy={handleSortBy} // Passing the single function
           ipoTypeFilter={ipoTypeFilter}
           setIpoTypeFilter={setIpoTypeFilter}
           statusFilter={statusFilter}
@@ -210,13 +288,7 @@ const App = () => {
         currentSmeCount={currentSmeCount}
         refreshData={refreshData}
         sortConfig={sortConfig}
-        sortBy={(key) => {
-          let direction = 'asc';
-          if (sortConfig.key === key && sortConfig.direction === 'asc') {
-            direction = 'desc';
-          }
-          setSortConfig({ key, direction });
-        }}
+        sortBy={handleSortBy} // Passing the single function
         ipoTypeFilter={ipoTypeFilter}
         setIpoTypeFilter={setIpoTypeFilter}
         statusFilter={statusFilter}
@@ -243,30 +315,9 @@ const App = () => {
           </section>
         ) : (
           <div>
-            <IPOTable title="Current IPOs" ipoList={currentIpos} sortConfig={sortConfig} sortBy={(key) => {
-                let direction = 'asc';
-                if (sortConfig.key === key && sortConfig.direction === 'asc') {
-                  direction = 'desc';
-                }
-                setSortConfig({ key, direction });
-              }}
-            />
-            <IPOTable title="Upcoming IPOs" ipoList={upcomingIpos} sortConfig={sortConfig} sortBy={(key) => {
-                let direction = 'asc';
-                if (sortConfig.key === key && sortConfig.direction === 'asc') {
-                  direction = 'desc';
-                }
-                setSortConfig({ key, direction });
-              }}
-            />
-            <IPOTable title="Listed/Closed IPOs" ipoList={listedIpos} sortConfig={sortConfig} sortBy={(key) => {
-                let direction = 'asc';
-                if (sortConfig.key === key && sortConfig.direction === 'asc') {
-                  direction = 'desc';
-                }
-                setSortConfig({ key, direction });
-              }}
-            />
+            <IPOTable title="Current IPOs" ipoList={currentIpos} sortConfig={sortConfig} sortBy={handleSortBy} />
+            <IPOTable title="Upcoming IPOs" ipoList={upcomingIpos} sortConfig={sortConfig} sortBy={handleSortBy} />
+            <IPOTable title="Listed/Closed IPOs" ipoList={listedIpos} sortConfig={sortConfig} sortBy={handleSortBy} />
             {ipoData.length > 0 && currentIpos.length === 0 && upcomingIpos.length === 0 && listedIpos.length === 0 && (
               <p className="px-3 py-4 text-center text-gray-600 bg-white rounded-lg shadow-sm">No IPOs found matching your criteria across all categories.</p>
             )}
@@ -315,3 +366,4 @@ const App = () => {
 };
 
 export default App;
+

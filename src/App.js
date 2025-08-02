@@ -36,7 +36,7 @@ const App = () => {
     message,
     showMessageBox,
     showMessage,
-    setShowMessageBox, // Correctly destructure the setter function
+    setShowMessageBox, 
     refreshData,
     upcomingIpos,
     currentIpos,
@@ -57,7 +57,6 @@ const App = () => {
     setAllotmentLinks,
     setShowAllotmentPopup,
     setShowBrokerPopup,
-    showMessage,
   });
 
   const [contactFormMessage, setContactFormMessage] = useState('');
@@ -295,7 +294,7 @@ const App = () => {
         isOpen={showBrokerPopup}
         onClose={() => setShowBrokerPopup(false)}
       />
-      <MessageBox message={message} showMessageBox={showMessageBox} setShowMessageBox={() => setShowMessageBox(false)} />
+      <MessageBox message={message} showMessageBox={showMessageBox} setShowMessageBox={setShowMessageBox} />
       <PushNotificationPrompt
         isOpen={showPushNotificationPrompt}
         onSubscribe={() => {

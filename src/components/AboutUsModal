@@ -1,0 +1,49 @@
+// src/components/AboutUsModal.js
+import React, { useState } from 'react';
+
+const AboutUsModal = ({ isOpen, onClose, contactForm, onContactFormChange, onContactFormSubmit, contactFormMessage }) => {
+  const [showContactForm, setShowContactForm] = useState(false);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full relative">
+        <button className="absolute top-2 right-2 text-gray-600 hover:text-black text-lg" onClick={onClose}>×</button>
+        <h3 className="text-2xl font-bold text-gray-800 mb-4 text-center">About Track My IPO</h3>
+        <p className="text-gray-700 mb-4 text-sm max-h-60 overflow-y-auto pr-2">
+          Track My IPO is your go-to application for staying updated on the latest Initial Public Offerings (IPOs).
+          We aim to provide a simple, intuitive, and efficient way to track IPO statuses, GMP (Grey Market Premium),
+          and other crucial details. Our goal is to empower investors with timely information to make informed decisions.
+        </p>
+        <p className="text-gray-700 text-sm mb-4">
+          We are continuously working to enhance features and provide the best user experience.
+        </p>
+        {!showContactForm && (
+          <div className="text-center">
+            <button onClick={() => setShowContactForm(true)} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out">
+              Contact Us
+            </button>
+          </div>
+        )}
+        {showContactForm && (
+          <form onSubmit={onContactFormSubmit} className="space-y-4 mt-4">
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name <span className="text-red-500">*</span></label>
+              <input type="text" id="name" name="name" value={contactForm.name} onChange={onContactFormChange} className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required />
+            </div>
+            {/* ... other form fields ... */}
+          </form>
+        )}
+        <p className="text-center text-gray-800 text-xs mt-4">
+          Please share your suggestions and comments with us at <a href="mailto:trackmyipo@outlook.com" className="text-blue-600 hover:underline">trackmyipo@outlook.com</a>
+        </p>
+        <p className="text-gray-600 text-xs mt-2">
+          Disclaimer: All content provided on this platform is for educational and informational purposes only...
+        </p>
+      </div>
+    </div>
+  );
+};
+
+export default AboutUsModal;

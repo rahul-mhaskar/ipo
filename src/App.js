@@ -223,7 +223,6 @@ const App = () => {
     setLoadingProgress(0); // Reset progress
     setLoadingText("Loading IPO data..."); // Initial message
     startProgressSimulation(); // Start progress simulation
-
     Papa.parse(GOOGLE_SHEET_CSV_URL, {
   download: true,
   header: true,

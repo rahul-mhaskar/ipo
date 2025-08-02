@@ -1,4 +1,3 @@
-// src/components/IPOCard.js
 import React from 'react';
 import { getStatusContent, getIpoStatusClass } from '../utils/utils';
 

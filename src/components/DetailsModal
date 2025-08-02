@@ -1,0 +1,42 @@
+import React from "react";
+
+const DetailsModal = ({ ipo, onClose }) => {
+  if (!ipo) return null;
+
+  const details = Object.entries(ipo).filter(([key]) => key !== "ImageURL");
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-50 flex justify-center items-center p-4">
+      <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-lg relative">
+        <button
+          onClick={() => onClose(false)}
+          className="absolute top-2 right-3 text-gray-500 hover:text-red-500"
+        >
+          &times;
+        </button>
+
+        <div className="flex items-center gap-4 mb-4">
+          <img
+            src={ipo.ImageURL || "https://placehold.co/80x80?text=Logo"}
+            alt={ipo.Name}
+            className="w-14 h-14 object-contain rounded border bg-white"
+          />
+          <h2 className="text-lg font-bold text-blue-700">
+            {ipo.Name} <span className="text-sm text-gray-500">({ipo.Type})</span>
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 text-sm text-gray-700">
+          {details.map(([key, value]) => (
+            <React.Fragment key={key}>
+              <div className="font-semibold text-gray-600">{key}</div>
+              <div>{value || "N/A"}</div>
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default DetailsModal;

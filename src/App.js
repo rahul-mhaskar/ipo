@@ -1,5 +1,6 @@
 import React from "react";
 import useIpoData from "./hooks/useIpoData";
+
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import LayoutSwitcher from "./components/LayoutSwitcher";
@@ -14,6 +15,14 @@ import ContactUsModal from "./components/ContactUsModal";
 import AboutUsModal from "./components/AboutUsModal";
 
 const App = () => {
+  const data = useIpoData();
+  console.log("✅ useIpoData returned:", data);
+
+  // Safe check before destructuring
+  if (!data || typeof data !== "object") {
+    return <div className="p-4 text-red-600">❌ Error: IPO data not loaded properly.</div>;
+  }
+
   const {
     isLoading,
     loadingProgress,
@@ -27,17 +36,14 @@ const App = () => {
     displayedIpoData,
     state,
     actions
-  } = useIpoData();
+  } = data;
 
   return (
     <div className="min-h-screen bg-gray-100 font-sans flex flex-col">
       <style>{state.bounceAnimationCss}</style>
 
       {isLoading && (
-        <SplashScreen
-          loadingProgress={loadingProgress}
-          loadingText={loadingText}
-        />
+        <SplashScreen loadingProgress={loadingProgress} loadingText={loadingText} />
       )}
 
       <Header
@@ -86,26 +92,23 @@ const App = () => {
             tableHeaders={state.tableHeaders}
           />
         )}
+
         {state.showMessageBox && (
-          <MessageBox
-            message={state.message}
-            onClose={() => actions.showMessage("")}
-          />
+          <MessageBox message={state.message} onClose={() => actions.showMessage("")} />
         )}
       </main>
 
       {state.showBrokerPopup && (
-        <BrokerPopup
-          onClose={actions.setShowBrokerPopup}
-          showMessage={actions.showMessage}
-        />
+        <BrokerPopup onClose={actions.setShowBrokerPopup} showMessage={actions.showMessage} />
       )}
+
       {state.showAllotmentPopup && (
         <AllotmentPopup
           allotmentLinks={state.allotmentLinks}
           onClose={actions.setShowAllotmentPopup}
         />
       )}
+
       {state.showDetailsModal && (
         <DetailsModal
           ipo={state.selectedIpoDetails}
@@ -113,21 +116,21 @@ const App = () => {
           getStatusContent={actions.getStatusContent}
         />
       )}
+
       {state.showContactUsModal && (
         <ContactUsModal
           onClose={actions.setShowContactUsModal}
           showMessage={actions.showMessage}
         />
       )}
+
       {state.showAboutUsModal && (
         <AboutUsModal onClose={actions.setShowAboutUsModal} />
       )}
 
       <Footer
         isFooterExpanded={state.isFooterExpanded}
-        onToggle={() =>
-          actions.setIsFooterExpanded(!state.isFooterExpanded)
-        }
+        onToggle={() => actions.setIsFooterExpanded(!state.isFooterExpanded)}
         renderBrokerLinks={actions.renderBrokerLinks}
       />
     </div>
@@ -135,4 +138,3 @@ const App = () => {
 };
 
 export default App;
-

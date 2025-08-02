@@ -1,0 +1,88 @@
+import React from "react";
+import websiteLogo from "../assets/logo.png"; // Replace with actual logo path
+
+const Header = ({
+  layoutMode,
+  searchTerm,
+  setSearchTerm,
+  setLayoutMode,
+  setShowAboutUsModal,
+  setShowContactUsModal,
+  setIsSidebarOpen,
+  isSidebarOpen,
+}) => {
+  return (
+    <header className="fixed top-0 w-full z-50 bg-gradient-to-r from-blue-600 to-purple-700 text-white p-2 shadow-lg rounded-b-xl">
+      <div className="container mx-auto flex flex-col sm:flex-row justify-between items-center">
+        {/* Mobile Top Row */}
+        <div className="flex w-full sm:w-auto justify-between items-center">
+          <div className="sm:hidden">
+            <button onClick={() => setIsSidebarOpen(true)} className="p-2 text-white">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          </div>
+          <div className="flex items-center justify-center sm:justify-start">
+            <img
+              src={websiteLogo}
+              alt="Website Logo"
+              className="w-12 h-12 sm:w-16 sm:h-16 mr-2 object-contain"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = "https://placehold.co/40x40/000000/FFFFFF?text=Logo";
+              }}
+            />
+            <h1 className="text-lg sm:text-xl font-bold">Track My IPO</h1>
+          </div>
+          <div className="hidden sm:flex items-center gap-2">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search IPOs..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="py-1.5 pl-9 pr-3 rounded-lg bg-white bg-opacity-20 text-white placeholder-white focus:ring-white text-sm"
+              />
+              <svg className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-white w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <button onClick={() => setLayoutMode(layoutMode === 'card' ? 'table' : 'card')} className="bg-white text-blue-700 font-bold py-1 px-3 rounded-lg shadow-md hover:bg-blue-100 text-sm">
+              Switch to {layoutMode === 'card' ? 'Table' : 'Card'} View
+            </button>
+            <button onClick={() => setShowAboutUsModal(true)} className="bg-white text-blue-700 font-bold py-1 px-3 rounded-lg shadow-md hover:bg-blue-100 text-sm">
+              About Us
+            </button>
+            <button onClick={() => setShowContactUsModal(true)} className="bg-white text-blue-700 font-bold py-1 px-3 rounded-lg shadow-md hover:bg-blue-100 text-sm">
+              Contact Us
+            </button>
+          </div>
+        </div>
+        {/* Mobile Search and View Switch */}
+        <div className="flex w-full sm:hidden items-center gap-2 mt-2">
+          <div className="relative flex-grow">
+            <input
+              type="text"
+              placeholder="Search IPOs..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full p-1 pl-7 rounded-lg bg-white bg-opacity-20 text-white placeholder-white focus:ring-white text-xs"
+            />
+            <svg className="absolute left-1.5 top-1/2 transform -translate-y-1/2 text-white w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+            </svg>
+          </div>
+          <button
+            onClick={() => setLayoutMode(layoutMode === 'card' ? 'table' : 'card')}
+            className="flex-shrink-0 bg-white text-blue-700 font-bold py-1 px-2 rounded-lg shadow-md hover:bg-blue-100 text-xs"
+          >
+            Switch to {layoutMode === 'card' ? 'Table' : 'Card'} View
+          </button>
+        </div>
+      </div>
+    </header>
+  );
+};
+
+export default Header;

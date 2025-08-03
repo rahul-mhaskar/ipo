@@ -1,105 +1,189 @@
-import React, { useEffect, useState } from "react";
-import Papa from "papaparse"; 
+import React, { useEffect, useState, useMemo } from "react";
+import Papa from "papaparse";
+import { BrowserRouter as Router, Routes, Route, Link, useParams } from "react-router-dom";
 
-const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/PASTE_YOUR_LINK_HERE/pub?output=csv"; // Replace with your link
+import websiteLogo from './Track My IPO - Logo.png';
+const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlsMurbsXT2UBQ2ADbyoiQtLUTznQU4vNzw3nS02_StSrFV9pkrnXOrNAjV_Yj-Byc_zw72z_rM0tQ/pub?output=csv";
 
-const headers = [
-  "Name", "Subscription", "Price", "Est Listing", "IPO Size", "Lot", 
-  "Open dt", "Close dt", "BoA Dt", "Listing dt", "Type", "GMP", "Allotment Link"
-];
 
-const App = () => {
+const About = () => (
+  <div className="p-6 text-lg max-w-3xl mx-auto">
+    <h2 className="text-2xl font-bold mb-4">About Track My IPO</h2>
+    <p className="mb-4">
+      Track My IPO is your go-to application for staying updated on the latest Initial Public Offerings (IPOs). We aim to provide a simple, intuitive, and efficient way to track IPO statuses, GMP (Grey Market Premium), and other crucial details. Our goal is to empower investors with timely information to make informed decisions.
+    </p>
+    <p className="mb-4">
+      We are continuously working to enhance features and provide the best user experience.
+    </p>
+    <p className="mb-4">
+      Please share your suggestions and comments with us at <a href="mailto:trackmyipo@outlook.com" className="text-blue-600 hover:underline">trackmyipo@outlook.com</a>.
+    </p>
+    <h3 className="text-xl font-semibold mt-6 mb-2">Disclaimer</h3>
+    <p className="text-sm text-gray-700 dark:text-gray-300">
+      All content provided on this platform is intended solely for educational and informational purposes. Under no circumstances should any information published here be interpreted as investment advice, a recommendation to buy or sell any securities, or guidance for participating in IPOs.
+      We are not registered with SEBI as financial analysts or advisors. Users are strongly advised to consult a qualified financial advisor before making any investment decisions based on the information presented on this platform.
+      The content shared is based on publicly available data and prevailing market views as of the date of publication. By using this platform, you acknowledge and agree to these terms and conditions.
+    </p>
+  </div>
+);
+
+const Contact = () => (
+  <div className="p-6 text-lg max-w-2xl mx-auto">
+    <h2 className="text-2xl font-bold mb-4">Contact Us</h2>
+    <p className="mb-4">We'd love to hear from you! To avoid spam and ensure genuine communication, please reach out via email:</p>
+    <p className="text-blue-600 underline"><a href="mailto:trackmyipo@outlook.com">trackmyipo@outlook.com</a></p>
+    <p className="mt-6 text-sm text-gray-600 dark:text-gray-400">
+      Note: We may not respond to unsolicited promotions or automated messages.
+    </p>
+  </div>
+);
+
+const IPOPage = ({ ipoData }) => {
+  const { nameSlug } = useParams();
+  const ipo = ipoData.find(
+    (item) => item.Name?.toLowerCase().replace(/\s+/g, '-') === nameSlug
+  );
+
+  if (!ipo) return <div className="p-6 text-red-500">IPO not found.</div>;
+
+  return (
+    <div className="p-6 max-w-4xl mx-auto">
+      <h1 className="text-2xl font-bold mb-4">{ipo.Name} IPO Details</h1>
+      <table className="table-auto w-full text-left">
+        <tbody>
+          {Object.entries(ipo).map(([key, value]) => (
+            <tr key={key} className="border-t">
+              <td className="font-medium p-2 w-1/3">{key}</td>
+              <td className="p-2">{value}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+const Home = () => {
   const [ipoData, setIpoData] = useState([]);
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  const [typeFilter, setTypeFilter] = useState("All");
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [dark, setDark] = useState(false);
 
   useEffect(() => {
     Papa.parse(GOOGLE_SHEET_CSV_URL, {
       download: true,
       header: true,
-      complete: (results) => setIpoData(results.data),
+      complete: (result) => {
+        const cleaned = result.data.filter(row => row.Name?.trim());
+        setIpoData(cleaned);
+      }
     });
   }, []);
 
-  const sortTable = (key) => {
-    let direction = 'asc';
-    if (sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
-    }
-    setSortConfig({ key, direction });
-  };
-
-  const sortedData = [...ipoData].sort((a, b) => {
-    if (!sortConfig.key) return 0;
-    const aVal = a[sortConfig.key] || "";
-    const bVal = b[sortConfig.key] || "";
-    return sortConfig.direction === 'asc'
-      ? aVal.localeCompare(bVal)
-      : bVal.localeCompare(aVal);
-  });
+  const filtered = useMemo(() => {
+    return ipoData.filter(item => {
+      const statusOk = statusFilter === "All" || item.Status?.toLowerCase().includes(statusFilter.toLowerCase());
+      const typeOk = typeFilter === "All" || item.Type?.toLowerCase() === typeFilter.toLowerCase();
+      return statusOk && typeOk;
+    });
+  }, [ipoData, typeFilter, statusFilter]);
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4">
-      <header className="text-center mb-6">
-        <h1 className="text-3xl font-bold text-indigo-700">IPO Track</h1>
-        <p className="text-gray-600">Track upcoming, ongoing, and past IPOs</p>
-      </header>
-
-      <div className="overflow-auto">
-        <table className="min-w-full bg-white shadow-md rounded-xl">
-          <thead className="bg-indigo-100">
-            <tr>
-              {headers.map((key) => (
-                <th key={key} onClick={() => sortTable(key)} className="p-2 cursor-pointer text-sm">
-                  {key} {sortConfig.key === key ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '▲▼'}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {sortedData.map((row, idx) => (
-              <tr key={idx} className="even:bg-gray-50 text-sm">
-                {headers.map((key) => (
-                  <td key={key} className="p-2 text-center">
-                    {key === "GMP" ? (
-                      <span className={parseInt(row[key]) >= 0 ? "text-green-600" : "text-red-600"}>{row[key]}</span>
-                    ) : key === "Allotment Link" ? (
-                      <a href={row[key]} target="_blank" rel="noreferrer" className="text-blue-600 underline">Check</a>
-                    ) : (
-                      row[key]
-                    )}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    <div className={`${dark ? 'dark' : ''}`}>
+      <div className="mb-4 flex justify-between items-center">
+        <h1 className="text-2xl font-bold">IPO Listings</h1>
+        <button onClick={() => setDark(!dark)} className="text-sm px-3 py-1 bg-gray-200 dark:bg-gray-800 rounded">
+          {dark ? '☀️ Light' : '🌙 Dark'}
+        </button>
       </div>
-
-      <section className="mt-8 text-center">
-        <h2 className="text-xl font-semibold mb-2">Join Our WhatsApp Group</h2>
-        <a
-          href="https://chat.whatsapp.com/YOUR_LINK_HERE"
-          target="_blank"
-          className="inline-block bg-green-500 text-white px-6 py-2 rounded-xl hover:bg-green-600"
-        >
-          Join Now
-        </a>
-      </section>
-
-      <section className="mt-8">
-        <h2 className="text-xl font-semibold mb-4 text-center">Download Stock Broker Apps</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <a href="https://zerodha.com/open-account" className="bg-white shadow p-4 text-center rounded-xl hover:shadow-lg">Zerodha</a>
-          <a href="https://upstox.com/open-account" className="bg-white shadow p-4 text-center rounded-xl hover:shadow-lg">Upstox</a>
-          <a href="https://groww.in" className="bg-white shadow p-4 text-center rounded-xl hover:shadow-lg">Groww</a>
-          <a href="https://angelone.in" className="bg-white shadow p-4 text-center rounded-xl hover:shadow-lg">Angel One</a>
-        </div>
-      </section>
-
-      <footer className="mt-12 text-center text-gray-400 text-sm">
-        &copy; {new Date().getFullYear()} IPO Track. All rights reserved.
-      </footer>
+      <div className="mb-4 space-x-2">
+        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="p-2 border">
+          <option>All</option>
+          <option>Open</option>
+          <option>Upcoming</option>
+          <option>Listed</option>
+        </select>
+        <label>
+          <input type="radio" name="type" value="All" checked={typeFilter === 'All'} onChange={e => setTypeFilter(e.target.value)} /> All
+        </label>
+        <label className="ml-2">
+          <input type="radio" name="type" value="Mainboard" checked={typeFilter === 'Mainboard'} onChange={e => setTypeFilter(e.target.value)} /> Mainboard
+        </label>
+        <label className="ml-2">
+          <input type="radio" name="type" value="SME" checked={typeFilter === 'SME'} onChange={e => setTypeFilter(e.target.value)} /> SME
+        </label>
+      </div>
+      <ul className="space-y-2">
+        {filtered.map((ipo, i) => (
+          <li key={i} className="border p-4 rounded hover:bg-gray-100 dark:hover:bg-gray-800">
+            <Link to={`/ipo/${ipo.Name?.toLowerCase().replace(/\s+/g, '-')}`} className="text-blue-600 hover:underline">
+              {ipo.Name}
+            </Link>
+            {ipo.Status === "Open - Apply Now" && (
+              <div className="mt-2">
+                <Link to="/brokers" className="text-green-600 hover:underline text-sm">Apply Now</Link>
+              </div>
+            )}
+          </li>
+        ))}
+      </ul>
     </div>
+  );
+};
+
+const Brokers = () => (
+  <div className="p-6 max-w-xl mx-auto">
+    <h2 className="text-xl font-bold mb-4">Select Your Preferred Broker</h2>
+    <ul className="space-y-3">
+      {[
+        { name: "Zerodha", url: "https://zerodha.com" },
+        { name: "Upstox", url: "https://upstox.com" },
+        { name: "Angel One", url: "https://angelone.in" }
+      ].map((broker, i) => (
+        <li key={i} className="bg-white dark:bg-gray-800 p-3 rounded shadow">
+          <a href={broker.url} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
+            {broker.name}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </div>
+);
+
+const App = () => {
+  const [ipoData, setIpoData] = useState([]);
+
+  useEffect(() => {
+    Papa.parse(GOOGLE_SHEET_CSV_URL, {
+      download: true,
+      header: true,
+      complete: (result) => {
+        const cleaned = result.data.filter(row => row.Name?.trim());
+        setIpoData(cleaned);
+      }
+    });
+  }, []);
+
+  return (
+    <Router>
+      <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 p-4">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/ipo/:nameSlug" element={<IPOPage ipoData={ipoData} />} />
+          <Route path="/brokers" element={<Brokers />} />
+        </Routes>
+        <footer className="text-center mt-8 text-sm text-gray-600 dark:text-gray-400">
+          <div className="mt-4">
+            <Link to="/about" className="mr-4 underline">About Us</Link>
+            <Link to="/contact" className="mr-4 underline">Contact Us</Link>
+            <Link to="/brokers" className="underline">Brokers</Link>
+          </div>
+          <p className="mt-2">&copy; {new Date().getFullYear()} Track My IPO</p>
+        </footer>
+      </div>
+    </Router>
   );
 };
 

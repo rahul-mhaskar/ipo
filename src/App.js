@@ -5,8 +5,6 @@ import { BrowserRouter as Router, Routes, Route, Link, useParams } from "react-r
 
 const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSHEORz3aArzaDTOWYW6FlC1avk1TYKAhDKfyALmqg2HMDWiD60N6WG2wgMlPkvLWC9d7YzwplhCStb/pub?output=csv";
 
-// ✅ React Router with filters, dark mode toggle, broker modal
-
 
 const About = () => (
   <div className="p-6 text-lg max-w-3xl mx-auto">

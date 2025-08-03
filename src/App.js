@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
-import Papa from "papaparse"; //check
+import Papa from "papaparse";
 import logo from './Track My IPO - Logo.png';
 import { BrowserRouter as Router, Routes, Route, Link, useParams } from "react-router-dom";
 

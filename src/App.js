@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import Papa from "papaparse";
+import Papa from "papaparse"; 
 
 const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/PASTE_YOUR_LINK_HERE/pub?output=csv"; // Replace with your link
 

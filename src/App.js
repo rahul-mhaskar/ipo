@@ -1,251 +1,191 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import Papa from "papaparse"; //check
 import logo from './Track My IPO - Logo.png';
+import { BrowserRouter as Router, Routes, Route, Link, useParams } from "react-router-dom";
 
 const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSHEORz3aArzaDTOWYW6FlC1avk1TYKAhDKfyALmqg2HMDWiD60N6WG2wgMlPkvLWC9d7YzwplhCStb/pub?output=csv";
 
-const App = () => {
+// ✅ React Router with filters, dark mode toggle, broker modal
+
+
+const About = () => (
+  <div className="p-6 text-lg max-w-3xl mx-auto">
+    <h2 className="text-2xl font-bold mb-4">About Track My IPO</h2>
+    <p className="mb-4">
+      Track My IPO is your go-to application for staying updated on the latest Initial Public Offerings (IPOs). We aim to provide a simple, intuitive, and efficient way to track IPO statuses, GMP (Grey Market Premium), and other crucial details. Our goal is to empower investors with timely information to make informed decisions.
+    </p>
+    <p className="mb-4">
+      We are continuously working to enhance features and provide the best user experience.
+    </p>
+    <p className="mb-4">
+      Please share your suggestions and comments with us at <a href="mailto:trackmyipo@outlook.com" className="text-blue-600 hover:underline">trackmyipo@outlook.com</a>.
+    </p>
+    <h3 className="text-xl font-semibold mt-6 mb-2">Disclaimer</h3>
+    <p className="text-sm text-gray-700 dark:text-gray-300">
+      All content provided on this platform is intended solely for educational and informational purposes. Under no circumstances should any information published here be interpreted as investment advice, a recommendation to buy or sell any securities, or guidance for participating in IPOs.
+      We are not registered with SEBI as financial analysts or advisors. Users are strongly advised to consult a qualified financial advisor before making any investment decisions based on the information presented on this platform.
+      The content shared is based on publicly available data and prevailing market views as of the date of publication. By using this platform, you acknowledge and agree to these terms and conditions.
+    </p>
+  </div>
+);
+
+const Contact = () => (
+  <div className="p-6 text-lg max-w-2xl mx-auto">
+    <h2 className="text-2xl font-bold mb-4">Contact Us</h2>
+    <p className="mb-4">We'd love to hear from you! To avoid spam and ensure genuine communication, please reach out via email:</p>
+    <p className="text-blue-600 underline"><a href="mailto:trackmyipo@outlook.com">trackmyipo@outlook.com</a></p>
+    <p className="mt-6 text-sm text-gray-600 dark:text-gray-400">
+      Note: We may not respond to unsolicited promotions or automated messages.
+    </p>
+  </div>
+);
+
+const IPOPage = ({ ipoData }) => {
+  const { nameSlug } = useParams();
+  const ipo = ipoData.find(
+    (item) => item.Name?.toLowerCase().replace(/\s+/g, '-') === nameSlug
+  );
+
+  if (!ipo) return <div className="p-6 text-red-500">IPO not found.</div>;
+
+  return (
+    <div className="p-6 max-w-4xl mx-auto">
+      <h1 className="text-2xl font-bold mb-4">{ipo.Name} IPO Details</h1>
+      <table className="table-auto w-full text-left">
+        <tbody>
+          {Object.entries(ipo).map(([key, value]) => (
+            <tr key={key} className="border-t">
+              <td className="font-medium p-2 w-1/3">{key}</td>
+              <td className="p-2">{value}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+const Home = () => {
   const [ipoData, setIpoData] = useState([]);
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
-  const [searchTerm, setSearchTerm] = useState("");
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadingProgress, setLoadingProgress] = useState(0);
-  const [loadingText, setLoadingText] = useState("Initializing...");
-  const [viewType, setViewType] = useState("card");
+  const [typeFilter, setTypeFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [dark, setDark] = useState(false);
 
   useEffect(() => {
-    const handler = setTimeout(() => setDebouncedSearchTerm(searchTerm), 300);// check
-    return () => clearTimeout(handler);
-  }, [searchTerm]);
-
-  useEffect(() => {
-    let progressInterval;
-    let currentProgress = 0;
-
-    const startProgressSimulation = () => {
-      progressInterval = setInterval(() => {
-        currentProgress = Math.min(currentProgress + Math.random() * 10, 95);
-        setLoadingProgress(Math.floor(currentProgress));
-        setLoadingText(
-          currentProgress < 30
-            ? "Connecting to data source..."
-            : currentProgress < 70
-            ? "Fetching IPO records..."
-            : "Processing data..."
-        );
-      }, 200);
-    };
-
-    setIsLoading(true);
-    setLoadingProgress(0);
-    setLoadingText("Loading IPO data...");
-    startProgressSimulation();
-
     Papa.parse(GOOGLE_SHEET_CSV_URL, {
       download: true,
       header: true,
       complete: (result) => {
-        clearInterval(progressInterval);
-        const cleanedData = result.data.filter(row => row.Name?.trim());
-        setIpoData(cleanedData);
-        setLoadingProgress(100);
-        setLoadingText("Data loaded successfully!");
-        setTimeout(() => setIsLoading(false), 300);
-      },
-      error: (error) => {
-        clearInterval(progressInterval);
-        setLoadingText("Error loading data");
-        setTimeout(() => setIsLoading(false), 2000);
-        console.error("CSV Error:", error);
+        const cleaned = result.data.filter(row => row.Name?.trim());
+        setIpoData(cleaned);
       }
     });
-
-    return () => clearInterval(progressInterval);
   }, []);
 
-  const sortBy = useCallback((key) => {
-    setSortConfig(prev => ({
-      key,
-      direction: prev.key === key && prev.direction === "asc" ? "desc" : "asc"
-    }));
-  }, []);
-
-  const parseDateForSort = (dateString) => {
-    if (!dateString) return null;
-    const date = new Date(dateString);
-    return isNaN(date) ? null : date;
-  };
-
-  const filteredSortedIpoData = useMemo(() => {
-    let items = [...ipoData];
-    const term = debouncedSearchTerm.toLowerCase();
-
-    if (term) {
-      items = items.filter((ipo) =>
-        ["Name", "Status", "Type", "GMP", "Price", "Description"].some(
-          (field) => ipo[field]?.toLowerCase().includes(term)
-        )
-      );
-    }
-
-    if (statusFilter !== "All") {
-      items = items.filter((ipo) => ipo.Status?.toLowerCase() === statusFilter.toLowerCase());
-    }
-
-    if (sortConfig.key) {
-      items.sort((a, b) => {
-        const aVal = a[sortConfig.key] || "";
-        const bVal = b[sortConfig.key] || "";
-        const numericKeys = ["GMP", "Price", "IPO Size", "Lot"];
-        const dateKeys = ["Open", "Close", "BoA Dt", "Listing"];
-
-        if (numericKeys.includes(sortConfig.key)) {
-          const numA = parseFloat(aVal.replace(/[^0-9.-]/g, ""));
-          const numB = parseFloat(bVal.replace(/[^0-9.-]/g, ""));
-          return sortConfig.direction === "asc" ? numA - numB : numB - numA;
-        }
-
-        if (dateKeys.includes(sortConfig.key)) {
-          const dateA = parseDateForSort(aVal);
-          const dateB = parseDateForSort(bVal);
-          if (!dateA || !dateB) return !dateA ? 1 : -1;
-          return sortConfig.direction === "asc" ? dateA - dateB : dateB - dateA;
-        }
-
-        return sortConfig.direction === "asc"
-          ? aVal.localeCompare(bVal, undefined, { numeric: true })
-          : bVal.localeCompare(aVal, undefined, { numeric: true });
-      });
-    }
-    return items;
-  }, [ipoData, sortConfig, debouncedSearchTerm, statusFilter]);
+  const filtered = useMemo(() => {
+    return ipoData.filter(item => {
+      const statusOk = statusFilter === "All" || item.Status?.toLowerCase().includes(statusFilter.toLowerCase());
+      const typeOk = typeFilter === "All" || item.Type?.toLowerCase() === typeFilter.toLowerCase();
+      return statusOk && typeOk;
+    });
+  }, [ipoData, typeFilter, statusFilter]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-100 text-gray-800">
-      {isLoading && (
-        <div className="fixed inset-0 bg-gradient-to-br from-blue-600 to-purple-700 text-white flex flex-col items-center justify-center z-50">
-          <img src={logo} alt="Logo" className="h-20 w-auto mb-4 rounded-full border border-white" />
-          <h2 className="text-4xl font-bold mb-4">Track My IPO</h2>
-          <p className="text-xl mb-2">{loadingText}</p>
-          <div className="w-64 bg-white bg-opacity-30 rounded-full h-2.5 mb-4">
-            <div className="bg-white h-2.5 rounded-full transition-all duration-300" style={{ width: `${loadingProgress}%` }} />
-          </div>
-          <p className="text-lg font-semibold">{loadingProgress}%</p>
-        </div>
-      )}
-
-      <header className="p-4 bg-gradient-to-r from-indigo-500 to-blue-500 text-white shadow flex flex-wrap gap-2 justify-between items-center sticky top-0 z-30">
-        <div className="flex items-center">
-          <img src={logo} alt="Logo" className="h-10 w-auto mr-3 rounded-full border border-white" />
-          <h1 className="text-xl font-bold">Track My IPO</h1>
-        </div>
-        <div className="flex flex-wrap gap-2 items-center">
-          <input
-            type="text"
-            placeholder="Search IPOs..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="bg-white text-gray-800 border border-gray-300 p-2 rounded w-40 sm:w-64"
-          />
-          <select
-            className="text-black p-2 rounded border"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option>All</option>
-            <option>Open</option>
-            <option>Closed</option>
-            <option>Upcoming</option>
-          </select>
-          <button onClick={() => setViewType(viewType === 'card' ? 'table' : 'card')} className="bg-white text-blue-600 px-3 py-1 rounded font-semibold">
-            {viewType === 'card' ? 'Table View' : 'Card View'}
-          </button>
-        </div>
-      </header>
-
-      <main className="p-4">
-        {viewType === 'card' ? (
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
-            {filteredSortedIpoData.map((ipo, i) => (
-              <div key={i} className="bg-white rounded-xl p-4 shadow hover:shadow-md transition border border-gray-200">
-                <h2 className="text-lg font-bold text-indigo-700 mb-2">{ipo.Name}</h2>
-                <p className="text-sm"><strong>Type:</strong> {ipo.Type}</p>
-                <p className="text-sm"><strong>Status:</strong> {ipo.Status}</p>
-                <p className="text-sm"><strong>Price:</strong> {ipo.Price}</p>
-                <p className="text-sm"><strong>Open:</strong> {ipo.Open} | <strong>Close:</strong> {ipo.Close}</p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {ipo.Status === "Open - Apply Now" && (
-                    <a href={ipo.ApplyURL || "#"} target="_blank" rel="noreferrer" className="px-2 py-1 bg-green-500 text-white rounded">Apply Now</a>
-                  )}
-                  {ipo.Status?.includes("Allotment Out") && (
-                    <a href={ipo.AllotmentLink1 || "#"} target="_blank" rel="noreferrer" className="px-2 py-1 bg-blue-500 text-white rounded">Check Allotment</a>
-                  )}
-                </div>
+    <div className={`${dark ? 'dark' : ''}`}>
+      <div className="mb-4 flex justify-between items-center">
+        <h1 className="text-2xl font-bold">IPO Listings</h1>
+        <button onClick={() => setDark(!dark)} className="text-sm px-3 py-1 bg-gray-200 dark:bg-gray-800 rounded">
+          {dark ? '☀️ Light' : '🌙 Dark'}
+        </button>
+      </div>
+      <div className="mb-4 space-x-2">
+        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="p-2 border">
+          <option>All</option>
+          <option>Open</option>
+          <option>Upcoming</option>
+          <option>Listed</option>
+        </select>
+        <label>
+          <input type="radio" name="type" value="All" checked={typeFilter === 'All'} onChange={e => setTypeFilter(e.target.value)} /> All
+        </label>
+        <label className="ml-2">
+          <input type="radio" name="type" value="Mainboard" checked={typeFilter === 'Mainboard'} onChange={e => setTypeFilter(e.target.value)} /> Mainboard
+        </label>
+        <label className="ml-2">
+          <input type="radio" name="type" value="SME" checked={typeFilter === 'SME'} onChange={e => setTypeFilter(e.target.value)} /> SME
+        </label>
+      </div>
+      <ul className="space-y-2">
+        {filtered.map((ipo, i) => (
+          <li key={i} className="border p-4 rounded hover:bg-gray-100 dark:hover:bg-gray-800">
+            <Link to={`/ipo/${ipo.Name?.toLowerCase().replace(/\s+/g, '-')}`} className="text-blue-600 hover:underline">
+              {ipo.Name}
+            </Link>
+            {ipo.Status === "Open - Apply Now" && (
+              <div className="mt-2">
+                <Link to="/brokers" className="text-green-600 hover:underline text-sm">Apply Now</Link>
               </div>
-            ))}
-          </div>
-        ) : (
-          <table className="w-full text-left mt-4 bg-white shadow rounded">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="p-2 cursor-pointer" onClick={() => sortBy("Name")}>Name</th>
-                <th className="p-2 cursor-pointer" onClick={() => sortBy("Status")}>Status</th>
-                <th className="p-2 cursor-pointer" onClick={() => sortBy("Type")}>Type</th>
-                <th className="p-2 cursor-pointer" onClick={() => sortBy("Price")}>Price</th>
-                <th className="p-2 cursor-pointer" onClick={() => sortBy("GMP")}>GMP</th>
-                <th className="p-2 cursor-pointer" onClick={() => sortBy("Subscription")}>Subscription</th>
-                <th className="p-2 cursor-pointer" onClick={() => sortBy("IPO Size")}>IPO Size</th>
-                <th className="p-2 cursor-pointer" onClick={() => sortBy("Lot")}>Lot</th>
-                <th className="p-2 cursor-pointer" onClick={() => sortBy("Open")}>Open</th>
-                <th className="p-2 cursor-pointer" onClick={() => sortBy("Close")}>Close</th>
-                <th className="p-2 cursor-pointer" onClick={() => sortBy("BoA Dt")}>BoA Dt</th>
-                <th className="p-2 cursor-pointer" onClick={() => sortBy("Listing")}>Listing</th>
-                <th className="p-2">Apply</th>
-                <th className="p-2">Allotment</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredSortedIpoData.map((ipo, i) => (
-                <tr key={i} className="border-t">
-                  <td className="p-2 font-medium text-indigo-700">{ipo.Name}</td>
-                  <td className="p-2">{ipo.Status}</td>
-                  <td className="p-2">{ipo.Type}</td>
-                  <td className="p-2">{ipo.Price}</td>
-                  <td className="p-2">{ipo.GMP}</td>
-                  <td className="p-2">{ipo.Subscription}</td>
-                  <td className="p-2">{ipo["IPO Size"]}</td>
-                  <td className="p-2">{ipo.Lot}</td>
-                  <td className="p-2">{ipo.Open}</td>
-                  <td className="p-2">{ipo.Close}</td>
-                  <td className="p-2">{ipo["BoA Dt"]}</td>
-                  <td className="p-2">{ipo.Listing}</td>
-                  <td className="p-2">
-                    {ipo.Status === "Open - Apply Now" && (
-                      <a href={ipo.ApplyURL || "#"} className="text-green-600" target="_blank" rel="noreferrer">Apply</a>
-                    )}
-                  </td>
-                  <td className="p-2">
-                    {ipo.Status?.includes("Allotment Out") && (
-                      <a href={ipo.AllotmentLink1 || "#"} className="text-blue-600" target="_blank" rel="noreferrer">Check</a>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </main>
-
-      <footer className="text-center p-4 text-sm text-gray-600">
-        <div className="mt-4">
-          <a href="/about" className="mr-4 underline">About Us</a>
-          <a href="/contact" className="underline">Contact Us</a>
-        </div>
-        <p className="mt-2">&copy; {new Date().getFullYear()} Track My IPO</p>
-      </footer>
+            )}
+          </li>
+        ))}
+      </ul>
     </div>
+  );
+};
+
+const Brokers = () => (
+  <div className="p-6 max-w-xl mx-auto">
+    <h2 className="text-xl font-bold mb-4">Select Your Preferred Broker</h2>
+    <ul className="space-y-3">
+      {[
+        { name: "Zerodha", url: "https://zerodha.com" },
+        { name: "Upstox", url: "https://upstox.com" },
+        { name: "Angel One", url: "https://angelone.in" }
+      ].map((broker, i) => (
+        <li key={i} className="bg-white dark:bg-gray-800 p-3 rounded shadow">
+          <a href={broker.url} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
+            {broker.name}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </div>
+);
+
+const App = () => {
+  const [ipoData, setIpoData] = useState([]);
+
+  useEffect(() => {
+    Papa.parse(GOOGLE_SHEET_CSV_URL, {
+      download: true,
+      header: true,
+      complete: (result) => {
+        const cleaned = result.data.filter(row => row.Name?.trim());
+        setIpoData(cleaned);
+      }
+    });
+  }, []);
+
+  return (
+    <Router>
+      <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 p-4">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/ipo/:nameSlug" element={<IPOPage ipoData={ipoData} />} />
+          <Route path="/brokers" element={<Brokers />} />
+        </Routes>
+        <footer className="text-center mt-8 text-sm text-gray-600 dark:text-gray-400">
+          <div className="mt-4">
+            <Link to="/about" className="mr-4 underline">About Us</Link>
+            <Link to="/contact" className="mr-4 underline">Contact Us</Link>
+            <Link to="/brokers" className="underline">Brokers</Link>
+          </div>
+          <p className="mt-2">&copy; {new Date().getFullYear()} Track My IPO</p>
+        </footer>
+      </div>
+    </Router>
   );
 };
 

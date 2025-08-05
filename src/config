@@ -1,0 +1,11 @@
+export const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlsMurbsXT2UBQ2ADbyoiQtLUTznQU4vNzw3nS02_StSrFV9pkrnXOrNAjV_Yj-Byc_zw72z_rM0tQ/pub?output=csv";
+export const BROKER_LINKS = {
+  'Zerodha': 'https://zerodha.com/open-account?c=VCB643/',
+  'Upstox': 'https://upstox.onelink.me/0H1s/4LAYGW/',
+  'Paytm Money': 'https://paytmmoney.page.link/DSwSvdhoasovQYLz9/',
+ 
+};
+
+export const CONTACT_EMAIL = 'trackmyipo@outlook.com';
+
+export const BROKER_NAMES = Object.keys(BROKER_LINKS);

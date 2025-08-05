@@ -1,15 +1,12 @@
+// src/App.js (Updated)
+
 import React, { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import Papa from "papaparse";
+import websiteLogo from './Track My IPO - Logo.png';
+import { GOOGLE_SHEET_CSV_URL, BROKER_LINKS, CONTACT_EMAIL } from './config';
+// Now imports hardcoded data from a separate config file
 
-// Import your website logo from the src folder
-// IMPORTANT: Replace 'websiteLogo.png' with your actual logo file name and path within src/
-import websiteLogo from './Track My IPO - Logo.png'; // Example: if your logo is directly in src/
-
-
-const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlsMurbsXT2UBQ2ADbyoiQtLUTznQU4vNzw3nS02_StSrFV9pkrnXOrNAjV_Yj-Byc_zw72z_rM0tQ/pub?output=csv";
-// Use the imported logo for the main website logo
-const WEBSITE_LOGO_URL = websiteLogo; // Now uses the imported local asset
-
+const WEBSITE_LOGO_URL = websiteLogo;
 const App = () => {
   const [ipoData, setIpoData] = useState([]);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
@@ -20,23 +17,14 @@ const App = () => {
   const [message, setMessage] = useState("");
   const [showMessageBox, setShowMessageBox] = useState(false);
   const [layoutMode, setLayoutMode] = useState('table'); // 'card' or 'table'
-
-  // NEW STATE: Filter for IPO Type (All, Mainboard, SME)
-  const [ipoTypeFilter, setIpoTypeFilter] = useState('All'); // Default to 'All'
-  // NEW STATE: Filter for IPO Status (All, Current, Upcoming)
-  const [statusFilter, setStatusFilter] = useState('All'); // Default to 'All'
-
-  // States for the new splash screen loading animation
-  const [isLoading, setIsLoading] = useState(true); // Controls visibility of the full splash screen
-  const [loadingProgress, setLoadingProgress] = useState(0); // For percentage display
-  const [loadingText, setLoadingText] = useState("Initializing..."); // Dynamic loading messages
-
-  // State for toggling table sections visibility
+  const [ipoTypeFilter, setIpoTypeFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [loadingText, setLoadingText] = useState("Initializing...");
   const [showUpcomingSection, setShowUpcomingSection] = useState(false);
-  const [showCurrentSection, setShowCurrentSection] = useState(true); // Default to open
+  const [showCurrentSection, setShowCurrentSection] = useState(true);
   const [showListedSection, setShowListedSection] = useState(false);
-
-  // States for About Us and Contact Us modals
   const [showAboutUsModal, setShowAboutUsModal] = useState(false);
   const [showContactUsModal, setShowContactUsModal] = useState(false);
   const [contactForm, setContactForm] = useState({
@@ -46,27 +34,14 @@ const App = () => {
     email: ''
   });
   const [contactFormMessage, setContactFormMessage] = useState('');
-
-  // State for footer visibility (for shutter effect)
-  const [isFooterExpanded, setIsFooterExpanded] = useState(true); // Start expanded
-  const footerTimeoutRef = useRef(null); // Ref to store the timeout ID
-  const bounceIntervalRef = useRef(null); // Ref for bounce animation interval
-
-  // State for sidebar (hamburger menu)
+  const [isFooterExpanded, setIsFooterExpanded] = useState(true);
+  const footerTimeoutRef = useRef(null);
+  const bounceIntervalRef = useRef(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-  // New state for triggering data refresh
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-
-  // State for controlling the mobile sort dropdown visibility
   const [showSortDropdown, setShowSortDropdown] = useState(false);
-
-  // State for IPO Details Modal
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedIpoDetails, setSelectedIpoDetails] = useState(null);
-
-
-  // Google Analytics Page View Tracking
   useEffect(() => {
     if (typeof window.gtag === 'function') {
       window.gtag('event', 'page_view', {
@@ -76,46 +51,37 @@ const App = () => {
       });
     }
   }, []);
-
-  // Effect for footer shutter behavior
   useEffect(() => {
-    // Function to collapse footer after a delay
     const startCollapseTimeout = () => {
       if (footerTimeoutRef.current) {
         clearTimeout(footerTimeoutRef.current);
       }
       footerTimeoutRef.current = setTimeout(() => {
         setIsFooterExpanded(false);
-      }, 3000); // Collapse after 3 seconds
+      }, 3000);
     };
-
-    // Function to start bounce animation
     const startBounceAnimation = () => {
       if (bounceIntervalRef.current) {
         clearInterval(bounceIntervalRef.current);
       }
       bounceIntervalRef.current = setInterval(() => {
-        // Add a class for a quick bounce animation
         const footerElement = document.getElementById('broker-section');
         if (footerElement) {
           footerElement.classList.add('animate-bounce-once');
           setTimeout(() => {
             footerElement.classList.remove('animate-bounce-once');
-          }, 500); // Remove bounce class after animation
+          }, 500);
         }
-      }, 10000); // Bounce every 10 seconds
+      }, 10000);
     };
-
     if (isFooterExpanded) {
-      startCollapseTimeout(); // Start timer to collapse
+      startCollapseTimeout();
       if (bounceIntervalRef.current) {
-        clearInterval(bounceIntervalRef.current); // Stop bouncing if expanded
+        clearInterval(bounceIntervalRef.current);
       }
     } else {
-      startBounceAnimation(); // Start bouncing if collapsed
+      startBounceAnimation();
     }
-
-    // Cleanup function
     return () => {
       if (footerTimeoutRef.current) {
         clearTimeout(footerTimeoutRef.current);
@@ -124,63 +90,46 @@ const App = () => {
         clearInterval(bounceIntervalRef.current);
       }
     };
-  }, [isFooterExpanded]); // Re-run when footer expansion state changes
-
-  // Add CSS for bounce animation directly in the component for simplicity
-  // In a real app, this would be in a CSS file.
+  }, [isFooterExpanded]);
   const bounceAnimationCss = `
     @keyframes bounce-once {
       0%, 100% {
         transform: translateY(0);
       }
       50% {
-        transform: translateY(-5px); /* Small upward bounce */
+        transform: translateY(-5px);
       }
     }
     .animate-bounce-once {
       animation: bounce-once 0.5s ease-in-out;
     }
   `;
-
-
-  // Function to show a custom message box
   const showMessage = useCallback((msg) => {
     setMessage(msg);
     setShowMessageBox(true);
-    // Auto-hide after 0.5 seconds (reduced from 1.5 seconds)
     setTimeout(() => {
       setShowMessageBox(false);
       setMessage("");
-    }, 500); // Reduced delay here
+    }, 500);
   }, []);
-
-  // Helper for parsing dates for sorting (DD Month YYYY or DD Month format)
   const monthMap = {
     "jan": 0, "feb": 1, "mar": 2, "apr": 3, "may": 4, "jun": 5,
     "jul": 6, "aug": 7, "sep": 8, "oct": 9, "nov": 10, "dec": 11
   };
-
   const parseDateForSort = (dateString) => {
     if (!dateString || typeof dateString !== 'string') return null;
     const cleanedDateString = dateString.trim();
-
-    // Try parsing with a full year first (e.g., "21 June 2024")
     const fullDate = new Date(cleanedDateString);
     if (!isNaN(fullDate.getTime())) {
       return fullDate;
     }
-
-    // Fallback for "DD Month" format, assuming current year
     const parts = cleanedDateString.split(' ');
     if (parts.length >= 2) {
       const day = parseInt(parts[0], 10);
       const monthName = parts[1].toLowerCase().substring(0, 3);
       const month = monthMap[monthName];
-
       if (!isNaN(day) && month !== undefined) {
         const currentYear = new Date().getFullYear();
-        // Heuristic: If the month/day has already passed this year, assume it's for next year.
-        // This helps sort "20 Dec" (past) before "05 Jan" (next year) if no year is provided.
         let yearToUse = currentYear;
         const today = new Date();
         if (month < today.getMonth() || (month === today.getMonth() && day < today.getDate())) {
@@ -192,24 +141,16 @@ const App = () => {
         }
       }
     }
-    return null; // Unable to parse
+    return null;
   };
-
   useEffect(() => {
     let progressInterval;
     let currentProgress = 0;
-
-    // Function to simulate loading progress
     const startProgressSimulation = () => {
-      // Clear any existing interval to prevent multiple intervals running
       if (progressInterval) clearInterval(progressInterval);
-      
       progressInterval = setInterval(() => {
-        // Simulate progress up to 95% before actual data load completes
         currentProgress = Math.min(currentProgress + Math.random() * 10, 95);
         setLoadingProgress(Math.floor(currentProgress));
-
-        // Update loading text based on progress
         if (currentProgress < 30) {
           setLoadingText("Connecting to data source...");
         } else if (currentProgress < 70) {
@@ -217,50 +158,41 @@ const App = () => {
         } else {
           setLoadingText("Processing data...");
         }
-      }, 200); // Update every 200ms
+      }, 200);
     };
-
-    setIsLoading(true); // Ensure splash screen is visible
-    setLoadingProgress(0); // Reset progress
-    setLoadingText("Loading IPO data..."); // Initial message
-    startProgressSimulation(); // Start progress simulation
-
+    setIsLoading(true);
+    setLoadingProgress(0);
+    setLoadingText("Loading IPO data...");
+    startProgressSimulation();
     Papa.parse(GOOGLE_SHEET_CSV_URL, {
       download: true,
       header: true,
       complete: (result) => {
-        clearInterval(progressInterval); // Stop the progress simulation
+        clearInterval(progressInterval);
         const cleanedData = result.data.filter(row => row.Name && row.Name.trim() !== '');
         setIpoData(cleanedData);
-
-        setLoadingProgress(100); // Set progress to 100% immediately
-        setLoadingText("Data loaded successfully!"); // Final success message on splash
-
-        setTimeout(() => { // Briefly show 100% and success message before hiding splash
-          setIsLoading(false); // Hide the splash screen
-          showMessage("IPO data loaded successfully!"); // Show confirmation in the main message box
-        }, 100); // Reduced delay here (from 500ms to 100ms)
-
+        setLoadingProgress(100);
+        setLoadingText("Data loaded successfully!");
+        setTimeout(() => {
+          setIsLoading(false);
+          showMessage("IPO data loaded successfully!");
+        }, 100);
       },
       error: (error) => {
-        clearInterval(progressInterval); // Stop the progress simulation
+        clearInterval(progressInterval);
         console.error("Error parsing CSV:", error);
-        setLoadingProgress(0); // Reset progress on error
-        setLoadingText(`Error: ${error.message}. Please check URL.`); // Display error on splash
-        
-        setTimeout(() => { // Show error message briefly on splash, then hide splash
-            setIsLoading(false); // Hide the splash screen
-            showMessage(`Failed to load IPO data: ${error.message}. Please check the CSV URL and ensure it's publicly accessible.`);
-        }, 2000); // Show error on splash for 2 seconds before hiding
+        setLoadingProgress(0);
+        setLoadingText(`Error: ${error.message}. Please check URL.`);
+        setTimeout(() => {
+          setIsLoading(false);
+          showMessage(`Failed to load IPO data: ${error.message}. Please check the CSV URL and ensure it's publicly accessible.`);
+        }, 2000);
       }
     });
-
-    // Cleanup function for the effect
     return () => {
-      clearInterval(progressInterval); // Clear interval if component unmounts
+      clearInterval(progressInterval);
     };
-  }, [refreshTrigger, showMessage]); // Run on mount AND when refreshTrigger changes
-
+  }, [refreshTrigger, showMessage]);
   const sortBy = (key) => {
     let direction = "asc";
     if (sortConfig.key === key && sortConfig.direction === "asc") {
@@ -268,12 +200,8 @@ const App = () => {
     }
     setSortConfig({ key, direction });
   };
-
-  // Memoize sorted and filtered data for performance and categorization
   const { upcomingIpos, currentIpos, listedIpos, totalIposCount, currentMainboardCount, currentSmeCount } = useMemo(() => {
     let sortableItems = [...ipoData];
-
-    // Apply search term filter first
     if (searchTerm) {
       sortableItems = sortableItems.filter(ipo =>
         ipo.Name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -284,21 +212,15 @@ const App = () => {
         ipo.Description?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-
-    // Apply IPO Type filter
     if (ipoTypeFilter !== 'All') {
       sortableItems = sortableItems.filter(ipo =>
         ipo.Type?.toLowerCase().includes(ipoTypeFilter.toLowerCase())
       );
     }
-
-    // Sort based on sortConfig
     if (sortConfig.key) {
       sortableItems.sort((a, b) => {
         const aVal = a[sortConfig.key] || "";
         const bVal = b[sortConfig.key] || "";
-
-        // Handle numeric sorting for GMP, Price, IPO Size, Lot
         const numericKeys = ["GMP", "Price", "IPO Size", "Lot"];
         if (numericKeys.includes(sortConfig.key)) {
           const numA = parseFloat(String(aVal).replace(/[^0-9.-]+/g, ""));
@@ -308,37 +230,27 @@ const App = () => {
           }
           return numB - numA;
         }
-
-        // Handle date sorting for specific date columns
         const dateKeys = ["Open", "Close", "BoA Dt", "Listing"];
         if (dateKeys.includes(sortConfig.key)) {
           const dateA = parseDateForSort(aVal);
           const dateB = parseDateForSort(bVal);
-
-          // Handle null dates (e.g., 'N/A') by pushing them to the end
           if (dateA === null && dateB === null) return 0;
           if (dateA === null) return sortConfig.direction === "asc" ? 1 : -1;
           if (dateB === null) return sortConfig.direction === "asc" ? -1 : 1;
-
           if (sortConfig.direction === "asc") {
             return dateA.getTime() - dateB.getTime();
           }
           return dateB.getTime() - dateA.getTime();
         }
-
-        // Default to string comparison for other keys
         if (sortConfig.direction === "asc") {
           return String(aVal).localeCompare(String(bVal), undefined, { numeric: true });
         }
         return String(bVal).localeCompare(String(aVal), undefined, { numeric: true });
       });
     }
-
-    // Categorize IPOs based on status keywords
     const upcoming = [];
     const current = [];
     const listed = [];
-
     sortableItems.forEach(ipo => {
       const status = ipo.Status ? String(ipo.Status).toLowerCase() : '';
       if (status.includes("upcoming") || status.includes("pre-open")) {
@@ -349,8 +261,6 @@ const App = () => {
         listed.push(ipo);
       }
     });
-
-    // Calculate Mainboard and SME counts for current IPOs (after all filters)
     let currentMainboard = 0;
     let currentSme = 0;
     current.forEach(ipo => {
@@ -360,23 +270,17 @@ const App = () => {
         currentSme++;
       }
     });
-
-
     return {
       upcomingIpos: upcoming,
       currentIpos: current,
       listedIpos: listed,
-      totalIposCount: sortableItems.length, // Total IPOs after search and type filter
+      totalIposCount: sortableItems.length,
       currentMainboardCount: currentMainboard,
       currentSmeCount: currentSme
     };
-  }, [ipoData, sortConfig, searchTerm, ipoTypeFilter]); // Added ipoTypeFilter to dependencies
-
-  // This is used for card view and for determining if any IPOs match search
+  }, [ipoData, sortConfig, searchTerm, ipoTypeFilter]);
   const displayedIpoData = useMemo(() => {
     let filteredAndSortedItems = [...ipoData];
-
-    // Apply search term filter first
     if (searchTerm) {
       filteredAndSortedItems = filteredAndSortedItems.filter(ipo =>
         ipo.Name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -386,22 +290,17 @@ const App = () => {
         ipo.Price?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-
-    // Apply IPO Type filter (Mainboard/SME)
     if (ipoTypeFilter !== 'All') {
       filteredAndSortedItems = filteredAndSortedItems.filter(ipo =>
         ipo.Type?.toLowerCase().includes(ipoTypeFilter.toLowerCase())
       );
     }
-
-    // Apply sorting
     if (sortConfig.key) {
       filteredAndSortedItems.sort((a, b) => {
         const aVal = a[sortConfig.key] || "";
         const bVal = b[sortConfig.key] || "";
         const numericKeys = ["GMP", "Price", "IPO Size", "Lot"];
         const dateKeys = ["Open", "Close", "BoA Dt", "Listing"];
-
         if (numericKeys.includes(sortConfig.key)) {
           const numA = parseFloat(String(aVal).replace(/[^0-9.-]+/g, ""));
           const numB = parseFloat(String(bVal).replace(/[^0-9.-]+/g, ""));
@@ -412,29 +311,23 @@ const App = () => {
         } else if (dateKeys.includes(sortConfig.key)) {
           const dateA = parseDateForSort(aVal);
           const dateB = parseDateForSort(bVal);
-
           if (dateA === null && dateB === null) return 0;
           if (dateA === null) return sortConfig.direction === "asc" ? 1 : -1;
           if (dateB === null) return sortConfig.direction === "asc" ? -1 : 1;
-
           if (sortConfig.direction === "asc") {
             return dateA.getTime() - dateB.getTime();
           }
           return dateB.getTime() - dateA.getTime();
         }
-        // Default to string comparison for other keys
         if (sortConfig.direction === "asc") {
           return String(aVal).localeCompare(String(bVal), undefined, { numeric: true });
         }
         return String(bVal).localeCompare(String(aVal), undefined, { numeric: true });
       });
     }
-
-    // Apply status filter for card view
     let finalDisplayedItems = [];
     if (layoutMode === 'card') {
       if (statusFilter === 'All') {
-        // For card view, 'All' means Current + Upcoming, excluding Listed
         finalDisplayedItems = filteredAndSortedItems.filter(ipo => {
           const status = ipo.Status ? String(ipo.Status).toLowerCase() : '';
           return !status.includes("listed") && !status.includes("closed");
@@ -450,36 +343,30 @@ const App = () => {
           return status.includes("upcoming") || status.includes("pre-open");
         });
       }
-    } else { // For table view, no status filtering is applied here, it's handled by sections
+    } else {
       finalDisplayedItems = filteredAndSortedItems;
     }
-
     return finalDisplayedItems;
-  }, [ipoData, sortConfig, searchTerm, ipoTypeFilter, statusFilter, layoutMode]); // Added statusFilter and layoutMode to dependencies
-
-
+  }, [ipoData, sortConfig, searchTerm, ipoTypeFilter, statusFilter, layoutMode]);
   const handleApplyClick = () => {
     setShowBrokerPopup(true);
   };
-
   const handleAllotmentClick = (ipo) => {
     const links = [];
-    if (ipo.AllotmentLink1) { 
+    if (ipo.AllotmentLink1) {
       links.push({ name: "BSE", url: "https://www.bseindia.com/investors/appli_check.aspx" });
       links.push({ name: "NSE", url: "https://www.nseindia.com/products/dynaContent/equities/ipos/ipo_login.jsp" });
-      links.push({ name: "Registrar Link", url: ipo.AllotmentLink1 }); // Use a more descriptive name for the third link
+      links.push({ name: "Registrar Link", url: ipo.AllotmentLink1 });
     }
     setAllotmentLinks(links);
     setShowAllotmentPopup(true);
   };
-
   const handleViewDetailsClick = (ipo) => {
     setSelectedIpoDetails(ipo);
     setShowDetailsModal(true);
   };
-
   const getStatusContent = (status, ipo) => {
-    const cleanStatus = status ? String(status).toLowerCase() : ''; // Handle undefined status
+    const cleanStatus = status ? String(status).toLowerCase() : '';
     if (cleanStatus.includes("apply")) {
       return (
         <span className="text-blue-600 cursor-pointer hover:underline font-semibold" onClick={handleApplyClick}>
@@ -502,27 +389,8 @@ const App = () => {
       return <span className="text-gray-500 font-semibold">📅 {status}</span>;
     }
   };
-
   const renderBrokerLinks = () => {
-    const brokers = [
-      {
-        name: "Zerodha",
-        href: "https://zerodha.com/open-account?c=VCB643",
-        logo: "https://zerodha.com/static/images/logo.svg",
-      },
-      {
-        name: "Upstox",
-        href: "https://upstox.onelink.me/0H1s/4LAYGW",
-        logo: "https://assets.upstox.com/website/images/upstox-new-logo.svg",
-      },
-      {
-        name: "Paytm Money",
-        href: "https://paytmmoney.page.link/DSwSvdhoasovQYLz9",
-        logo: "https://play-lh.googleusercontent.com/nXCY9Did341stoQEhCEH5wJW2FBybZYbpiYl2J-eCajYOXZ_XXXHX1ptjATuA0zayg",
-      },
-    ];
-
-    return brokers.map((broker, idx) => (
+    return BROKER_LINKS.map((broker, idx) => (
       <a
         key={idx}
         href={broker.href}
@@ -536,14 +404,10 @@ const App = () => {
       </a>
     ));
   };
-
-  // Define headers for the table view based on your CSV columns
   const tableHeaders = [
     "Name", "Type", "Status", "GMP", "Subscription", "Price", "Est Listing",
     "IPO Size", "Lot", "Open", "Close", "BoA Dt", "Listing"
   ];
-
-  // Helper function to render a collapsible table section
   const renderTableSection = (title, ipoList, isVisible, toggleVisibility) => (
     <div className="mb-8">
       <div
@@ -590,7 +454,7 @@ const App = () => {
                       <td key={key} className="px-3 py-2 border-b border-gray-100 whitespace-nowrap">
                         {key === "Status"
                           ? getStatusContent(ipo[key], ipo)
-                          : ipo[key] || 'N/A'} 
+                          : ipo[key] || 'N/A'}
                       </td>
                     ))}
                   </tr>
@@ -604,20 +468,16 @@ const App = () => {
       </div>
     </div>
   );
-
   const handleContactFormChange = (e) => {
     const { name, value } = e.target;
     setContactForm(prevState => ({ ...prevState, [name]: value }));
   };
-
   const handleContactFormSubmit = (e) => {
     e.preventDefault();
-    // Basic validation
     if (!contactForm.name || !contactForm.contactNumber || !contactForm.locality || !contactForm.email) {
       setContactFormMessage('Please fill in all mandatory fields.');
       return;
     }
-    // Name field validation: only alphabets and spaces
     if (!/^[A-Za-z\s]+$/.test(contactForm.name)) {
       setContactFormMessage('Name can only contain alphabets and spaces.');
       return;
@@ -630,36 +490,26 @@ const App = () => {
       setContactFormMessage('Please enter a valid 10-digit contact number.');
       return;
     }
-
-    // Simulate form submission
     console.log("Contact Form Submitted:", contactForm);
-    setContactFormMessage('we are experiencing technical difficulties. Please write us at trackmyipo@outlook.com');
-    // Clear form after a short delay
+    setContactFormMessage(`we are experiencing technical difficulties. Please write us at ${CONTACT_EMAIL}`);
     setTimeout(() => {
       setContactForm({ name: '', contactNumber: '', locality: '', email: '' });
       setContactFormMessage('');
-      setShowContactUsModal(false); // Close modal after submission
+      setShowContactUsModal(false);
     }, 5000);
   };
-
-  // Effect to close sidebar if screen size changes to desktop
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 640) { // Tailwind's 'sm' breakpoint
+      if (window.innerWidth >= 640) {
         setIsSidebarOpen(false);
       }
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-
-
   return (
     <div className="min-h-screen bg-gray-100 font-sans flex flex-col">
-      {/* Inject global styles for animations */}
       <style>{bounceAnimationCss}</style>
-
-      {/* Full-screen Loading Splash Screen */}
       {isLoading && (
         <div className="fixed inset-0 bg-gradient-to-br from-blue-600 to-purple-700 text-white flex flex-col items-center justify-center z-50 transition-opacity duration-500 opacity-100">
           <svg className="animate-spin h-16 w-16 text-white mb-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -677,13 +527,9 @@ const App = () => {
           <p className="text-lg font-semibold">{loadingProgress}%</p>
         </div>
       )}
-
-      {/* Header */}
       <header className="fixed top-0 w-full z-50 bg-gradient-to-r from-blue-600 to-purple-700 text-white p-1 sm:p-2 shadow-lg rounded-b-xl">
         <div className="container mx-auto flex flex-col sm:flex-row justify-between items-center">
-          {/* Mobile Top Row: Hamburger, Logo, Title */}
           <div className="flex w-full sm:w-auto justify-between items-center sm:mb-0">
-            {/* Mobile: Hamburger Icon */}
             <div className="sm:hidden">
               <button
                 onClick={() => setIsSidebarOpen(true)}
@@ -694,627 +540,518 @@ const App = () => {
                 </svg>
               </button>
             </div>
-
-            {/* Logo and Title - Centered on mobile, left on desktop */}
             <div className="flex items-center flex-grow sm:flex-grow-0 justify-center sm:justify-start">
-            {/* Website Logo */}
               <img
                 src={WEBSITE_LOGO_URL}
-                alt="Website Logo"
-                className="w-12 h-12 sm:w-16 sm:h-16 mr-2 sm:mr-4 object-contain" // Reduced size
-                onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/40x40/000000/FFFFFF?text=Logo"; }} // Fallback logo
+                alt="Track My IPO Logo"
+                className="h-10 sm:h-12 mr-2"
               />
-              <h1 className="text-lg sm:text-xl font-bold whitespace-nowrap text-center flex-grow">Track My IPO</h1> {/* Reduced font size */}
+              <h1 className="text-xl sm:text-2xl font-bold font-heading">Track My IPO</h1>
             </div>
-
-            {/* Desktop Search Bar & Buttons (Hidden on Mobile) */}
-            <div className="hidden sm:flex items-center flex-grow justify-end gap-2"> {/* desktop layout */}
-              <div className="relative flex-grow max-w-xl"> {/* Adjusted max-w for search bar and added horizontal expansion */}
-                <input
-                  type="text"
-                  id="searchInputDesktop"
-                  placeholder="Search IPOs..."
-                  className="w-full py-1.5 pl-9 pr-3 rounded-lg bg-white bg-opacity-20 text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-white text-sm" // Adjusted vertical padding
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <svg className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-white w-5 h-5" width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd"></path>
+            <div className="sm:hidden">
+              <button
+                onClick={() => setRefreshTrigger(prev => prev + 1)}
+                className="p-2 -mr-2 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-white"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.836 3.582a4.5 4.5 0 01-1.314 3.424m-10.74 0a4.5 4.5 0 01-1.314-3.424M5.582 9h.582m0 0a5.952 5.952 0 01-.027-.678C6.184 6.84 8.01 5 10.25 5H18m0 0c-3.111 0-5.64 2.53-5.64 5.64M12 20c-3.111 0-5.64-2.53-5.64-5.64m0 0a5.952 5.952 0 01-.027-.678M18 10.64a5.952 5.952 0 01.027.678" />
                 </svg>
-              </div>
-              <button
-                onClick={() => setLayoutMode(layoutMode === 'card' ? 'table' : 'card')}
-                className="bg-white text-blue-700 font-bold py-1.5 px-3 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out text-sm whitespace-nowrap"
-              >
-                Switch to {layoutMode === 'card' ? 'Table' : 'Card'} View
-              </button>
-              <button
-                onClick={() => setShowAboutUsModal(true)}
-                className="bg-white text-blue-700 font-bold py-1.5 px-3 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out text-sm whitespace-nowrap"
-              >
-                About Us
-              </button>
-              <button
-                onClick={() => setShowContactUsModal(true)}
-                className="bg-white text-blue-700 font-bold py-1.5 px-3 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out text-sm whitespace-nowrap"
-              >
-                Contact Us
               </button>
             </div>
           </div>
-
-          {/* Mobile Second Row: Search Bar & Switch View Button */}
-          <div className="flex w-full sm:hidden items-center gap-2 -mt-1 mb-1"> {/* Increased gap to 2 */}
-            <div className="relative flex-grow">
-              <input
-                type="text"
-                id="searchInputMobile"
-                placeholder="Search IPOs..."
-                className="w-full p-1 pl-7 rounded-lg bg-white bg-opacity-20 text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-white text-xs"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              <svg className="absolute left-1.5 top-1/2 transform -translate-y-1/2 text-white w-3.5 h-3.5" width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd"></path>
-              </svg>
-            </div>
+          {/* Desktop Navigation */}
+          <nav className="hidden sm:flex items-center space-x-6 text-sm font-semibold">
             <button
-              onClick={() => setLayoutMode(layoutMode === 'card' ? 'table' : 'card')}
-              className="flex-shrink-0 bg-white text-blue-700 font-bold py-1 px-2 rounded-lg shadow-md hover:bg-blue-100 transition duration-300 ease-in-out text-xs whitespace-nowrap" // Adjusted padding for better fit
+              onClick={() => { setIpoTypeFilter('All'); setStatusFilter('All'); setLayoutMode('table'); }}
+              className="hover:text-blue-200 transition-colors duration-200"
             >
-              Switch to {layoutMode === 'card' ? 'Table' : 'Card'} View
+              All IPOs
             </button>
-          </div>
+            <button
+              onClick={() => { setIpoTypeFilter('Main Board'); setStatusFilter('All'); setLayoutMode('table'); }}
+              className="hover:text-blue-200 transition-colors duration-200"
+            >
+              Main Board
+            </button>
+            <button
+              onClick={() => { setIpoTypeFilter('SME'); setStatusFilter('All'); setLayoutMode('table'); }}
+              className="hover:text-blue-200 transition-colors duration-200"
+            >
+              SME
+            </button>
+            <button
+              onClick={() => setShowAboutUsModal(true)}
+              className="hover:text-blue-200 transition-colors duration-200"
+            >
+              About Us
+            </button>
+            <button
+              onClick={() => setShowContactUsModal(true)}
+              className="hover:text-blue-200 transition-colors duration-200"
+            >
+              Contact Us
+            </button>
+            <button
+              onClick={() => setRefreshTrigger(prev => prev + 1)}
+              className="p-1 rounded-md hover:bg-white hover:text-blue-600 transition-colors duration-200"
+              aria-label="Refresh Data"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.836 3.582a4.5 4.5 0 01-1.314 3.424m-10.74 0a4.5 4.5 0 01-1.314-3.424M5.582 9h.582m0 0a5.952 5.952 0 01-.027-.678C6.184 6.84 8.01 5 10.25 5H18m0 0c-3.111 0-5.64 2.53-5.64 5.64M12 20c-3.111 0-5.64-2.53-5.64-5.64m0 0a5.952 5.952 0 01-.027-.678M18 10.64a5.952 5.952 0 01.027.678" />
+              </svg>
+            </button>
+          </nav>
         </div>
       </header>
-
-      {/* Mobile Sidebar (Drawer) */}
-      <div className={`fixed inset-y-0 left-0 w-64 bg-blue-800 text-white z-50 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out sm:hidden`}>
-        <div className="p-4 flex justify-between items-center border-b border-blue-700">
-          <h2 className="text-xl font-bold">Navigation</h2>
-          <button onClick={() => setIsSidebarOpen(false)} className="text-white text-2xl">
-            &times;
-          </button>
+      {/* Mobile Sidebar (Hamburger Menu) */}
+      <div className={`fixed inset-y-0 left-0 w-64 bg-gray-800 text-white p-4 transform transition-transform duration-300 ease-in-out z-50 sm:hidden ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <button onClick={() => setIsSidebarOpen(false)} className="absolute top-4 right-4 text-white">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+        <div className="flex items-center mb-6">
+          <img src={WEBSITE_LOGO_URL} alt="Track My IPO Logo" className="h-10 mr-2" />
+          <h2 className="text-xl font-bold">Menu</h2>
         </div>
-        <nav className="p-4 space-y-2">
-          {/* About Us Button (Mobile Sidebar) */}
+        <nav className="flex flex-col space-y-4 text-sm font-semibold">
+          <button
+            onClick={() => { setIpoTypeFilter('All'); setStatusFilter('All'); setLayoutMode('table'); setIsSidebarOpen(false); }}
+            className="text-left py-2 hover:text-blue-200 transition-colors duration-200 border-b border-gray-700"
+          >
+            All IPOs
+          </button>
+          <button
+            onClick={() => { setIpoTypeFilter('Main Board'); setStatusFilter('All'); setLayoutMode('table'); setIsSidebarOpen(false); }}
+            className="text-left py-2 hover:text-blue-200 transition-colors duration-200 border-b border-gray-700"
+          >
+            Main Board
+          </button>
+          <button
+            onClick={() => { setIpoTypeFilter('SME'); setStatusFilter('All'); setLayoutMode('table'); setIsSidebarOpen(false); }}
+            className="text-left py-2 hover:text-blue-200 transition-colors duration-200 border-b border-gray-700"
+          >
+            SME
+          </button>
           <button
             onClick={() => { setShowAboutUsModal(true); setIsSidebarOpen(false); }}
-            className="block w-full text-left py-2 px-3 rounded-md hover:bg-blue-700 transition-colors"
+            className="text-left py-2 hover:text-blue-200 transition-colors duration-200 border-b border-gray-700"
           >
             About Us
           </button>
-          {/* Contact Us Button (Mobile Sidebar) */}
           <button
             onClick={() => { setShowContactUsModal(true); setIsSidebarOpen(false); }}
-            className="block w-full text-left py-2 px-3 rounded-md hover:bg-blue-700 transition-colors"
+            className="text-left py-2 hover:text-blue-200 transition-colors duration-200 border-b border-gray-700"
           >
             Contact Us
           </button>
         </nav>
       </div>
-      {/* Overlay for sidebar */}
-      {isSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 sm:hidden"
-          onClick={() => setIsSidebarOpen(false)}
-        ></div>
-      )}
-
-      {/* New Fixed Sort and Total IPOs Bar */}
-      {/* Adjusted top based on new header height (approx 92px for mobile header) */}
-      <div className="fixed top-[92px] sm:top-[80px] w-full z-40 bg-gray-200 p-1.5 sm:p-2 shadow-md flex flex-col sm:flex-row justify-between items-center text-gray-700 text-xs sm:text-sm">
-        <div className="mb-1 sm:mb-0 text-center sm:text-left text-xs sm:text-sm">
-          Total IPOs: {totalIposCount} (Current: {currentIpos.length} | Mainboard: {currentMainboardCount} | SME: {currentSmeCount})
+      {/* Main Content Area */}
+      <main className="flex-grow container mx-auto px-4 py-8 mt-16 sm:mt-24">
+        {/* Main Filters & Controls */}
+        <div className="bg-white p-4 rounded-xl shadow-lg mb-8 flex flex-col lg:flex-row items-center justify-between space-y-4 lg:space-y-0 lg:space-x-4">
+          <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full lg:w-auto">
+            {/* Search Bar */}
+            <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden w-full sm:w-auto flex-grow lg:flex-grow-0">
+              <input
+                type="text"
+                placeholder="Search IPOs..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="p-2 flex-grow text-sm focus:outline-none"
+              />
+              <span className="p-2 bg-gray-100 border-l border-gray-300">
+                <svg className="h-5 w-5 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M12.9 14.32a8 8 0 111.414-1.414l5.36 5.36a1 1 0 01-1.414 1.414l-5.36-5.36zM8 14a6 6 0 100-12 6 6 0 000 12z"></path>
+                </svg>
+              </span>
+            </div>
+            {/* IPO Type Filter (Desktop) */}
+            <div className="hidden sm:flex space-x-2">
+              <button
+                onClick={() => setIpoTypeFilter('All')}
+                className={`py-2 px-4 rounded-lg text-sm font-semibold transition-colors duration-200 ${ipoTypeFilter === 'All' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+              >
+                All
+              </button>
+              <button
+                onClick={() => setIpoTypeFilter('Main Board')}
+                className={`py-2 px-4 rounded-lg text-sm font-semibold transition-colors duration-200 ${ipoTypeFilter === 'Main Board' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+              >
+                Mainboard
+              </button>
+              <button
+                onClick={() => setIpoTypeFilter('SME')}
+                className={`py-2 px-4 rounded-lg text-sm font-semibold transition-colors duration-200 ${ipoTypeFilter === 'SME' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+              >
+                SME
+              </button>
+            </div>
+            {/* Layout Toggler (Desktop) */}
+            <div className="hidden sm:flex space-x-2">
+              <button
+                onClick={() => setLayoutMode('table')}
+                className={`p-2 rounded-lg transition-colors duration-200 ${layoutMode === 'table' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                aria-label="Toggle Table View"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+              <button
+                onClick={() => setLayoutMode('card')}
+                className={`p-2 rounded-lg transition-colors duration-200 ${layoutMode === 'card' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                aria-label="Toggle Card View"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          {/* Mobile-only controls */}
+          <div className="sm:hidden flex w-full justify-between items-center space-x-2">
+            {/* Mobile IPO Type Filter */}
+            <div className="relative w-1/2">
+              <select
+                value={ipoTypeFilter}
+                onChange={(e) => setIpoTypeFilter(e.target.value)}
+                className="block w-full p-2 text-sm bg-gray-200 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-600"
+              >
+                <option value="All">All Types</option>
+                <option value="Main Board">Mainboard</option>
+                <option value="SME">SME</option>
+              </select>
+              <span className="absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 pointer-events-none">
+                <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                </svg>
+              </span>
+            </div>
+            {/* Mobile Status Filter */}
+            <div className="relative w-1/2">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="block w-full p-2 text-sm bg-gray-200 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-600"
+              >
+                <option value="All">All Status</option>
+                <option value="Current">Current</option>
+                <option value="Upcoming">Upcoming</option>
+                <option value="Listed">Listed</option>
+              </select>
+              <span className="absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 pointer-events-none">
+                <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                </svg>
+              </span>
+            </div>
+            {/* Mobile Layout Toggler */}
+            <div className="flex space-x-2 w-auto">
+              <button
+                onClick={() => setLayoutMode('table')}
+                className={`p-2 rounded-lg transition-colors duration-200 ${layoutMode === 'table' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                aria-label="Toggle Table View"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+              <button
+                onClick={() => setLayoutMode('card')}
+                className={`p-2 rounded-lg transition-colors duration-200 ${layoutMode === 'card' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                aria-label="Toggle Card View"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+            </div>
+          </div>
         </div>
-        <div className="flex gap-1 sm:gap-2 items-center flex-wrap justify-center sm:flex-nowrap"> {/* Added flex-wrap and justify-center for mobile */}
-          {/* Refresh button */}
-          <button
-            onClick={() => {
-              setRefreshTrigger(prev => prev + 1); // Increment to trigger useEffect
-              showMessage("Refreshing IPO data...");
-            }}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-2 rounded-lg transition duration-300 ease-in-out text-xs whitespace-nowrap" // Adjusted padding/font
-          >
-            Refresh
-          </button>
-
-          {/* Mobile Sort Dropdown Trigger */}
-          <div className="relative sm:hidden">
-            <button
-              onClick={() => setShowSortDropdown(!showSortDropdown)}
-              className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-2 rounded-lg transition duration-300 ease-in-out text-xs whitespace-nowrap flex items-center" // Adjusted padding/font
-            >
-              Sort
-              <svg className={`w-3 h-3 ml-1 transform transition-transform duration-200 ${showSortDropdown ? 'rotate-180' : 'rotate-0'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
-              </svg>
-            </button>
-            {showSortDropdown && (
-              <div className="absolute top-full left-0 mt-1 bg-white rounded-lg shadow-lg z-50 py-1 w-32 min-w-max"> {/* min-w-max to prevent text wrapping */}
-                <button
-                  onClick={() => { sortBy("Name"); setShowSortDropdown(false); }}
-                  className="block w-full text-left px-3 py-1 text-sm text-gray-700 hover:bg-gray-100"
-                >
-                  Name {sortConfig.key === "Name" ? (sortConfig.direction === "asc" ? "▲" : "▼") : ""}
-                </button>
-                <button
-                  onClick={() => { sortBy("Open"); setShowSortDropdown(false); }}
-                  className="block w-full text-left px-3 py-1 text-sm text-gray-700 hover:bg-gray-100"
-                >
-                  Open Date {sortConfig.key === "Open" ? (sortConfig.direction === "asc" ? "▲" : "▼") : ""}
-                </button>
-              </div>
-            )}
+        {/* Layout based on state */}
+        {layoutMode === 'table' ? (
+          <div>
+            {/* Table View Sections */}
+            {renderTableSection("Current IPOs", currentIpos, showCurrentSection, () => setShowCurrentSection(!showCurrentSection))}
+            {renderTableSection("Upcoming IPOs", upcomingIpos, showUpcomingSection, () => setShowUpcomingSection(!showUpcomingSection))}
+            {renderTableSection("Listed IPOs", listedIpos, showListedSection, () => setShowListedSection(!showListedSection))}
           </div>
-
-          {/* Desktop Sort Buttons - visible on sm and up */}
-          <button
-            onClick={() => sortBy("Name")}
-            className="hidden sm:block bg-blue-500 hover:bg-blue-600 text-white font-bold py-0.5 px-1 rounded-lg transition duration-300 ease-in-out text-[0.65rem] whitespace-nowrap"
-          >
-            Sort by Name {sortConfig.key === "Name" ? (sortConfig.direction === "asc" ? "▲" : "▼") : "⬍"}
-          </button>
-          <button
-            onClick={() => sortBy("Open")}
-            className="hidden sm:block bg-blue-500 hover:bg-blue-600 text-white font-bold py-0.5 px-1 rounded-lg transition duration-300 ease-in-out text-[0.65rem] whitespace-nowrap"
-          >
-            Sort by Open Date {sortConfig.key === "Open" ? (sortConfig.direction === "asc" ? "▲" : "▼") : "⬍"}
-          </button>
-
-          {/* IPO Type Filter Radios */}
-          <div className="flex items-center gap-1 ml-2 flex-wrap sm:flex-nowrap"> {/* Added flex-wrap for mobile */}
-            <label className="inline-flex items-center">
-              <input
-                type="radio"
-                className="form-radio text-blue-600"
-                name="ipoType"
-                value="All"
-                checked={ipoTypeFilter === 'All'}
-                onChange={(e) => setIpoTypeFilter(e.target.value)}
-              />
-              <span className="ml-1 text-gray-700 text-xs whitespace-nowrap">All</span>
-            </label>
-            <label className="inline-flex items-center">
-              <input
-                type="radio"
-                className="form-radio text-blue-600"
-                name="ipoType"
-                value="Main Board"
-                checked={ipoTypeFilter === 'Main Board'}
-                onChange={(e) => setIpoTypeFilter(e.target.value)}
-              />
-              <span className="ml-1 text-gray-700 text-xs whitespace-nowrap">Mainboard</span>
-            </label>
-            <label className="inline-flex items-center">
-              <input
-                type="radio"
-                className="form-radio text-blue-600"
-                name="ipoType"
-                value="SME"
-                checked={ipoTypeFilter === 'SME'}
-                onChange={(e) => setIpoTypeFilter(e.target.value)}
-              />
-              <span className="ml-1 text-gray-700 text-xs whitespace-nowrap">SME</span>
-            </label>
-          </div>
-
-          {/* IPO Status Filter Radios */}
-          <div className="flex items-center gap-1 ml-2 flex-wrap sm:flex-nowrap">
-            <label className="inline-flex items-center">
-              <input
-                type="radio"
-                className="form-radio text-blue-600"
-                name="statusFilter"
-                value="All"
-                checked={statusFilter === 'All'}
-                onChange={(e) => setStatusFilter(e.target.value)}
-              />
-              <span className="ml-1 text-gray-700 text-xs whitespace-nowrap">All</span>
-            </label>
-            <label className="inline-flex items-center">
-              <input
-                type="radio"
-                className="form-radio text-blue-600"
-                name="statusFilter"
-                value="Current"
-                checked={statusFilter === 'Current'}
-                onChange={(e) => setStatusFilter(e.target.value)}
-              />
-              <span className="ml-1 text-gray-700 text-xs whitespace-nowrap">Current</span>
-            </label>
-            <label className="inline-flex items-center">
-              <input
-                type="radio"
-                className="form-radio text-blue-600"
-                name="statusFilter"
-                value="Upcoming"
-                checked={statusFilter === 'Upcoming'}
-                onChange={(e) => setStatusFilter(e.target.value)}
-              />
-              <span className="ml-1 text-gray-700 text-xs whitespace-nowrap">Upcoming</span>
-            </label>
-          </div>
-
-        </div>
-      </div>
-
-      {/* Main Content - Adjusted padding top to account for fixed header and new bar */}
-      {/* Dynamic padding-bottom based on footer state */}
-      <main className={`container mx-auto p-4 flex-grow overflow-y-auto pt-[130px] sm:pt-[128px] ${isFooterExpanded ? 'pb-[180px] sm:pb-28' : 'pb-[40px] sm:pb-28'}`}>
-        {/* Conditional Rendering for Layout */}
-        {layoutMode === 'card' ? (
-          <section id="ipo-list" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Display cards if there's data to show, otherwise show a message */}
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {displayedIpoData.length > 0 ? (
               displayedIpoData.map((ipo, index) => (
-                <div key={index} className="card p-6 flex flex-col justify-between relative border border-gray-200"> {/* Added border */}
-                  {/* IPO Name and Type */}
-                  <div className="flex-grow mb-2">
-                    <h2 className="text-xl font-semibold text-blue-700">{ipo.Name} ({ipo.Type})</h2>
-                  </div>
-
-                  {/* Details and IPO Image - Grouped */}
-                  <div className="flex items-start gap-4 mb-4">
-                    <div className="flex-grow"> {/* Details column */}
-                      <p className="text-gray-700 text-sm mb-0.5"><strong>Price:</strong> {ipo.Price || 'N/A'}</p>
-                      <p className="text-gray-700 text-sm mb-0.5"><strong>Lot Size:</strong> {ipo.Lot || 'N/A'}</p>
-                      <p className="text-gray-700 text-sm mb-0.5"><strong>Open Date:</strong> {ipo.Open || 'N/A'}</p>
-                      <p className="text-gray-700 text-sm mb-0.5"><strong>Close Date:</strong> {ipo.Close || 'N/A'}</p>
-                    </div>
-                    {/* IPO Image - Now beside the details */}
-                    <div className="flex-shrink-0">
-                      {ipo.ImageURL ? (
-                        <img
-                          src={ipo.ImageURL}
-                          alt={`${ipo.Name} Logo`}
-                          className="w-16 h-16 object-contain rounded-lg border p-1 bg-white shadow-sm"
-                          onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/80x80/e0e0e0/555555?text=No+Image"; }}
-                        />
-                      ) : (
-                        <img
-                          src="https://placehold.co/80x80/e0e0e0/555555?text=No+Image"
-                          alt="No Image Available"
-                          className="w-16 h-16 object-contain rounded-lg border p-1 bg-white shadow-sm"
-                        />
-                      )}
-                    </div>
-                  </div>
-
-                  {/* GMP/Est Listing/IPO Size - below the image/price block */}
-                  <p className="text-gray-600 text-sm mb-4">
-                    <strong>GMP:</strong> {ipo.GMP || 'N/A'} |
-                    <strong> Est. Listing:</strong> {ipo["Est Listing"] || 'N/A'} |
-                    <strong> IPO Size:</strong> {ipo["IPO Size"] || 'N/A'}
-                  </p>
-                  {/* Status and View Details button */}
-                  <div className="flex items-center justify-between mt-auto">
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold
-                      ${ipo.Status?.toLowerCase().includes('open') || ipo.Status?.toLowerCase().includes('apply') ? 'status-open' :
-                        ipo.Status?.toLowerCase().includes('closed') || ipo.Status?.toLowerCase().includes('listed') || ipo.Status?.toLowerCase().includes('allotment') ? 'status-closed' :
-                        'status-upcoming'}`}>
-                      {getStatusContent(ipo.Status, ipo)}
+                <div
+                  key={index}
+                  className="bg-white rounded-xl shadow-lg overflow-hidden p-6 hover:shadow-xl transition-shadow duration-300 flex flex-col"
+                >
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-xl font-bold text-gray-800">{ipo.Name}</h3>
+                    <span className={`text-sm font-semibold px-2 py-1 rounded-full ${ipo.Type?.toLowerCase().includes("sme") ? 'bg-yellow-200 text-yellow-800' : 'bg-green-200 text-green-800'}`}>
+                      {ipo.Type}
                     </span>
-                    <button
-                      onClick={() => handleViewDetailsClick(ipo)} // Changed to open details modal
-                      className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out"
-                    >
-                      View Details
-                    </button>
                   </div>
+                  <div className="space-y-2 text-sm text-gray-600 flex-grow">
+                    <div className="flex items-center">
+                      <span className="font-semibold text-gray-700 mr-2">Status:</span>
+                      {getStatusContent(ipo.Status, ipo)}
+                    </div>
+                    {ipo.Open && (
+                      <p>
+                        <span className="font-semibold text-gray-700">Open:</span> {ipo.Open}
+                      </p>
+                    )}
+                    {ipo.Close && (
+                      <p>
+                        <span className="font-semibold text-gray-700">Close:</span> {ipo.Close}
+                      </p>
+                    )}
+                    {ipo.Price && (
+                      <p>
+                        <span className="font-semibold text-gray-700">Price:</span> {ipo.Price}
+                      </p>
+                    )}
+                    {ipo["IPO Size"] && (
+                      <p>
+                        <span className="font-semibold text-gray-700">IPO Size:</span> {ipo["IPO Size"]}
+                      </p>
+                    )}
+                    {ipo.GMP && (
+                      <p>
+                        <span className="font-semibold text-gray-700">GMP:</span> {ipo.GMP}
+                      </p>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => handleViewDetailsClick(ipo)}
+                    className="mt-4 w-full bg-blue-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-200"
+                  >
+                    View Details
+                  </button>
                 </div>
               ))
             ) : (
-              // Show appropriate message if no data or no matching data
-              !isLoading && (
-                <p className="text-center text-gray-600 col-span-full">
-                  {ipoData.length === 0 ? "No IPO data available. Please check the Google Sheet URL." : "No IPOs found matching your criteria."}
-                </p>
-              )
+              <p className="col-span-full text-center text-gray-600 py-8">No IPOs found matching the criteria.</p>
             )}
-          </section>
-        ) : (
-          <div>
-            {/* Render categorized table sections */}
-            {renderTableSection("Current IPOs", currentIpos, showCurrentSection, () => setShowCurrentSection(!showCurrentSection))}
-            {renderTableSection("Upcoming IPOs", upcomingIpos, showUpcomingSection, () => setShowUpcomingSection(!showUpcomingSection))}
-            {renderTableSection("Listed/Closed IPOs", listedIpos, showListedSection, () => setShowListedSection(!showListedSection))}
-
-            {/* Message if no IPOs found in table view after filtering/categorizing */}
-            {ipoData.length > 0 && currentIpos.length === 0 && upcomingIpos.length === 0 && listedIpos.length === 0 && (
-              <p className="px-3 py-4 text-center text-gray-600 bg-white rounded-lg shadow-sm">No IPOs found matching your criteria across all categories.</p>
-            )}
-            {ipoData.length === 0 && !isLoading && layoutMode === 'table' && (
-                <p className="px-3 py-4 text-center text-gray-600 bg-white rounded-lg shadow-sm">No IPO data available to display in table view. Please check the Google Sheet URL.</p>
-            )}
-          </div>
-        )}
-
-
-        {/* Message Box for alerts */}
-        {showMessageBox && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity duration-300">
-            <div className="bg-white p-8 rounded-lg shadow-2xl text-center relative transform scale-90 opacity-0 animate-fade-in-scale-up">
-              <p className="text-2xl font-bold text-gray-800 mb-4">{message}</p>
-              <button
-                onClick={() => setShowMessageBox(false)}
-                className="absolute top-2 right-2 text-gray-600 hover:text-black text-xl font-bold"
-              >
-                X
-            </button>
-            </div>
           </div>
         )}
       </main>
-
-      {/* IPO Details Modal */}
-      {showDetailsModal && selectedIpoDetails && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full relative">
-            <button
-              className="absolute top-2 right-2 text-gray-600 hover:text-black text-lg"
-              onClick={() => { setShowDetailsModal(false); setSelectedIpoDetails(null); }}
+      {/* Footer */}
+      <footer
+        id="footer"
+        className={`bg-gray-800 text-white transition-all duration-500 ease-in-out transform ${isFooterExpanded ? 'h-auto py-6 translate-y-0' : 'h-16 -translate-y-0'}`}
+        onMouseEnter={() => setIsFooterExpanded(true)}
+        onMouseLeave={() => setIsFooterExpanded(false)}
+      >
+        <div className="container mx-auto px-4 text-center">
+          <div className="flex flex-col items-center justify-between">
+            <div
+              id="broker-section"
+              className="flex justify-center flex-wrap gap-4 mb-4 items-center w-full"
             >
-              ×
-            </button>
-            <h3 className="text-2xl font-bold text-gray-800 mb-4 text-center">{selectedIpoDetails.Name} Details</h3>
-            <div className="space-y-2 text-gray-700 text-sm max-h-96 overflow-y-auto pr-2"> {/* Added max-h and overflow for scrollability */}
-              <p><strong>Type:</strong> {selectedIpoDetails.Type || 'N/A'}</p>
-              <p><strong>Status:</strong> {getStatusContent(selectedIpoDetails.Status, selectedIpoDetails)}</p>
-              <p><strong>GMP:</strong> {selectedIpoDetails.GMP || 'N/A'}</p>
-              <p><strong>Subscription:</strong> {selectedIpoDetails.Subscription || 'N/A'}</p>
-              <p><strong>Price:</strong> {selectedIpoDetails.Price || 'N/A'}</p>
-              <p><strong>Est. Listing:</strong> {selectedIpoDetails["Est Listing"] || 'N/A'}</p>
-              <p><strong>IPO Size:</strong> {selectedIpoDetails["IPO Size"] || 'N/A'}</p>
-              <p><strong>Lot Size:</strong> {selectedIpoDetails.Lot || 'N/A'}</p>
-              <p><strong>Open Date:</strong> {selectedIpoDetails.Open || 'N/A'}</p>
-              <p><strong>Close Date:</strong> {selectedIpoDetails.Close || 'N/A'}</p>
-              <p><strong>BoA Date:</strong> {selectedIpoDetails["BoA Dt"] || 'N/A'}</p>
-              <p><strong>Listing Date:</strong> {selectedIpoDetails.Listing || 'N/A'}</p>
-              {selectedIpoDetails.Description && (
-                <p><strong>Description:</strong> {selectedIpoDetails.Description}</p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Allotment Popup */}
-      {showAllotmentPopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex justify-center items-center p-4">
-          <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full relative">
-            <button
-              className="absolute top-2 right-2 text-gray-600 hover:text-black text-lg"
-              onClick={() => setShowAllotmentPopup(false)}
-            >
-              ×
-            </button>
-            <h3 className="text-lg font-semibold mb-3 text-gray-800">Check allotment from the below verified links</h3>
-            {allotmentLinks.length > 0 ? (
-              <ul className="space-y-2">
-                {allotmentLinks.map((link, idx) => (
-                  <li key={idx}>
-                    <a
-                      href={link.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 underline hover:text-blue-800 break-all"
-                    >
-                      � {link.name}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-gray-600">No allotment links available for this IPO.</p>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Floating Broker Banner */}
-      {showBrokerPopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex justify-center items-center p-4">
-          <div className="bg-white p-4 rounded-lg shadow-lg w-full max-w-3xl relative">
-            <button
-              onClick={() => setShowBrokerPopup(false)}
-              className="absolute top-2 right-2 text-gray-600 hover:text-black text-lg"
-              >
-              ×
-            </button>
-            <h2 className="text-lg font-semibold mb-4 text-center text-gray-800">
-              🛡️ Open Demat account securely with verified investment brokers.
-            </h2>
-            <div className="flex flex-wrap justify-center gap-4">
               {renderBrokerLinks()}
             </div>
           </div>
-        </div>
-      )}
-
-      {/* About Us Modal */}
-      {showAboutUsModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full relative">
-            <button
-              className="absolute top-2 right-2 text-gray-600 hover:text-black text-lg"
-              onClick={() => setShowAboutUsModal(false)}
-            >
-              ×
-            </button>
-            <h3 className="text-2xl font-bold text-gray-800 mb-4 text-center">About Track My IPO</h3>
-            <p className="text-gray-700 mb-4 text-sm max-h-60 overflow-y-auto"> {/* Added max-h and overflow for scrollability */}
-              Track My IPO is your go-to application for staying updated on the latest Initial Public Offerings (IPOs).
-              We aim to provide a simple, intuitive, and efficient way to track IPO statuses, GMP (Grey Market Premium),
-              and other crucial details. Our goal is to empower investors with timely information to make informed decisions.
-            </p>
-            <p className="text-gray-700 text-sm mb-4">
-              We are continuously working to enhance features and provide the best user experience.
-            </p>
-
-                 <p className="text-center text-gray-800 text-xs mt-4">
-                Please share your suggestions and comments us at <a href="mailto:trackmyipo@outlook.com" className="text-blue-600 hover:underline">trackmyipo@outlook.com</a>
-              </p>
- <p className="text-gray-600 text-xs mt-2"> {/* Reduced font size for disclaimer */}
-                Disclaimer:
-                All content provided on this platform is intended solely for educational and informational purposes.
-                Under no circumstances should any information published here be interpreted as investment advice, a recommendation to buy or sell any securities, or guidance for participating in IPOs. 
-                We are not registered with SEBI as financial analysts or advisors. 
-                Users are strongly advised to consult a qualified financial advisor before making any investment decisions based on the information presented on this platform. 
-                The content shared is based on publicly available data and prevailing market views as of the date of publication.
-                By using this platform, you acknowledge and agree to these terms and conditions.
-                   </p>
+          <div className="text-sm border-t border-gray-700 pt-4">
+            <p className="mb-1">&copy; 2024 Track My IPO. All Rights Reserved.</p>
+            <p>Disclaimer: The information provided is for informational purposes only. Consult a financial advisor before making any investment decisions.</p>
           </div>
-        </div>
-      )}
-
-      {/* Contact Us Modal */}
-      {showContactUsModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full relative">
-            <button
-              className="absolute top-2 right-2 text-gray-600 hover:text-black text-lg"
-              onClick={() => { setShowContactUsModal(false); setContactFormMessage(''); }}
-            >
-              ×
-            </button>
-            <h3 className="text-2xl font-bold text-gray-800 mb-4 text-center">Contact Us</h3>
-            <form onSubmit={handleContactFormSubmit} className="space-y-4">
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name <span className="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={contactForm.name}
-                  onChange={handleContactFormChange}
-                  className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="contactNumber" className="block text-sm font-medium text-gray-700">Contact Number <span className="text-red-500">*</span></label>
-                <input
-                  type="tel"
-                  id="contactNumber"
-                  name="contactNumber"
-                  value={contactForm.contactNumber}
-                  onChange={handleContactFormChange}
-                  className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                  required
-                  pattern="[0-9]{10}" // Basic pattern for 10 digits
-                  title="Please enter a 10-digit phone number"
-                />
-              </div>
-              <div>
-                <label htmlFor="locality" className="block text-sm font-medium text-gray-700">Locality <span className="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  id="locality"
-                  name="locality"
-                  value={contactForm.locality}
-                  onChange={handleContactFormChange}
-                  className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email <span className="text-red-500">*</span></label> {/* Changed label */}
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={contactForm.email}
-                  onChange={handleContactFormChange}
-                  className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                  required
-                />
-              </div>
-              {contactFormMessage && (
-                <p className={`text-center text-sm ${contactFormMessage.includes('Thanks') ? 'text-green-600' : 'text-red-600'}`}>
-                  {contactFormMessage}
-                </p>
-              )}
-              <button
-                type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
-              >
-                Submit
-              </button>
-              <p className="text-center text-gray-500 text-xs mt-4">
-                Having trouble submitting form? email us at <a href="mailto:trackmyipo@outlook.com" className="text-blue-600 hover:underline">trackmyipo@outlook.com</a>
-              </p>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Collapsible Footer */}
-      <footer
-        id="broker-section"
-        className={`fixed bottom-0 left-0 w-full bg-white border-t shadow z-40 transition-all duration-[2000ms] ease-in-out
-          ${isFooterExpanded ? 'h-auto py-2 sm:py-2 px-2 sm:px-4' : 'h-[40px] sm:h-[40px] py-1 px-2 sm:px-4 overflow-hidden'}`}
-        onClick={() => setIsFooterExpanded(!isFooterExpanded)}
-      >
-        <div
-          className="flex justify-center items-center h-full sm:h-auto cursor-pointer"
-        >
-          <div className="flex flex-col items-center">
-            {/* Arrow icon for expand/collapse */}
-            <svg
-              className={`w-5 h-5 text-gray-600 transform transition-transform duration-300 ${isFooterExpanded ? 'rotate-180' : 'rotate-0'}`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
-            </svg>
-            {/* Only show "Tap to Expand" or "Tap to Collapse" on mobile when collapsed/expanded */}
-            <p className="text-gray-500 text-xs mt-0.5 sm:hidden">
-              {isFooterExpanded ? 'Tap to Collapse' : 'Tap for Brokers'}
-            </p>
-          </div>
-        </div>
-
-        {/* Content that expands/collapses */}
-        <div className={`transition-opacity duration-300 ${isFooterExpanded ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-center sm:justify-between gap-1 sm:gap-2">
-            {/* WhatsApp Channel Section */}
-            <div className="whatsapp-section text-center sm:text-left mb-0.5 sm:mb-1">
-              <a
-                href="https://www.whatsapp.com/channel/0029VbBPCHaKAwEkO9zdRl34"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center bg-green-600 text-white px-3 py-1 rounded-full shadow-md hover:bg-green-700 hover:scale-105 transition transform text-xs"
-              >
-                <img
-                  src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"
-                  alt="WhatsApp"
-                  className="w-3.5 h-3.5 mr-1"
-                />
-                WhatsApp Updates
-              </a>
-            </div>
-            
-            <div className="flex flex-col items-center sm:items-end">
-              <h2 className="text-xs sm:text-sm font-semibold mb-0.5 sm:mb-1 text-center text-gray-800 hover:text-blue-600 transition-all">
-                🛡️ Open Demat account securely with verified investment brokers.
-              </h2>
-              <div className="flex flex-wrap justify-center gap-1 overflow-x-auto pb-0.5">
-                {renderBrokerLinks()}
-              </div>
-            </div>
-          </div>
-          <p className="text-center text-gray-500 text-xs mt-1">© {new Date().getFullYear()} Track My IPO. All rights reserved.</p>
         </div>
       </footer>
+      {/* Popups and Modals */}
+      {/* Message Box */}
+      {showMessageBox && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 bg-green-500 text-white text-center px-6 py-3 rounded-xl shadow-lg z-[60] transition-transform duration-300 ease-out transform-gpu">
+          {message}
+        </div>
+      )}
+      {/* Broker Popup */}
+      {showBrokerPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70]">
+          <div className="bg-white p-6 rounded-lg shadow-xl w-11/12 max-w-lg">
+            <div className="flex justify-between items-center mb-4">
+              <h4 className="text-xl font-bold text-gray-800">Open a Demat Account</h4>
+              <button onClick={() => setShowBrokerPopup(false)} className="text-gray-500 hover:text-gray-800">
+                &times;
+              </button>
+            </div>
+            <p className="text-gray-600 mb-4">
+              Please open a Demat account with one of our trusted partners to apply for IPOs.
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              {BROKER_LINKS.map((broker, idx) => (
+                <a
+                  key={idx}
+                  href={broker.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex flex-col items-center p-3 border rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <img src={broker.logo} alt={broker.name} className="h-8 mb-2" />
+                  <span className="text-sm font-semibold">{broker.name}</span>
+                </a>
+              ))}
+            </div>
+            <p className="mt-4 text-xs text-gray-400">
+              Note: Clicking a link will take you to an external site to open an account.
+            </p>
+          </div>
+        </div>
+      )}
+      {/* Allotment Popup */}
+      {showAllotmentPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70]">
+          <div className="bg-white p-6 rounded-lg shadow-xl w-11/12 max-w-lg">
+            <div className="flex justify-between items-center mb-4">
+              <h4 className="text-xl font-bold text-gray-800">Check Allotment Status</h4>
+              <button onClick={() => setShowAllotmentPopup(false)} className="text-gray-500 hover:text-gray-800">
+                &times;
+              </button>
+            </div>
+            <p className="text-gray-600 mb-4">
+              Check your IPO allotment status using the links below.
+            </p>
+            <ul className="space-y-3">
+              {allotmentLinks.map((link, idx) => (
+                <li key={idx}>
+                  <a
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block w-full bg-blue-100 text-blue-700 py-3 px-4 rounded-lg font-semibold hover:bg-blue-200 text-center transition-colors"
+                  >
+                    {link.name}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
+      {/* About Us Modal */}
+      {showAboutUsModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70]">
+          <div className="bg-white p-8 rounded-xl shadow-2xl w-11/12 max-w-2xl">
+            <div className="flex justify-between items-center mb-6">
+              <h4 className="text-2xl font-bold text-gray-800">About Us</h4>
+              <button onClick={() => setShowAboutUsModal(false)} className="text-gray-500 hover:text-gray-800">
+                &times;
+              </button>
+            </div>
+            <div className="text-gray-700 space-y-4">
+              <p>
+                Welcome to **Track My IPO**, your one-stop destination for tracking the latest Initial Public Offerings. We provide up-to-date information on upcoming, current, and listed IPOs, including key details like GMP (Grey Market Premium), price bands, subscription status, and more.
+              </p>
+              <p>
+                Our mission is to empower retail investors by providing a clean, easy-to-use interface to monitor IPOs, helping you make informed decisions. We strive to be a reliable source for all your IPO-related information.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Contact Us Modal */}
+      {showContactUsModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70]">
+          <div className="bg-white p-8 rounded-xl shadow-2xl w-11/12 max-w-2xl">
+            <div className="flex justify-between items-center mb-6">
+              <h4 className="text-2xl font-bold text-gray-800">Contact Us</h4>
+              <button onClick={() => setShowContactUsModal(false)} className="text-gray-500 hover:text-gray-800">
+                &times;
+              </button>
+            </div>
+            <div className="text-gray-700 space-y-4">
+              <form onSubmit={handleContactFormSubmit} className="space-y-4">
+                <div>
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    value={contactForm.name}
+                    onChange={handleContactFormChange}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email Address</label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={contactForm.email}
+                    onChange={handleContactFormChange}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="contactNumber" className="block text-sm font-medium text-gray-700">Contact Number (10 digits)</label>
+                  <input
+                    type="tel"
+                    id="contactNumber"
+                    name="contactNumber"
+                    value={contactForm.contactNumber}
+                    onChange={handleContactFormChange}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="locality" className="block text-sm font-medium text-gray-700">Locality</label>
+                  <input
+                    type="text"
+                    id="locality"
+                    name="locality"
+                    value={contactForm.locality}
+                    onChange={handleContactFormChange}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    required
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  Submit
+                </button>
+                {contactFormMessage && (
+                  <p className="mt-2 text-center text-sm text-red-600">
+                    {contactFormMessage}
+                  </p>
+                )}
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* IPO Details Modal */}
+      {showDetailsModal && selectedIpoDetails && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70]">
+          <div className="bg-white p-8 rounded-xl shadow-2xl w-11/12 max-w-2xl overflow-y-auto max-h-[90vh]">
+            <div className="flex justify-between items-center mb-6">
+              <h4 className="text-2xl font-bold text-gray-800">{selectedIpoDetails.Name} Details</h4>
+              <button onClick={() => setShowDetailsModal(false)} className="text-gray-500 hover:text-gray-800">
+                &times;
+              </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700">
+              {Object.entries(selectedIpoDetails).map(([key, value]) => {
+                if (value && key !== 'AllotmentLink1') {
+                  return (
+                    <div key={key}>
+                      <span className="font-semibold text-gray-900">{key}:</span> {value}
+                    </div>
+                  );
+                }
+                return null;
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
-
 export default App;
-
-
-
-

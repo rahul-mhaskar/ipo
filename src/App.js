@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import Papa from "papaparse";
 import websiteLogo from './Track My IPO - Logo.png';
-import { GOOGLE_SHEET_CSV_URL, BROKER_LINKS, CONTACT_EMAIL } from './config';
+import * as config from './config';
 
 const App = () => {
   const [ipoData, setIpoData] = useState([]);
@@ -160,7 +160,7 @@ const App = () => {
     setLoadingProgress(0);
     setLoadingText("Loading IPO data...");
     startProgressSimulation();
-    Papa.parse(GOOGLE_SHEET_CSV_URL, {
+    Papa.parse(config.GOOGLE_SHEET_CSV_URL, {
       download: true,
       header: true,
       complete: (result) => {
@@ -386,7 +386,7 @@ const App = () => {
     }
   };
   const renderBrokerLinks = () => {
-    return BROKER_LINKS.map((broker, idx) => (
+    return config.BROKER_LINKS.map((broker, idx) => (
       <a
         key={idx}
         href={broker.href}
@@ -487,7 +487,7 @@ const App = () => {
       return;
     }
     console.log("Contact Form Submitted:", contactForm);
-    setContactFormMessage(`we are experiencing technical difficulties. Please write us at ${CONTACT_EMAIL}`);
+    setContactFormMessage(`we are experiencing technical difficulties. Please write us at ${config.CONTACT_EMAIL}`);
     setTimeout(() => {
       setContactForm({ name: '', contactNumber: '', locality: '', email: '' });
       setContactFormMessage('');
@@ -859,7 +859,7 @@ const App = () => {
               Please open a Demat account with one of our trusted partners to apply for IPOs.
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              {BROKER_LINKS.map((broker, idx) => (
+              {config.BROKER_LINKS.map((broker, idx) => (
                 <a
                   key={idx}
                   href={broker.href}

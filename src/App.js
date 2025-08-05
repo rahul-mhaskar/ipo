@@ -1,12 +1,8 @@
-// src/App.js (Updated)
-
 import React, { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import Papa from "papaparse";
 import websiteLogo from './Track My IPO - Logo.png';
 import { GOOGLE_SHEET_CSV_URL, BROKER_LINKS, CONTACT_EMAIL } from './config';
-// Now imports hardcoded data from a separate config file
 
-const WEBSITE_LOGO_URL = websiteLogo;
 const App = () => {
   const [ipoData, setIpoData] = useState([]);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
@@ -16,7 +12,7 @@ const App = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [message, setMessage] = useState("");
   const [showMessageBox, setShowMessageBox] = useState(false);
-  const [layoutMode, setLayoutMode] = useState('table'); // 'card' or 'table'
+  const [layoutMode, setLayoutMode] = useState('table');
   const [ipoTypeFilter, setIpoTypeFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
   const [isLoading, setIsLoading] = useState(true);
@@ -542,7 +538,7 @@ const App = () => {
             </div>
             <div className="flex items-center flex-grow sm:flex-grow-0 justify-center sm:justify-start">
               <img
-                src={WEBSITE_LOGO_URL}
+                src={websiteLogo}
                 alt="Track My IPO Logo"
                 className="h-10 sm:h-12 mr-2"
               />
@@ -559,7 +555,6 @@ const App = () => {
               </button>
             </div>
           </div>
-          {/* Desktop Navigation */}
           <nav className="hidden sm:flex items-center space-x-6 text-sm font-semibold">
             <button
               onClick={() => { setIpoTypeFilter('All'); setStatusFilter('All'); setLayoutMode('table'); }}
@@ -603,7 +598,6 @@ const App = () => {
           </nav>
         </div>
       </header>
-      {/* Mobile Sidebar (Hamburger Menu) */}
       <div className={`fixed inset-y-0 left-0 w-64 bg-gray-800 text-white p-4 transform transition-transform duration-300 ease-in-out z-50 sm:hidden ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <button onClick={() => setIsSidebarOpen(false)} className="absolute top-4 right-4 text-white">
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -611,7 +605,7 @@ const App = () => {
           </svg>
         </button>
         <div className="flex items-center mb-6">
-          <img src={WEBSITE_LOGO_URL} alt="Track My IPO Logo" className="h-10 mr-2" />
+          <img src={websiteLogo} alt="Track My IPO Logo" className="h-10 mr-2" />
           <h2 className="text-xl font-bold">Menu</h2>
         </div>
         <nav className="flex flex-col space-y-4 text-sm font-semibold">
@@ -647,12 +641,9 @@ const App = () => {
           </button>
         </nav>
       </div>
-      {/* Main Content Area */}
       <main className="flex-grow container mx-auto px-4 py-8 mt-16 sm:mt-24">
-        {/* Main Filters & Controls */}
         <div className="bg-white p-4 rounded-xl shadow-lg mb-8 flex flex-col lg:flex-row items-center justify-between space-y-4 lg:space-y-0 lg:space-x-4">
           <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full lg:w-auto">
-            {/* Search Bar */}
             <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden w-full sm:w-auto flex-grow lg:flex-grow-0">
               <input
                 type="text"
@@ -667,7 +658,6 @@ const App = () => {
                 </svg>
               </span>
             </div>
-            {/* IPO Type Filter (Desktop) */}
             <div className="hidden sm:flex space-x-2">
               <button
                 onClick={() => setIpoTypeFilter('All')}
@@ -688,7 +678,6 @@ const App = () => {
                 SME
               </button>
             </div>
-            {/* Layout Toggler (Desktop) */}
             <div className="hidden sm:flex space-x-2">
               <button
                 onClick={() => setLayoutMode('table')}
@@ -710,9 +699,7 @@ const App = () => {
               </button>
             </div>
           </div>
-          {/* Mobile-only controls */}
           <div className="sm:hidden flex w-full justify-between items-center space-x-2">
-            {/* Mobile IPO Type Filter */}
             <div className="relative w-1/2">
               <select
                 value={ipoTypeFilter}
@@ -729,7 +716,6 @@ const App = () => {
                 </svg>
               </span>
             </div>
-            {/* Mobile Status Filter */}
             <div className="relative w-1/2">
               <select
                 value={statusFilter}
@@ -747,7 +733,6 @@ const App = () => {
                 </svg>
               </span>
             </div>
-            {/* Mobile Layout Toggler */}
             <div className="flex space-x-2 w-auto">
               <button
                 onClick={() => setLayoutMode('table')}
@@ -770,10 +755,8 @@ const App = () => {
             </div>
           </div>
         </div>
-        {/* Layout based on state */}
         {layoutMode === 'table' ? (
           <div>
-            {/* Table View Sections */}
             {renderTableSection("Current IPOs", currentIpos, showCurrentSection, () => setShowCurrentSection(!showCurrentSection))}
             {renderTableSection("Upcoming IPOs", upcomingIpos, showUpcomingSection, () => setShowUpcomingSection(!showUpcomingSection))}
             {renderTableSection("Listed IPOs", listedIpos, showListedSection, () => setShowListedSection(!showListedSection))}
@@ -837,7 +820,6 @@ const App = () => {
           </div>
         )}
       </main>
-      {/* Footer */}
       <footer
         id="footer"
         className={`bg-gray-800 text-white transition-all duration-500 ease-in-out transform ${isFooterExpanded ? 'h-auto py-6 translate-y-0' : 'h-16 -translate-y-0'}`}
@@ -854,26 +836,23 @@ const App = () => {
             </div>
           </div>
           <div className="text-sm border-t border-gray-700 pt-4">
-            <p className="mb-1">&copy; 2024 Track My IPO. All Rights Reserved.</p>
+            <p className="mb-1">© 2024 Track My IPO. All Rights Reserved.</p>
             <p>Disclaimer: The information provided is for informational purposes only. Consult a financial advisor before making any investment decisions.</p>
           </div>
         </div>
       </footer>
-      {/* Popups and Modals */}
-      {/* Message Box */}
       {showMessageBox && (
         <div className="fixed top-20 left-1/2 -translate-x-1/2 bg-green-500 text-white text-center px-6 py-3 rounded-xl shadow-lg z-[60] transition-transform duration-300 ease-out transform-gpu">
           {message}
         </div>
       )}
-      {/* Broker Popup */}
       {showBrokerPopup && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70]">
           <div className="bg-white p-6 rounded-lg shadow-xl w-11/12 max-w-lg">
             <div className="flex justify-between items-center mb-4">
               <h4 className="text-xl font-bold text-gray-800">Open a Demat Account</h4>
               <button onClick={() => setShowBrokerPopup(false)} className="text-gray-500 hover:text-gray-800">
-                &times;
+                ×
               </button>
             </div>
             <p className="text-gray-600 mb-4">
@@ -899,14 +878,13 @@ const App = () => {
           </div>
         </div>
       )}
-      {/* Allotment Popup */}
       {showAllotmentPopup && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70]">
           <div className="bg-white p-6 rounded-lg shadow-xl w-11/12 max-w-lg">
             <div className="flex justify-between items-center mb-4">
               <h4 className="text-xl font-bold text-gray-800">Check Allotment Status</h4>
               <button onClick={() => setShowAllotmentPopup(false)} className="text-gray-500 hover:text-gray-800">
-                &times;
+                ×
               </button>
             </div>
             <p className="text-gray-600 mb-4">
@@ -929,14 +907,13 @@ const App = () => {
           </div>
         </div>
       )}
-      {/* About Us Modal */}
       {showAboutUsModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70]">
           <div className="bg-white p-8 rounded-xl shadow-2xl w-11/12 max-w-2xl">
             <div className="flex justify-between items-center mb-6">
               <h4 className="text-2xl font-bold text-gray-800">About Us</h4>
               <button onClick={() => setShowAboutUsModal(false)} className="text-gray-500 hover:text-gray-800">
-                &times;
+                ×
               </button>
             </div>
             <div className="text-gray-700 space-y-4">
@@ -950,14 +927,13 @@ const App = () => {
           </div>
         </div>
       )}
-      {/* Contact Us Modal */}
       {showContactUsModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70]">
           <div className="bg-white p-8 rounded-xl shadow-2xl w-11/12 max-w-2xl">
             <div className="flex justify-between items-center mb-6">
               <h4 className="text-2xl font-bold text-gray-800">Contact Us</h4>
               <button onClick={() => setShowContactUsModal(false)} className="text-gray-500 hover:text-gray-800">
-                &times;
+                ×
               </button>
             </div>
             <div className="text-gray-700 space-y-4">
@@ -1026,14 +1002,13 @@ const App = () => {
           </div>
         </div>
       )}
-      {/* IPO Details Modal */}
       {showDetailsModal && selectedIpoDetails && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70]">
           <div className="bg-white p-8 rounded-xl shadow-2xl w-11/12 max-w-2xl overflow-y-auto max-h-[90vh]">
             <div className="flex justify-between items-center mb-6">
               <h4 className="text-2xl font-bold text-gray-800">{selectedIpoDetails.Name} Details</h4>
               <button onClick={() => setShowDetailsModal(false)} className="text-gray-500 hover:text-gray-800">
-                &times;
+                ×
               </button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700">

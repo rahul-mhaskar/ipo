@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import Papa from "papaparse";
-import websiteLogo from './Track My IPO - Logo.png';
+import websiteLogo from './Track my IPO_3D_Logo.png';
 import * as config from './config';
 
 const App = () => {

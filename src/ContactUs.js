@@ -1,62 +1,88 @@
 import React, { useState } from "react";
+import GoogleLogin from "./GoogleLogin"; // Assuming this path is correct
 
 export default function ContactUs({ user }) {
   const [message, setMessage] = useState("");
+  const [statusMessage, setStatusMessage] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!user) return;
-    alert(`Message sent from ${user.email}: ${message}`);
+    if (!user) {
+      setStatusMessage("Please sign in with Google to send a message.");
+      return;
+    }
+
+    // In a real application, you would make an API call here
+    // For now, we will simulate a successful submission.
+    // Replace this console log with a fetch call to your backend.
+    console.log(`Message from ${user.email}: ${message}`);
+    
+    setStatusMessage("Thank you! Your message has been sent.");
     setMessage("");
+
+    // Clear the status message after a few seconds
+    setTimeout(() => setStatusMessage(""), 3000);
   };
 
-  if (!user) {
-    return (
-      <div className="p-4 bg-yellow-100 text-yellow-800 rounded shadow">
-        Please sign in with Google to contact us.
-      </div>
-    );
-  }
-
   return (
-    <div className="max-w-md mx-auto p-4 bg-white shadow rounded">
-      <h2 className="text-xl font-bold mb-4">Contact Us</h2>
+    <div className="max-w-md mx-auto p-6 bg-white shadow-xl rounded-2xl border border-gray-200">
+      <h2 className="text-2xl font-bold mb-6 text-gray-800">Contact Us</h2>
+      
+      {/* Show the GoogleLogin component if no user is authenticated */}
+      {!user && (
+        <div className="p-4 bg-yellow-50 text-yellow-800 rounded-lg shadow mb-4">
+          <p className="text-sm font-medium">Please sign in with Google to contact us.</p>
+        </div>
+      )}
+
+      {/* Show a custom status message box */}
+      {statusMessage && (
+        <div className={`p-4 rounded-lg shadow-md mb-4 ${
+            statusMessage.includes("sent") ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+        }`}>
+          <p className="text-sm font-medium">{statusMessage}</p>
+        </div>
+      )}
+
+      {/* Main form */}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block mb-1 text-sm font-medium">Name</label>
+          <label className="block mb-1 text-sm font-medium text-gray-700">Name</label>
           <input
             type="text"
-            value={user.displayName || ""}
+            value={user?.displayName || "Guest"}
             readOnly
-            className="w-full border px-3 py-2 rounded bg-gray-100"
+            className="w-full border border-gray-300 px-4 py-2 rounded-lg bg-gray-50 focus:outline-none"
           />
         </div>
 
         <div>
-          <label className="block mb-1 text-sm font-medium">Email</label>
+          <label className="block mb-1 text-sm font-medium text-gray-700">Email</label>
           <input
             type="email"
-            value={user.email || ""}
+            value={user?.email || "guest@example.com"}
             readOnly
-            className="w-full border px-3 py-2 rounded bg-gray-100"
+            className="w-full border border-gray-300 px-4 py-2 rounded-lg bg-gray-50 focus:outline-none"
           />
         </div>
 
         <div>
-          <label className="block mb-1 text-sm font-medium">Message</label>
+          <label className="block mb-1 text-sm font-medium text-gray-700">Message</label>
           <textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             required
-            className="w-full border px-3 py-2 rounded"
+            rows="4"
+            className="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
           />
         </div>
 
         <button
           type="submit"
-          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
+          className="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition-colors duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          disabled={!user || !message.trim()}
         >
-          Send
+          Send Message
         </button>
       </form>
     </div>

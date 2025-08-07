@@ -1,20 +1,33 @@
-import React, { useEffect, useState, useMemo, useRef, useCallback } from "react";
-import Papa from "papaparse";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+
+// IMPORTANT: All Firebase imports must be from the specific modules
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, signInAnonymously } from 'firebase/auth';
-import { getFirestore, doc, setDoc, getDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, signInAnonymously, signInWithCustomToken } from 'firebase/auth';
+import { getFirestore, doc, setDoc, collection, serverTimestamp } from 'firebase/firestore';
 
-const App = () => {
-  // Config
-  const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT5N_L9IuYqgGkY2t6yVzNqM8O-d7X8r_wP_c9L-C4n4o0S3B6z9wJ7hF9/pub?gid=0&single=true&output=csv";
-  const BROKER_LINKS = [
-    { name: "Zerodha", logo: "https://zerodha.com/static/images/logo.svg", href: "https://zerodha.com/" },
-    { name: "Upstox", logo: "https://upstox.com/app/themes/upstox-new-theme/images/upstox-logo.svg", href: "https://upstox.com/" },
-    { name: "Groww", logo: "https://groww.in/groww-logo-270.png", href: "https://groww.in/" },
-    { name: "Angel One", logo: "https://www.angelone.in/logo-angel.svg", href: "https://www.angelone.in/" },
-  ];
-  const websiteLogo = "https://placehold.co/150x50/3454D1/FFFFFF?text=Track%20My%20IPO";
+// Tailwind CSS is assumed to be configured in the project
+// For a standalone file, you would include the CDN, but for a modern React project, it's typically set up with a build tool.
 
+// Data URL
+const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT5N_L9IuYqgGkY2t6yVzNqM8O-d7X8r_wP_c9L-C4n4o0S3B6z9wJ7hF9/pub?gid=0&single=true&output=csv";
+
+// Broker and website info
+const BROKER_LINKS = [
+  { name: "Zerodha", logo: "https://zerodha.com/static/images/logo.svg", href: "https://zerodha.com/" },
+  { name: "Upstox", logo: "https://upstox.com/app/themes/upstox-new-theme/images/upstox-logo.svg", href: "https://upstox.com/" },
+  { name: "Groww", logo: "https://groww.in/groww-logo-270.png", href: "https://groww.in/" },
+  { name: "Angel One", logo: "https://www.angelone.in/logo-angel.svg", href: "https://www.angelone.in/" },
+];
+const websiteLogo = "https://placehold.co/150x50/3454D1/FFFFFF?text=Track%20My%20IPO";
+
+// Month mapping for date parsing
+const monthMap = {
+  "jan": 0, "feb": 1, "mar": 2, "apr": 3, "may": 4, "jun": 5,
+  "jul": 6, "aug": 7, "sep": 8, "oct": 9, "nov": 10, "dec": 11
+};
+
+// Main App component
+export default function App() {
   // State Management
   const [ipoData, setIpoData] = useState([]);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
@@ -36,34 +49,32 @@ const App = () => {
   const [showAboutUsModal, setShowAboutUsModal] = useState(false);
   const [showContactUsModal, setShowContactUsModal] = useState(false);
   const [isFooterExpanded, setIsFooterExpanded] = useState(true);
-  const footerTimeoutRef = useRef(null);
-  const bounceIntervalRef = useRef(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedIpoDetails, setSelectedIpoDetails] = useState(null);
-  const [user, setUser] = useState(null); // New state for authenticated user
-  const [firebaseApp, setFirebaseApp] = useState(null);
+  const [user, setUser] = useState(null);
   const [auth, setAuth] = useState(null);
   const [db, setDb] = useState(null);
 
   // Firebase Initialization and Authentication
   useEffect(() => {
-    // Check if Firebase config exists
+    // Check for Firebase configuration globals
     if (typeof __firebase_config === 'undefined' || !__firebase_config) {
       console.error("Firebase config is not defined.");
       return;
     }
+
     const firebaseConfig = JSON.parse(__firebase_config);
     
-    // Initialize Firebase app
+    // Initialize Firebase app and services
     const app = initializeApp(firebaseConfig);
     const authInstance = getAuth(app);
     const dbInstance = getFirestore(app);
-    setFirebaseApp(app);
     setAuth(authInstance);
     setDb(dbInstance);
 
+    // Sign in using the custom token or anonymously
     const checkAuthStatus = async () => {
       try {
         if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
@@ -77,6 +88,7 @@ const App = () => {
     };
     checkAuthStatus();
 
+    // Listen for auth state changes
     const unsubscribe = onAuthStateChanged(authInstance, (authUser) => {
       if (authUser) {
         setUser(authUser);
@@ -86,9 +98,9 @@ const App = () => {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, []); // Run only once on component mount
 
-  // Helper Functions
+  // Helper function to show a temporary message
   const showMessage = useCallback((msg) => {
     setMessage(msg);
     setShowMessageBox(true);
@@ -98,11 +110,7 @@ const App = () => {
     }, 3000);
   }, []);
 
-  const monthMap = {
-    "jan": 0, "feb": 1, "mar": 2, "apr": 3, "may": 4, "jun": 5,
-    "jul": 6, "aug": 7, "sep": 8, "oct": 9, "nov": 10, "dec": 11
-  };
-  
+  // Helper function to parse dates for sorting
   const parseDateForSort = (dateString) => {
     if (!dateString || typeof dateString !== 'string') return null;
     const cleanedDateString = dateString.trim();
@@ -119,6 +127,7 @@ const App = () => {
         const currentYear = new Date().getFullYear();
         let yearToUse = currentYear;
         const today = new Date();
+        // Adjust year for future dates
         if (month < today.getMonth() || (month === today.getMonth() && day < today.getDate())) {
           yearToUse = currentYear + 1;
         }
@@ -130,8 +139,8 @@ const App = () => {
     }
     return null;
   };
-  
-  // Data Fetching
+
+  // Data fetching hook
   useEffect(() => {
     let progressInterval;
     let currentProgress = 0;
@@ -149,35 +158,51 @@ const App = () => {
         }
       }, 200);
     };
+
     setIsLoading(true);
     setLoadingProgress(0);
     setLoadingText("Loading IPO data...");
     startProgressSimulation();
-    Papa.parse(GOOGLE_SHEET_CSV_URL, {
-      download: true,
-      header: true,
-      complete: (result) => {
+    
+    // PapaParse library is not part of default React projects, so we need to fetch it
+    // This is an unusual but necessary step for this specific platform context.
+    // In a normal React app, you would 'npm install papaparse' and 'import Papa from 'papaparse';
+    import('https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js')
+      .then(Papa => {
+        Papa.default.parse(GOOGLE_SHEET_CSV_URL, {
+          download: true,
+          header: true,
+          complete: (result) => {
+            clearInterval(progressInterval);
+            const cleanedData = result.data.filter(row => row.Name && row.Name.trim() !== '');
+            setIpoData(cleanedData);
+            setLoadingProgress(100);
+            setLoadingText("Data loaded successfully!");
+            setTimeout(() => {
+              setIsLoading(false);
+              showMessage("IPO data loaded successfully!");
+            }, 100);
+          },
+          error: (error) => {
+            clearInterval(progressInterval);
+            console.error("Error parsing CSV:", error);
+            setLoadingProgress(0);
+            setLoadingText(`Error: ${error.message}. Please check URL.`);
+            setTimeout(() => {
+              setIsLoading(false);
+              showMessage(`Failed to load IPO data: ${error.message}. Please check the CSV URL.`);
+            }, 2000);
+          }
+        });
+      })
+      .catch(error => {
         clearInterval(progressInterval);
-        const cleanedData = result.data.filter(row => row.Name && row.Name.trim() !== '');
-        setIpoData(cleanedData);
-        setLoadingProgress(100);
-        setLoadingText("Data loaded successfully!");
-        setTimeout(() => {
-          setIsLoading(false);
-          showMessage("IPO data loaded successfully!");
-        }, 100);
-      },
-      error: (error) => {
-        clearInterval(progressInterval);
-        console.error("Error parsing CSV:", error);
+        console.error("Failed to load PapaParse:", error);
         setLoadingProgress(0);
-        setLoadingText(`Error: ${error.message}. Please check URL.`);
-        setTimeout(() => {
-          setIsLoading(false);
-          showMessage(`Failed to load IPO data: ${error.message}. Please check the CSV URL and ensure it's publicly accessible.`);
-        }, 2000);
-      }
-    });
+        setLoadingText("Error loading CSV parser.");
+        setTimeout(() => setIsLoading(false), 2000);
+      });
+
     return () => {
       clearInterval(progressInterval);
     };
@@ -195,12 +220,9 @@ const App = () => {
     let sortableItems = [...ipoData];
     if (searchTerm) {
       sortableItems = sortableItems.filter(ipo =>
-        ipo.Name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ipo.Status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ipo.Type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ipo.GMP?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ipo.Price?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ipo.Description?.toLowerCase().includes(searchTerm.toLowerCase())
+        Object.values(ipo).some(value =>
+          String(value).toLowerCase().includes(searchTerm.toLowerCase())
+        )
       );
     }
     if (ipoTypeFilter !== 'All') {
@@ -216,9 +238,7 @@ const App = () => {
         if (numericKeys.includes(sortConfig.key)) {
           const numA = parseFloat(String(aVal).replace(/[^0-9.-]+/g, ""));
           const numB = parseFloat(String(bVal).replace(/[^0-9.-]+/g, ""));
-          if (sortConfig.direction === "asc") {
-            return numA - numB;
-          }
+          if (sortConfig.direction === "asc") { return numA - numB; }
           return numB - numA;
         }
         const dateKeys = ["Open", "Close", "BoA Dt", "Listing"];
@@ -228,17 +248,14 @@ const App = () => {
           if (dateA === null && dateB === null) return 0;
           if (dateA === null) return sortConfig.direction === "asc" ? 1 : -1;
           if (dateB === null) return sortConfig.direction === "asc" ? -1 : 1;
-          if (sortConfig.direction === "asc") {
-            return dateA.getTime() - dateB.getTime();
-          }
+          if (sortConfig.direction === "asc") { return dateA.getTime() - dateB.getTime(); }
           return dateB.getTime() - dateA.getTime();
         }
-        if (sortConfig.direction === "asc") {
-          return String(aVal).localeCompare(String(bVal), undefined, { numeric: true });
-        }
+        if (sortConfig.direction === "asc") { return String(aVal).localeCompare(String(bVal), undefined, { numeric: true }); }
         return String(bVal).localeCompare(String(aVal), undefined, { numeric: true });
       });
     }
+
     const upcoming = [];
     const current = [];
     const listed = [];
@@ -252,22 +269,17 @@ const App = () => {
         listed.push(ipo);
       }
     });
-    return {
-      upcomingIpos: upcoming,
-      currentIpos: current,
-      listedIpos: listed,
-    };
-  }, [ipoData, sortConfig, searchTerm, ipoTypeFilter]);
 
+    return { upcomingIpos: upcoming, currentIpos: current, listedIpos: listed };
+  }, [ipoData, sortConfig, searchTerm, ipoTypeFilter]);
+  
   const displayedIpoData = useMemo(() => {
     let filteredAndSortedItems = [...ipoData];
     if (searchTerm) {
       filteredAndSortedItems = filteredAndSortedItems.filter(ipo =>
-        ipo.Name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ipo.Status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ipo.Type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ipo.GMP?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ipo.Price?.toLowerCase().includes(searchTerm.toLowerCase())
+        Object.values(ipo).some(value =>
+          String(value).toLowerCase().includes(searchTerm.toLowerCase())
+        )
       );
     }
     if (ipoTypeFilter !== 'All') {
@@ -284,9 +296,7 @@ const App = () => {
         if (numericKeys.includes(sortConfig.key)) {
           const numA = parseFloat(String(aVal).replace(/[^0-9.-]+/g, ""));
           const numB = parseFloat(String(bVal).replace(/[^0-9.-]+/g, ""));
-          if (sortConfig.direction === "asc") {
-            return numA - numB;
-          }
+          if (sortConfig.direction === "asc") { return numA - numB; }
           return numB - numA;
         } else if (dateKeys.includes(sortConfig.key)) {
           const dateA = parseDateForSort(aVal);
@@ -294,44 +304,36 @@ const App = () => {
           if (dateA === null && dateB === null) return 0;
           if (dateA === null) return sortConfig.direction === "asc" ? 1 : -1;
           if (dateB === null) return sortConfig.direction === "asc" ? -1 : 1;
-          if (sortConfig.direction === "asc") {
-            return dateA.getTime() - dateB.getTime();
-          }
+          if (sortConfig.direction === "asc") { return dateA.getTime() - dateB.getTime(); }
           return dateB.getTime() - dateA.getTime();
         }
-        if (sortConfig.direction === "asc") {
-          return String(aVal).localeCompare(String(bVal), undefined, { numeric: true });
-        }
+        if (sortConfig.direction === "asc") { return String(aVal).localeCompare(String(bVal), undefined, { numeric: true }); }
         return String(bVal).localeCompare(String(aVal), undefined, { numeric: true });
       });
     }
-    let finalDisplayedItems = [];
+
     if (layoutMode === 'card') {
       if (statusFilter === 'All') {
-        finalDisplayedItems = filteredAndSortedItems.filter(ipo => {
+        return filteredAndSortedItems.filter(ipo => {
           const status = ipo.Status ? String(ipo.Status).toLowerCase() : '';
           return !status.includes("listed") && !status.includes("closed");
         });
       } else if (statusFilter === 'Current') {
-        finalDisplayedItems = filteredAndSortedItems.filter(ipo => {
+        return filteredAndSortedItems.filter(ipo => {
           const status = ipo.Status ? String(ipo.Status).toLowerCase() : '';
           return status.includes("apply") || status.includes("open") || status.includes("pending") || status.includes("allotment");
         });
       } else if (statusFilter === 'Upcoming') {
-        finalDisplayedItems = filteredAndSortedItems.filter(ipo => {
+        return filteredAndSortedItems.filter(ipo => {
           const status = ipo.Status ? String(ipo.Status).toLowerCase() : '';
           return status.includes("upcoming") || status.includes("pre-open");
         });
       }
-    } else {
-      finalDisplayedItems = filteredAndSortedItems;
     }
-    return finalDisplayedItems;
+    return filteredAndSortedItems;
   }, [ipoData, sortConfig, searchTerm, ipoTypeFilter, statusFilter, layoutMode]);
 
-  const handleApplyClick = () => {
-    setShowBrokerPopup(true);
-  };
+  const handleApplyClick = () => setShowBrokerPopup(true);
   
   const handleAllotmentClick = (ipo) => {
     const links = [];
@@ -466,7 +468,6 @@ const App = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Inline ContactUs Component
   const ContactUsComponent = ({ user, db, showMessage, setShowContactUsModal }) => {
     const [name, setName] = useState(user?.displayName || "");
     const [email, setEmail] = useState(user?.email || "");
@@ -599,8 +600,7 @@ const App = () => {
     );
   };
   
-  // Inline GoogleLogin Component
-  const GoogleLoginComponent = ({ auth, user, onLogin, onLogout }) => {
+  const GoogleLoginComponent = ({ auth, user, showMessage }) => {
     const handleLogin = async () => {
       if (!auth) {
         showMessage("Firebase Auth is not initialized.");
@@ -647,9 +647,19 @@ const App = () => {
       </button>
     );
   };
-  
+
   return (
     <div className="min-h-screen bg-gray-100 font-sans flex flex-col">
+      {isLoading && (
+        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-gray-900 bg-opacity-70 text-white">
+          <div className="w-16 h-16 border-4 border-t-4 border-white border-opacity-30 rounded-full animate-spin"></div>
+          <p className="mt-4 text-lg font-semibold">{loadingText}</p>
+          <div className="w-64 h-2 bg-gray-500 mt-2 rounded-full overflow-hidden">
+            <div className="h-full bg-blue-500 transition-all duration-300 ease-linear" style={{ width: `${loadingProgress}%` }}></div>
+          </div>
+          <p className="mt-1 text-sm text-gray-300">{loadingProgress}%</p>
+        </div>
+      )}
       <header className="fixed top-0 w-full z-50 bg-gradient-to-r from-blue-600 to-purple-700 text-white p-1 sm:p-2 shadow-lg rounded-b-xl">
         <div className="container mx-auto flex flex-col sm:flex-row justify-between items-center">
           <div className="flex w-full sm:w-auto justify-between items-center sm:mb-0">
@@ -713,7 +723,7 @@ const App = () => {
             >
               Contact Us
             </button>
-            <GoogleLoginComponent auth={auth} user={user} />
+            <GoogleLoginComponent auth={auth} user={user} showMessage={showMessage} />
             <button
               onClick={() => setRefreshTrigger(prev => prev + 1)}
               className="p-1 rounded-md hover:bg-white hover:text-blue-600 transition-colors duration-200"
@@ -767,7 +777,7 @@ const App = () => {
           >
             Contact Us
           </button>
-          <GoogleLoginComponent auth={auth} user={user} />
+          <GoogleLoginComponent auth={auth} user={user} showMessage={showMessage} />
         </nav>
       </div>
       <main className="flex-grow container mx-auto px-4 py-8 mt-16 sm:mt-24">
@@ -1095,5 +1105,4 @@ const App = () => {
       )}
     </div>
   );
-};
-export default App;
+}

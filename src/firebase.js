@@ -7,7 +7,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyAK0-ANrV8MOXRKshWbCNQbie-cNFcTgRQ",
   authDomain: "trackmyipo97.firebaseapp.com",
   projectId: "trackmyipo97",
-  storageBucket: "trackmyipo97.appspot.com",
+  storageBucket: "trackmyipo97.firebasestorage.app",
   messagingSenderId: "647720748444",
   appId: "1:647720748444:web:1c06d5d5734364d3917459",
 };

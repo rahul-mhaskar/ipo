@@ -1,34 +1,18 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useMemo, useRef, useCallback } from "react";
+import Papa from "papaparse";
+import websiteLogo from './Track my IPO_3D_Logo.png';
+import * as config from './config';
 
-// IMPORTANT: All Firebase imports must be from the specific modules
-import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, signInAnonymously, signInWithCustomToken } from 'firebase/auth';
-import { getFirestore, doc, setDoc, collection, serverTimestamp } from 'firebase/firestore';
+// ----------------------------------------------------
+// UPDATED: Now importing configured services from firebase.js
+// ----------------------------------------------------
+import { auth, provider, db } from './firebase.js';
 
-// Tailwind CSS is assumed to be configured in the project
-// For a standalone file, you would include the CDN, but for a modern React project, it's typically set up with a build tool.
+// Specific Firebase functions needed for actions (not initialization)
+import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
+import { collection, addDoc, serverTimestamp, doc, setDoc } from 'firebase/firestore';
 
-// Data URL
-const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT5N_L9IuYqgGkY2t6yVzNqM8O-d7X8r_wP_c9L-C4n4o0S3B6z9wJ7hF9/pub?gid=0&single=true&output=csv";
-
-// Broker and website info
-const BROKER_LINKS = [
-  { name: "Zerodha", logo: "https://zerodha.com/static/images/logo.svg", href: "https://zerodha.com/" },
-  { name: "Upstox", logo: "https://upstox.com/app/themes/upstox-new-theme/images/upstox-logo.svg", href: "https://upstox.com/" },
-  { name: "Groww", logo: "https://groww.in/groww-logo-270.png", href: "https://groww.in/" },
-  { name: "Angel One", logo: "https://www.angelone.in/logo-angel.svg", href: "https://www.angelone.in/" },
-];
-const websiteLogo = "https://placehold.co/150x50/3454D1/FFFFFF?text=Track%20My%20IPO";
-
-// Month mapping for date parsing
-const monthMap = {
-  "jan": 0, "feb": 1, "mar": 2, "apr": 3, "may": 4, "jun": 5,
-  "jul": 6, "aug": 7, "sep": 8, "oct": 9, "nov": 10, "dec": 11
-};
-
-// Main App component
-export default function App() {
-  // State Management
+const App = () => {
   const [ipoData, setIpoData] = useState([]);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
   const [showBrokerPopup, setShowBrokerPopup] = useState(false);
@@ -48,69 +32,138 @@ export default function App() {
   const [showListedSection, setShowListedSection] = useState(false);
   const [showAboutUsModal, setShowAboutUsModal] = useState(false);
   const [showContactUsModal, setShowContactUsModal] = useState(false);
+  const [contactForm, setContactForm] = useState({
+    name: '',
+    contactNumber: '',
+    locality: '',
+    email: ''
+  });
+  const [contactFormMessage, setContactFormMessage] = useState('');
   const [isFooterExpanded, setIsFooterExpanded] = useState(true);
+  const footerTimeoutRef = useRef(null);
+  const bounceIntervalRef = useRef(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedIpoDetails, setSelectedIpoDetails] = useState(null);
+
+  // ----------------------------------------------------
+  // ADDED: State for Firebase User and Auth Loading
+  // ----------------------------------------------------
   const [user, setUser] = useState(null);
-  const [auth, setAuth] = useState(null);
-  const [db, setDb] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
 
-  // Firebase Initialization and Authentication
   useEffect(() => {
-    // Check for Firebase configuration globals
-    if (typeof __firebase_config === 'undefined' || !__firebase_config) {
-      console.error("Firebase config is not defined.");
-      return;
+    if (typeof window.gtag === 'function') {
+      window.gtag('event', 'page_view', {
+        page_title: 'Track My IPO Home',
+        page_location: window.location.href,
+        page_path: '/'
+      });
     }
+  }, []);
 
-    const firebaseConfig = JSON.parse(__firebase_config);
-    
-    // Initialize Firebase app and services
-    const app = initializeApp(firebaseConfig);
-    const authInstance = getAuth(app);
-    const dbInstance = getFirestore(app);
-    setAuth(authInstance);
-    setDb(dbInstance);
-
-    // Sign in using the custom token or anonymously
-    const checkAuthStatus = async () => {
-      try {
-        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-          await signInWithCustomToken(authInstance, __initial_auth_token);
-        } else {
-          await signInAnonymously(authInstance);
+  useEffect(() => {
+    const startCollapseTimeout = () => {
+      if (footerTimeoutRef.current) {
+        clearTimeout(footerTimeoutRef.current);
+      }
+      footerTimeoutRef.current = setTimeout(() => {
+        setIsFooterExpanded(false);
+      }, 3000);
+    };
+    const startBounceAnimation = () => {
+      if (bounceIntervalRef.current) {
+        clearInterval(bounceIntervalRef.current);
+      }
+      bounceIntervalRef.current = setInterval(() => {
+        const footerElement = document.getElementById('broker-section');
+        if (footerElement) {
+          footerElement.classList.add('animate-bounce-once');
+          setTimeout(() => {
+            footerElement.classList.remove('animate-bounce-once');
+          }, 500);
         }
-      } catch (error) {
-        console.error("Firebase auth error:", error);
+      }, 10000);
+    };
+    if (isFooterExpanded) {
+      startCollapseTimeout();
+      if (bounceIntervalRef.current) {
+        clearInterval(bounceIntervalRef.current);
+      }
+    } else {
+      startBounceAnimation();
+    }
+    return () => {
+      if (footerTimeoutRef.current) {
+        clearTimeout(footerTimeoutRef.current);
+      }
+      if (bounceIntervalRef.current) {
+        clearInterval(bounceIntervalRef.current);
       }
     };
-    checkAuthStatus();
+  }, [isFooterExpanded]);
 
-    // Listen for auth state changes
-    const unsubscribe = onAuthStateChanged(authInstance, (authUser) => {
-      if (authUser) {
-        setUser(authUser);
-      } else {
-        setUser(null);
-      }
+  // ----------------------------------------------------
+  // ADDED: Firebase Authentication Effect
+  // ----------------------------------------------------
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setAuthLoading(false);
     });
 
     return () => unsubscribe();
-  }, []); // Run only once on component mount
+  }, []);
 
-  // Helper function to show a temporary message
+  // ----------------------------------------------------
+  // ADDED: Firebase Auth Functions
+  // ----------------------------------------------------
+  const signInWithGoogle = useCallback(async () => {
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      console.error("Error signing in with Google:", error);
+      showMessage("Failed to sign in. Please try again.");
+    }
+  }, [showMessage]);
+
+  const handleSignOut = useCallback(async () => {
+    try {
+      await signOut(auth);
+      showMessage("You have been signed out.");
+    } catch (error) {
+      console.error("Error signing out:", error);
+      showMessage("Failed to sign out. Please try again.");
+    }
+  }, [showMessage]);
+
+  const bounceAnimationCss = `
+    @keyframes bounce-once {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-5px);
+      }
+    }
+    .animate-bounce-once {
+      animation: bounce-once 0.5s ease-in-out;
+    }
+  `;
   const showMessage = useCallback((msg) => {
     setMessage(msg);
     setShowMessageBox(true);
     setTimeout(() => {
       setShowMessageBox(false);
       setMessage("");
-    }, 3000);
+    }, 500);
   }, []);
-
-  // Helper function to parse dates for sorting
+  const monthMap = {
+    "jan": 0, "feb": 1, "mar": 2, "apr": 3, "may": 4, "jun": 5,
+    "jul": 6, "aug": 7, "sep": 8, "oct": 9, "nov": 10, "dec": 11
+  };
   const parseDateForSort = (dateString) => {
     if (!dateString || typeof dateString !== 'string') return null;
     const cleanedDateString = dateString.trim();
@@ -127,7 +180,6 @@ export default function App() {
         const currentYear = new Date().getFullYear();
         let yearToUse = currentYear;
         const today = new Date();
-        // Adjust year for future dates
         if (month < today.getMonth() || (month === today.getMonth() && day < today.getDate())) {
           yearToUse = currentYear + 1;
         }
@@ -139,8 +191,6 @@ export default function App() {
     }
     return null;
   };
-
-  // Data fetching hook
   useEffect(() => {
     let progressInterval;
     let currentProgress = 0;
@@ -158,56 +208,39 @@ export default function App() {
         }
       }, 200);
     };
-
     setIsLoading(true);
     setLoadingProgress(0);
     setLoadingText("Loading IPO data...");
     startProgressSimulation();
-    
-    // PapaParse library is not part of default React projects, so we need to fetch it
-    // This is an unusual but necessary step for this specific platform context.
-    // In a normal React app, you would 'npm install papaparse' and 'import Papa from 'papaparse';
-    import('https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js')
-      .then(Papa => {
-        Papa.default.parse(GOOGLE_SHEET_CSV_URL, {
-          download: true,
-          header: true,
-          complete: (result) => {
-            clearInterval(progressInterval);
-            const cleanedData = result.data.filter(row => row.Name && row.Name.trim() !== '');
-            setIpoData(cleanedData);
-            setLoadingProgress(100);
-            setLoadingText("Data loaded successfully!");
-            setTimeout(() => {
-              setIsLoading(false);
-              showMessage("IPO data loaded successfully!");
-            }, 100);
-          },
-          error: (error) => {
-            clearInterval(progressInterval);
-            console.error("Error parsing CSV:", error);
-            setLoadingProgress(0);
-            setLoadingText(`Error: ${error.message}. Please check URL.`);
-            setTimeout(() => {
-              setIsLoading(false);
-              showMessage(`Failed to load IPO data: ${error.message}. Please check the CSV URL.`);
-            }, 2000);
-          }
-        });
-      })
-      .catch(error => {
+    Papa.parse(config.GOOGLE_SHEET_CSV_URL, {
+      download: true,
+      header: true,
+      complete: (result) => {
         clearInterval(progressInterval);
-        console.error("Failed to load PapaParse:", error);
+        const cleanedData = result.data.filter(row => row.Name && row.Name.trim() !== '');
+        setIpoData(cleanedData);
+        setLoadingProgress(100);
+        setLoadingText("Data loaded successfully!");
+        setTimeout(() => {
+          setIsLoading(false);
+          showMessage("IPO data loaded successfully!");
+        }, 100);
+      },
+      error: (error) => {
+        clearInterval(progressInterval);
+        console.error("Error parsing CSV:", error);
         setLoadingProgress(0);
-        setLoadingText("Error loading CSV parser.");
-        setTimeout(() => setIsLoading(false), 2000);
-      });
-
+        setLoadingText(`Error: ${error.message}. Please check URL.`);
+        setTimeout(() => {
+          setIsLoading(false);
+          showMessage(`Failed to load IPO data: ${error.message}. Please check the CSV URL and ensure it's publicly accessible.`);
+        }, 2000);
+      }
+    });
     return () => {
       clearInterval(progressInterval);
     };
   }, [refreshTrigger, showMessage]);
-
   const sortBy = (key) => {
     let direction = "asc";
     if (sortConfig.key === key && sortConfig.direction === "asc") {
@@ -215,14 +248,16 @@ export default function App() {
     }
     setSortConfig({ key, direction });
   };
-  
-  const { upcomingIpos, currentIpos, listedIpos } = useMemo(() => {
+  const { upcomingIpos, currentIpos, listedIpos, totalIposCount, currentMainboardCount, currentSmeCount } = useMemo(() => {
     let sortableItems = [...ipoData];
     if (searchTerm) {
       sortableItems = sortableItems.filter(ipo =>
-        Object.values(ipo).some(value =>
-          String(value).toLowerCase().includes(searchTerm.toLowerCase())
-        )
+        ipo.Name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ipo.Status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ipo.Type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ipo.GMP?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ipo.Price?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ipo.Description?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
     if (ipoTypeFilter !== 'All') {
@@ -238,7 +273,9 @@ export default function App() {
         if (numericKeys.includes(sortConfig.key)) {
           const numA = parseFloat(String(aVal).replace(/[^0-9.-]+/g, ""));
           const numB = parseFloat(String(bVal).replace(/[^0-9.-]+/g, ""));
-          if (sortConfig.direction === "asc") { return numA - numB; }
+          if (sortConfig.direction === "asc") {
+            return numA - numB;
+          }
           return numB - numA;
         }
         const dateKeys = ["Open", "Close", "BoA Dt", "Listing"];
@@ -248,14 +285,17 @@ export default function App() {
           if (dateA === null && dateB === null) return 0;
           if (dateA === null) return sortConfig.direction === "asc" ? 1 : -1;
           if (dateB === null) return sortConfig.direction === "asc" ? -1 : 1;
-          if (sortConfig.direction === "asc") { return dateA.getTime() - dateB.getTime(); }
+          if (sortConfig.direction === "asc") {
+            return dateA.getTime() - dateB.getTime();
+          }
           return dateB.getTime() - dateA.getTime();
         }
-        if (sortConfig.direction === "asc") { return String(aVal).localeCompare(String(bVal), undefined, { numeric: true }); }
+        if (sortConfig.direction === "asc") {
+          return String(aVal).localeCompare(String(bVal), undefined, { numeric: true });
+        }
         return String(bVal).localeCompare(String(aVal), undefined, { numeric: true });
       });
     }
-
     const upcoming = [];
     const current = [];
     const listed = [];
@@ -269,17 +309,33 @@ export default function App() {
         listed.push(ipo);
       }
     });
-
-    return { upcomingIpos: upcoming, currentIpos: current, listedIpos: listed };
+    let currentMainboard = 0;
+    let currentSme = 0;
+    current.forEach(ipo => {
+      if (ipo.Type && ipo.Type.toLowerCase().includes("main board")) {
+        currentMainboard++;
+      } else if (ipo.Type && ipo.Type.toLowerCase().includes("sme")) {
+        currentSme++;
+      }
+    });
+    return {
+      upcomingIpos: upcoming,
+      currentIpos: current,
+      listedIpos: listed,
+      totalIposCount: sortableItems.length,
+      currentMainboardCount: currentMainboard,
+      currentSmeCount: currentSme
+    };
   }, [ipoData, sortConfig, searchTerm, ipoTypeFilter]);
-  
   const displayedIpoData = useMemo(() => {
     let filteredAndSortedItems = [...ipoData];
     if (searchTerm) {
       filteredAndSortedItems = filteredAndSortedItems.filter(ipo =>
-        Object.values(ipo).some(value =>
-          String(value).toLowerCase().includes(searchTerm.toLowerCase())
-        )
+        ipo.Name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ipo.Status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ipo.Type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ipo.GMP?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ipo.Price?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
     if (ipoTypeFilter !== 'All') {
@@ -296,7 +352,9 @@ export default function App() {
         if (numericKeys.includes(sortConfig.key)) {
           const numA = parseFloat(String(aVal).replace(/[^0-9.-]+/g, ""));
           const numB = parseFloat(String(bVal).replace(/[^0-9.-]+/g, ""));
-          if (sortConfig.direction === "asc") { return numA - numB; }
+          if (sortConfig.direction === "asc") {
+            return numA - numB;
+          }
           return numB - numA;
         } else if (dateKeys.includes(sortConfig.key)) {
           const dateA = parseDateForSort(aVal);
@@ -304,37 +362,43 @@ export default function App() {
           if (dateA === null && dateB === null) return 0;
           if (dateA === null) return sortConfig.direction === "asc" ? 1 : -1;
           if (dateB === null) return sortConfig.direction === "asc" ? -1 : 1;
-          if (sortConfig.direction === "asc") { return dateA.getTime() - dateB.getTime(); }
+          if (sortConfig.direction === "asc") {
+            return dateA.getTime() - dateB.getTime();
+          }
           return dateB.getTime() - dateA.getTime();
         }
-        if (sortConfig.direction === "asc") { return String(aVal).localeCompare(String(bVal), undefined, { numeric: true }); }
+        if (sortConfig.direction === "asc") {
+          return String(aVal).localeCompare(String(bVal), undefined, { numeric: true });
+        }
         return String(bVal).localeCompare(String(aVal), undefined, { numeric: true });
       });
     }
-
+    let finalDisplayedItems = [];
     if (layoutMode === 'card') {
       if (statusFilter === 'All') {
-        return filteredAndSortedItems.filter(ipo => {
+        finalDisplayedItems = filteredAndSortedItems.filter(ipo => {
           const status = ipo.Status ? String(ipo.Status).toLowerCase() : '';
           return !status.includes("listed") && !status.includes("closed");
         });
       } else if (statusFilter === 'Current') {
-        return filteredAndSortedItems.filter(ipo => {
+        finalDisplayedItems = filteredAndSortedItems.filter(ipo => {
           const status = ipo.Status ? String(ipo.Status).toLowerCase() : '';
           return status.includes("apply") || status.includes("open") || status.includes("pending") || status.includes("allotment");
         });
       } else if (statusFilter === 'Upcoming') {
-        return filteredAndSortedItems.filter(ipo => {
+        finalDisplayedItems = filteredAndSortedItems.filter(ipo => {
           const status = ipo.Status ? String(ipo.Status).toLowerCase() : '';
           return status.includes("upcoming") || status.includes("pre-open");
         });
       }
+    } else {
+      finalDisplayedItems = filteredAndSortedItems;
     }
-    return filteredAndSortedItems;
+    return finalDisplayedItems;
   }, [ipoData, sortConfig, searchTerm, ipoTypeFilter, statusFilter, layoutMode]);
-
-  const handleApplyClick = () => setShowBrokerPopup(true);
-  
+  const handleApplyClick = () => {
+    setShowBrokerPopup(true);
+  };
   const handleAllotmentClick = (ipo) => {
     const links = [];
     if (ipo.AllotmentLink1) {
@@ -345,12 +409,10 @@ export default function App() {
     setAllotmentLinks(links);
     setShowAllotmentPopup(true);
   };
-  
   const handleViewDetailsClick = (ipo) => {
     setSelectedIpoDetails(ipo);
     setShowDetailsModal(true);
   };
-  
   const getStatusContent = (status, ipo) => {
     const cleanStatus = status ? String(status).toLowerCase() : '';
     if (cleanStatus.includes("apply")) {
@@ -375,9 +437,8 @@ export default function App() {
       return <span className="text-gray-500 font-semibold">📅 {status}</span>;
     }
   };
-  
   const renderBrokerLinks = () => {
-    return BROKER_LINKS.map((broker, idx) => (
+    return config.BROKER_LINKS.map((broker, idx) => (
       <a
         key={idx}
         href={broker.href}
@@ -391,12 +452,10 @@ export default function App() {
       </a>
     ));
   };
-  
   const tableHeaders = [
     "Name", "Type", "Status", "GMP", "Subscription", "Price", "Est Listing",
     "IPO Size", "Lot", "Open", "Close", "BoA Dt", "Listing"
   ];
-  
   const renderTableSection = (title, ipoList, isVisible, toggleVisibility) => (
     <div className="mb-8">
       <div
@@ -457,7 +516,36 @@ export default function App() {
       </div>
     </div>
   );
-
+  const handleContactFormChange = (e) => {
+    const { name, value } = e.target;
+    setContactForm(prevState => ({ ...prevState, [name]: value }));
+  };
+  const handleContactFormSubmit = (e) => {
+    e.preventDefault();
+    if (!contactForm.name || !contactForm.contactNumber || !contactForm.locality || !contactForm.email) {
+      setContactFormMessage('Please fill in all mandatory fields.');
+      return;
+    }
+    if (!/^[A-Za-z\s]+$/.test(contactForm.name)) {
+      setContactFormMessage('Name can only contain alphabets and spaces.');
+      return;
+    }
+    if (!/^\S+@\S+\.\S+$/.test(contactForm.email)) {
+      setContactFormMessage('Please enter a valid email address.');
+      return;
+    }
+    if (!/^\d{10}$/.test(contactForm.contactNumber)) {
+      setContactFormMessage('Please enter a valid 10-digit contact number.');
+      return;
+    }
+    console.log("Contact Form Submitted:", contactForm);
+    setContactFormMessage(`we are experiencing technical difficulties. Please write us at ${config.CONTACT_EMAIL}`);
+    setTimeout(() => {
+      setContactForm({ name: '', contactNumber: '', locality: '', email: '' });
+      setContactFormMessage('');
+      setShowContactUsModal(false);
+    }, 5000);
+  };
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 640) {
@@ -467,197 +555,24 @@ export default function App() {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-
-  const ContactUsComponent = ({ user, db, showMessage, setShowContactUsModal }) => {
-    const [name, setName] = useState(user?.displayName || "");
-    const [email, setEmail] = useState(user?.email || "");
-    const [subject, setSubject] = useState("");
-    const [message, setMessage] = useState("");
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [isSignedOut, setIsSignedOut] = useState(!user);
-
-    useEffect(() => {
-      if (user) {
-        setName(user.displayName || "");
-        setEmail(user.email || "");
-        setIsSignedOut(false);
-      } else {
-        setName("");
-        setEmail("");
-        setIsSignedOut(true);
-      }
-    }, [user]);
-
-    const handleSubmit = async (e) => {
-      e.preventDefault();
-      if (!db) {
-        showMessage("Firebase is not initialized. Cannot submit form.");
-        return;
-      }
-      setIsSubmitting(true);
-      try {
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const userId = user?.uid || `anonymous-${crypto.randomUUID()}`;
-        const docRef = doc(db, 'artifacts', appId, 'users', userId, 'messages', `msg-${new Date().toISOString()}`);
-        
-        await setDoc(docRef, {
-          name: name,
-          email: email,
-          subject: subject,
-          message: message,
-          timestamp: serverTimestamp(),
-          userId: userId,
-          status: 'unread'
-        });
-        
-        showMessage("Message sent successfully!");
-        setName(user?.displayName || "");
-        setEmail(user?.email || "");
-        setSubject("");
-        setMessage("");
-        setShowContactUsModal(false);
-      } catch (error) {
-        console.error("Error submitting contact form:", error);
-        showMessage("Failed to send message. Please try again.");
-      } finally {
-        setIsSubmitting(false);
-      }
-    };
-
-    return (
-      <div className="text-gray-700">
-        <p className="mb-4">
-          Have a question, feedback, or suggestion? We'd love to hear from you.
-        </p>
-        {isSignedOut && (
-          <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-4" role="alert">
-            <p className="font-bold">Heads up!</p>
-            <p>You are not signed in. Please sign in to pre-fill your name and email.</p>
-          </div>
-        )}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
-            <input
-              id="name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-              placeholder="Your Name"
-              required
-              disabled={isSubmitting}
-            />
-          </div>
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-              placeholder="you@example.com"
-              required
-              disabled={isSubmitting}
-            />
-          </div>
-          <div>
-            <label htmlFor="subject" className="block text-sm font-medium text-gray-700">Subject</label>
-            <input
-              id="subject"
-              type="text"
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-              placeholder="Subject"
-              required
-              disabled={isSubmitting}
-            />
-          </div>
-          <div>
-            <label htmlFor="message" className="block text-sm font-medium text-gray-700">Message</label>
-            <textarea
-              id="message"
-              rows="4"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-              placeholder="Your message here..."
-              required
-              disabled={isSubmitting}
-            ></textarea>
-          </div>
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-          >
-            {isSubmitting ? "Sending..." : "Send Message"}
-          </button>
-        </form>
-      </div>
-    );
-  };
-  
-  const GoogleLoginComponent = ({ auth, user, showMessage }) => {
-    const handleLogin = async () => {
-      if (!auth) {
-        showMessage("Firebase Auth is not initialized.");
-        return;
-      }
-      const provider = new GoogleAuthProvider();
-      try {
-        await signInWithPopup(auth, provider);
-      } catch (error) {
-        console.error("Google login failed:", error);
-        showMessage("Failed to sign in with Google.");
-      }
-    };
-
-    const handleLogout = async () => {
-      if (!auth) {
-        showMessage("Firebase Auth is not initialized.");
-        return;
-      }
-      try {
-        await signOut(auth);
-      } catch (error) {
-        console.error("Logout failed:", error);
-        showMessage("Failed to sign out.");
-      }
-    };
-    
-    return user ? (
-      <div className="flex items-center space-x-2 text-white">
-        <span className="text-sm hidden sm:block">Hello, {user.displayName?.split(' ')[0]}</span>
-        <button
-          onClick={handleLogout}
-          className="bg-red-500 hover:bg-red-600 text-white font-semibold py-1 px-3 rounded-lg text-sm transition-colors duration-200"
-        >
-          Logout
-        </button>
-      </div>
-    ) : (
-      <button
-        onClick={handleLogin}
-        className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-1 px-3 rounded-lg text-sm transition-colors duration-200"
-      >
-        Sign in with Google
-      </button>
-    );
-  };
-
   return (
     <div className="min-h-screen bg-gray-100 font-sans flex flex-col">
-      {isLoading && (
-        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-gray-900 bg-opacity-70 text-white">
-          <div className="w-16 h-16 border-4 border-t-4 border-white border-opacity-30 rounded-full animate-spin"></div>
-          <p className="mt-4 text-lg font-semibold">{loadingText}</p>
-          <div className="w-64 h-2 bg-gray-500 mt-2 rounded-full overflow-hidden">
-            <div className="h-full bg-blue-500 transition-all duration-300 ease-linear" style={{ width: `${loadingProgress}%` }}></div>
+      <style>{bounceAnimationCss}</style>
+      {isLoading || authLoading && (
+        <div className="fixed inset-0 bg-gradient-to-br from-blue-600 to-purple-700 text-white flex flex-col items-center justify-center z-50 transition-opacity duration-500 opacity-100">
+          <svg className="animate-spin h-16 w-16 text-white mb-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <h2 className="text-4xl font-bold mb-4">Track My IPO</h2>
+          <p className="text-xl mb-2">{loadingText}</p>
+          <div className="w-64 bg-white bg-opacity-30 rounded-full h-2.5 mb-4">
+            <div
+              className="bg-white h-2.5 rounded-full transition-all duration-300 ease-out"
+              style={{ width: `${loadingProgress}%` }}
+            ></div>
           </div>
-          <p className="mt-1 text-sm text-gray-300">{loadingProgress}%</p>
+          <p className="text-lg font-semibold">{loadingProgress}%</p>
         </div>
       )}
       <header className="fixed top-0 w-full z-50 bg-gradient-to-r from-blue-600 to-purple-700 text-white p-1 sm:p-2 shadow-lg rounded-b-xl">
@@ -723,7 +638,6 @@ export default function App() {
             >
               Contact Us
             </button>
-            <GoogleLoginComponent auth={auth} user={user} showMessage={showMessage} />
             <button
               onClick={() => setRefreshTrigger(prev => prev + 1)}
               className="p-1 rounded-md hover:bg-white hover:text-blue-600 transition-colors duration-200"
@@ -733,6 +647,27 @@ export default function App() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.836 3.582a4.5 4.5 0 01-1.314 3.424m-10.74 0a4.5 4.5 0 01-1.314-3.424M5.582 9h.582m0 0a5.952 5.952 0 01-.027-.678C6.184 6.84 8.01 5 10.25 5H18m0 0c-3.111 0-5.64 2.53-5.64 5.64M12 20c-3.111 0-5.64-2.53-5.64-5.64m0 0a5.952 5.952 0 01-.027-.678M18 10.64a5.952 5.952 0 01.027.678" />
               </svg>
             </button>
+            {/* ----------------------------------------------------
+                ADDED: Conditional rendering for auth buttons
+            ---------------------------------------------------- */}
+            {user ? (
+              <>
+                <span className="text-white text-sm font-semibold">{user.displayName || user.email}</span>
+                <button
+                  onClick={handleSignOut}
+                  className="py-1 px-3 rounded-full text-sm font-semibold bg-white text-blue-600 hover:bg-gray-100 transition-colors duration-200"
+                >
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={signInWithGoogle}
+                className="py-1 px-3 rounded-full text-sm font-semibold bg-white text-blue-600 hover:bg-gray-100 transition-colors duration-200"
+              >
+                Sign In
+              </button>
+            )}
           </nav>
         </div>
       </header>
@@ -777,7 +712,29 @@ export default function App() {
           >
             Contact Us
           </button>
-          <GoogleLoginComponent auth={auth} user={user} showMessage={showMessage} />
+          {/* ----------------------------------------------------
+              ADDED: Conditional rendering for mobile auth buttons
+          ---------------------------------------------------- */}
+          <div className="border-t border-gray-700 pt-4 mt-4">
+            {user ? (
+              <div className="flex flex-col space-y-2">
+                <span className="text-white text-sm font-semibold">{user.displayName || user.email}</span>
+                <button
+                  onClick={() => { handleSignOut(); setIsSidebarOpen(false); }}
+                  className="w-full text-left py-2 px-3 rounded-md text-sm font-semibold bg-white text-blue-600 hover:bg-gray-100 transition-colors duration-200"
+                >
+                  Sign Out
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => { signInWithGoogle(); setIsSidebarOpen(false); }}
+                className="w-full text-left py-2 px-3 rounded-md text-sm font-semibold bg-white text-blue-600 hover:bg-gray-100 transition-colors duration-200"
+              >
+                Sign In
+              </button>
+            )}
+          </div>
         </nav>
       </div>
       <main className="flex-grow container mx-auto px-4 py-8 mt-16 sm:mt-24">
@@ -998,7 +955,7 @@ export default function App() {
               Please open a Demat account with one of our trusted partners to apply for IPOs.
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              {BROKER_LINKS.map((broker, idx) => (
+              {config.BROKER_LINKS.map((broker, idx) => (
                 <a
                   key={idx}
                   href={broker.href}
@@ -1075,7 +1032,69 @@ export default function App() {
                 ×
               </button>
             </div>
-            <ContactUsComponent user={user} db={db} showMessage={showMessage} setShowContactUsModal={setShowContactUsModal}/>
+            <div className="text-gray-700 space-y-4">
+              <form onSubmit={handleContactFormSubmit} className="space-y-4">
+                <div>
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    value={contactForm.name}
+                    onChange={handleContactFormChange}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email Address</label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={contactForm.email}
+                    onChange={handleContactFormChange}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="contactNumber" className="block text-sm font-medium text-gray-700">Contact Number (10 digits)</label>
+                  <input
+                    type="tel"
+                    id="contactNumber"
+                    name="contactNumber"
+                    value={contactForm.contactNumber}
+                    onChange={handleContactFormChange}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="locality" className="block text-sm font-medium text-gray-700">Locality</label>
+                  <input
+                    type="text"
+                    id="locality"
+                    name="locality"
+                    value={contactForm.locality}
+                    onChange={handleContactFormChange}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    required
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  Submit
+                </button>
+                {contactFormMessage && (
+                  <p className="mt-2 text-center text-sm text-red-600">
+                    {contactFormMessage}
+                  </p>
+                )}
+              </form>
+            </div>
           </div>
         </div>
       )}
@@ -1105,4 +1124,5 @@ export default function App() {
       )}
     </div>
   );
-}
+};
+export default App;

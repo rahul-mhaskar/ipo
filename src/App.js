@@ -2,6 +2,9 @@ import React, { useEffect, useState, useMemo, useRef, useCallback } from "react"
 import Papa from "papaparse";
 import websiteLogo from './Track My IPO - Logo.png';
 import * as config from './config';
+import GoogleLogin from "./GoogleLogin";
+import ContactUs from "./ContactUs";
+
 
 const App = () => {
   const [ipoData, setIpoData] = useState([]);

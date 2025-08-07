@@ -2,6 +2,8 @@ import React, { useEffect, useState, useMemo, useRef, useCallback } from "react"
 import Papa from "papaparse";
 import websiteLogo from './Track My IPO - Logo.png';
 import * as config from './config';
+import ContactUs from "./ContactUs";
+import GoogleLogin from "./GoogleLogin";
 
 const App = () => {
   const [ipoData, setIpoData] = useState([]);
@@ -23,13 +25,6 @@ const App = () => {
   const [showListedSection, setShowListedSection] = useState(false);
   const [showAboutUsModal, setShowAboutUsModal] = useState(false);
   const [showContactUsModal, setShowContactUsModal] = useState(false);
-  const [contactForm, setContactForm] = useState({
-    name: '',
-    contactNumber: '',
-    locality: '',
-    email: ''
-  });
-  const [contactFormMessage, setContactFormMessage] = useState('');
   const [isFooterExpanded, setIsFooterExpanded] = useState(true);
   const footerTimeoutRef = useRef(null);
   const bounceIntervalRef = useRef(null);
@@ -38,6 +33,8 @@ const App = () => {
   const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedIpoDetails, setSelectedIpoDetails] = useState(null);
+  const [user, setUser] = useState(null); // New state for authenticated user
+
   useEffect(() => {
     if (typeof window.gtag === 'function') {
       window.gtag('event', 'page_view', {
@@ -47,6 +44,7 @@ const App = () => {
       });
     }
   }, []);
+
   useEffect(() => {
     const startCollapseTimeout = () => {
       if (footerTimeoutRef.current) {
@@ -87,6 +85,7 @@ const App = () => {
       }
     };
   }, [isFooterExpanded]);
+
   const bounceAnimationCss = `
     @keyframes bounce-once {
       0%, 100% {
@@ -100,6 +99,7 @@ const App = () => {
       animation: bounce-once 0.5s ease-in-out;
     }
   `;
+
   const showMessage = useCallback((msg) => {
     setMessage(msg);
     setShowMessageBox(true);
@@ -108,10 +108,12 @@ const App = () => {
       setMessage("");
     }, 500);
   }, []);
+
   const monthMap = {
     "jan": 0, "feb": 1, "mar": 2, "apr": 3, "may": 4, "jun": 5,
     "jul": 6, "aug": 7, "sep": 8, "oct": 9, "nov": 10, "dec": 11
   };
+  
   const parseDateForSort = (dateString) => {
     if (!dateString || typeof dateString !== 'string') return null;
     const cleanedDateString = dateString.trim();
@@ -139,6 +141,7 @@ const App = () => {
     }
     return null;
   };
+  
   useEffect(() => {
     let progressInterval;
     let currentProgress = 0;
@@ -189,6 +192,7 @@ const App = () => {
       clearInterval(progressInterval);
     };
   }, [refreshTrigger, showMessage]);
+
   const sortBy = (key) => {
     let direction = "asc";
     if (sortConfig.key === key && sortConfig.direction === "asc") {
@@ -196,6 +200,7 @@ const App = () => {
     }
     setSortConfig({ key, direction });
   };
+  
   const { upcomingIpos, currentIpos, listedIpos, totalIposCount, currentMainboardCount, currentSmeCount } = useMemo(() => {
     let sortableItems = [...ipoData];
     if (searchTerm) {
@@ -275,6 +280,7 @@ const App = () => {
       currentSmeCount: currentSme
     };
   }, [ipoData, sortConfig, searchTerm, ipoTypeFilter]);
+
   const displayedIpoData = useMemo(() => {
     let filteredAndSortedItems = [...ipoData];
     if (searchTerm) {
@@ -344,9 +350,11 @@ const App = () => {
     }
     return finalDisplayedItems;
   }, [ipoData, sortConfig, searchTerm, ipoTypeFilter, statusFilter, layoutMode]);
+
   const handleApplyClick = () => {
     setShowBrokerPopup(true);
   };
+  
   const handleAllotmentClick = (ipo) => {
     const links = [];
     if (ipo.AllotmentLink1) {
@@ -357,10 +365,12 @@ const App = () => {
     setAllotmentLinks(links);
     setShowAllotmentPopup(true);
   };
+  
   const handleViewDetailsClick = (ipo) => {
     setSelectedIpoDetails(ipo);
     setShowDetailsModal(true);
   };
+  
   const getStatusContent = (status, ipo) => {
     const cleanStatus = status ? String(status).toLowerCase() : '';
     if (cleanStatus.includes("apply")) {
@@ -385,6 +395,7 @@ const App = () => {
       return <span className="text-gray-500 font-semibold">📅 {status}</span>;
     }
   };
+  
   const renderBrokerLinks = () => {
     return config.BROKER_LINKS.map((broker, idx) => (
       <a
@@ -400,10 +411,12 @@ const App = () => {
       </a>
     ));
   };
+  
   const tableHeaders = [
     "Name", "Type", "Status", "GMP", "Subscription", "Price", "Est Listing",
     "IPO Size", "Lot", "Open", "Close", "BoA Dt", "Listing"
   ];
+  
   const renderTableSection = (title, ipoList, isVisible, toggleVisibility) => (
     <div className="mb-8">
       <div
@@ -464,36 +477,7 @@ const App = () => {
       </div>
     </div>
   );
-  const handleContactFormChange = (e) => {
-    const { name, value } = e.target;
-    setContactForm(prevState => ({ ...prevState, [name]: value }));
-  };
-  const handleContactFormSubmit = (e) => {
-    e.preventDefault();
-    if (!contactForm.name || !contactForm.contactNumber || !contactForm.locality || !contactForm.email) {
-      setContactFormMessage('Please fill in all mandatory fields.');
-      return;
-    }
-    if (!/^[A-Za-z\s]+$/.test(contactForm.name)) {
-      setContactFormMessage('Name can only contain alphabets and spaces.');
-      return;
-    }
-    if (!/^\S+@\S+\.\S+$/.test(contactForm.email)) {
-      setContactFormMessage('Please enter a valid email address.');
-      return;
-    }
-    if (!/^\d{10}$/.test(contactForm.contactNumber)) {
-      setContactFormMessage('Please enter a valid 10-digit contact number.');
-      return;
-    }
-    console.log("Contact Form Submitted:", contactForm);
-    setContactFormMessage(`we are experiencing technical difficulties. Please write us at ${config.CONTACT_EMAIL}`);
-    setTimeout(() => {
-      setContactForm({ name: '', contactNumber: '', locality: '', email: '' });
-      setContactFormMessage('');
-      setShowContactUsModal(false);
-    }, 5000);
-  };
+
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 640) {
@@ -503,6 +487,7 @@ const App = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
   return (
     <div className="min-h-screen bg-gray-100 font-sans flex flex-col">
       <style>{bounceAnimationCss}</style>
@@ -586,6 +571,7 @@ const App = () => {
             >
               Contact Us
             </button>
+            <GoogleLogin onUserChange={setUser} /> {/* New GoogleLogin Component */}
             <button
               onClick={() => setRefreshTrigger(prev => prev + 1)}
               className="p-1 rounded-md hover:bg-white hover:text-blue-600 transition-colors duration-200"
@@ -639,6 +625,7 @@ const App = () => {
           >
             Contact Us
           </button>
+          <GoogleLogin onUserChange={setUser} /> {/* New GoogleLogin Component */}
         </nav>
       </div>
       <main className="flex-grow container mx-auto px-4 py-8 mt-16 sm:mt-24">
@@ -936,69 +923,8 @@ const App = () => {
                 ×
               </button>
             </div>
-            <div className="text-gray-700 space-y-4">
-              <form onSubmit={handleContactFormSubmit} className="space-y-4">
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={contactForm.name}
-                    onChange={handleContactFormChange}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    required
-                  />
-                </div>
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email Address</label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={contactForm.email}
-                    onChange={handleContactFormChange}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    required
-                  />
-                </div>
-                <div>
-                  <label htmlFor="contactNumber" className="block text-sm font-medium text-gray-700">Contact Number (10 digits)</label>
-                  <input
-                    type="tel"
-                    id="contactNumber"
-                    name="contactNumber"
-                    value={contactForm.contactNumber}
-                    onChange={handleContactFormChange}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    required
-                  />
-                </div>
-                <div>
-                  <label htmlFor="locality" className="block text-sm font-medium text-gray-700">Locality</label>
-                  <input
-                    type="text"
-                    id="locality"
-                    name="locality"
-                    value={contactForm.locality}
-                    onChange={handleContactFormChange}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    required
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  Submit
-                </button>
-                {contactFormMessage && (
-                  <p className="mt-2 text-center text-sm text-red-600">
-                    {contactFormMessage}
-                  </p>
-                )}
-              </form>
-            </div>
+            {/* New ContactUs Component */}
+            <ContactUs user={user} />
           </div>
         </div>
       )}

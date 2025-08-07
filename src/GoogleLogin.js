@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
-import { auth, provider } from "./firebase";
+import { auth, provider } from "./firebase"; // ✅ Make sure the path is correct
+
 
 export default function GoogleLogin({ onUserChange }) {
   const [user, setUser] = useState(null);

@@ -1,16 +1,52 @@
 import React, { useEffect, useState, useMemo, useRef, useCallback } from "react";
+import ReactDOM from 'react-dom/client';
 import Papa from "papaparse";
-import websiteLogo from './Track my IPO_3D_Logo.png';
-import * as config from './config';
 
 // ----------------------------------------------------
 // UPDATED: Now importing configured services from firebase.js
 // ----------------------------------------------------
-import { auth, provider, db } from './firebase.js';
+import { auth, provider } from './firebase.js';
 
 // Specific Firebase functions needed for actions (not initialization)
 import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
 import { collection, addDoc, serverTimestamp, doc, setDoc } from 'firebase/firestore';
+import { db } from './firebase.js'; // Firestore is imported here
+
+import * as config from './config';
+
+// ----------------------------------------------------
+// NEW: Custom hook to handle Firebase authentication logic
+// ----------------------------------------------------
+function useFirebaseAuth() {
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setAuthLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const signInWithGoogle = useCallback(async () => {
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      console.error("Error signing in with Google:", error);
+    }
+  }, []);
+
+  const handleSignOut = useCallback(async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  }, []);
+
+  return { user, authLoading, signInWithGoogle, handleSignOut };
+}
 
 const App = () => {
   const [ipoData, setIpoData] = useState([]);
@@ -49,19 +85,12 @@ const App = () => {
   const [selectedIpoDetails, setSelectedIpoDetails] = useState(null);
 
   // ----------------------------------------------------
-  // ADDED: State for Firebase User and Auth Loading
+  // ADDED: Use the custom auth hook
   // ----------------------------------------------------
-  const [user, setUser] = useState(null);
-  const [authLoading, setAuthLoading] = useState(true);
+  const { user, authLoading, signInWithGoogle, handleSignOut } = useFirebaseAuth();
 
   useEffect(() => {
-    if (typeof window.gtag === 'function') {
-      window.gtag('event', 'page_view', {
-        page_title: 'Track My IPO Home',
-        page_location: window.location.href,
-        page_path: '/'
-      });
-    }
+    // This is where you would handle analytics if needed
   }, []);
 
   useEffect(() => {
@@ -105,39 +134,6 @@ const App = () => {
     };
   }, [isFooterExpanded]);
 
-  // ----------------------------------------------------
-  // ADDED: Firebase Authentication Effect
-  // ----------------------------------------------------
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setAuthLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  // ----------------------------------------------------
-  // ADDED: Firebase Auth Functions
-  // ----------------------------------------------------
-  const signInWithGoogle = useCallback(async () => {
-    try {
-      await signInWithPopup(auth, provider);
-    } catch (error) {
-      console.error("Error signing in with Google:", error);
-      showMessage("Failed to sign in. Please try again.");
-    }
-  }, [showMessage]);
-
-  const handleSignOut = useCallback(async () => {
-    try {
-      await signOut(auth);
-      showMessage("You have been signed out.");
-    } catch (error) {
-      console.error("Error signing out:", error);
-      showMessage("Failed to sign out. Please try again.");
-    }
-  }, [showMessage]);
 
   const bounceAnimationCss = `
     @keyframes bounce-once {
@@ -590,7 +586,7 @@ const App = () => {
             </div>
             <div className="flex items-center flex-grow sm:flex-grow-0 justify-center sm:justify-start">
               <img
-                src={websiteLogo}
+                src={'https://placehold.co/100x40/2563eb/ffffff?text=IPO'}
                 alt="Track My IPO Logo"
                 className="h-10 sm:h-12 mr-2"
               />
@@ -648,7 +644,7 @@ const App = () => {
               </svg>
             </button>
             {/* ----------------------------------------------------
-                ADDED: Conditional rendering for auth buttons
+                UPDATED: Conditional rendering for auth buttons using hook
             ---------------------------------------------------- */}
             {user ? (
               <>
@@ -678,7 +674,7 @@ const App = () => {
           </svg>
         </button>
         <div className="flex items-center mb-6">
-          <img src={websiteLogo} alt="Track My IPO Logo" className="h-10 mr-2" />
+          <img src={'https://placehold.co/100x40/2563eb/ffffff?text=IPO'} alt="Track My IPO Logo" className="h-10 mr-2" />
           <h2 className="text-xl font-bold">Menu</h2>
         </div>
         <nav className="flex flex-col space-y-4 text-sm font-semibold">
@@ -713,7 +709,7 @@ const App = () => {
             Contact Us
           </button>
           {/* ----------------------------------------------------
-              ADDED: Conditional rendering for mobile auth buttons
+              UPDATED: Conditional rendering for mobile auth buttons
           ---------------------------------------------------- */}
           <div className="border-t border-gray-700 pt-4 mt-4">
             {user ? (
@@ -1125,4 +1121,11 @@ const App = () => {
     </div>
   );
 };
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+
 export default App;

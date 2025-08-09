@@ -1,17 +1,23 @@
+// Use the 'compat' library for maximum compatibility with build environments.
+import firebase from "firebase/compat/app";
+import "firebase/compat/auth";
+import "firebase/compat/firestore";
 
-import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-
-// The canvas environment securely provides the Firebase configuration.
+// The firebase configuration details are provided by the canvas environment
+// and automatically loaded at runtime.
 const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// Check if a Firebase app is already initialized before initializing.
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
 
-// Initialize services and export them
-const auth = getAuth(app);
-const db = getFirestore(app);
-const provider = new GoogleAuthProvider();
+// Get a reference to the Auth and Firestore services
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-export { auth, provider, db };
+// Create an instance of the Google Auth Provider
+const provider = new firebase.auth.GoogleAuthProvider();
+
+// Export the services for use in other components
+export { auth, db, provider };

@@ -1,22 +1,17 @@
-import { initializeApp } from "firebase/app";
 
-// Use the standard, canonical import paths for Firebase services
+import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
-// The firebase configuration details are provided by the canvas environment
-// and automatically loaded at runtime.
+// The canvas environment securely provides the Firebase configuration.
 const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// Get a reference to the Auth and Firestore services
+// Initialize services and export them
 const auth = getAuth(app);
 const db = getFirestore(app);
-
-// Create an instance of the Google Auth Provider
 const provider = new GoogleAuthProvider();
 
-// Export the services for use in other components
-export { auth, db, provider };
+export { auth, provider, db };

@@ -1,23 +1,24 @@
 // firebase.js
+// Import the functions you need from the Firebase SDKs
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
-import { getFirestore } from "firebase/firestore"; // <-- Added Firestore import
 
-const firebaseConfig = {
-  apiKey: "AIzaSyAK0-ANrV8MOXRKshWbCNQbie-cNFcTgRQ",
-  authDomain: "trackmyipo97.firebaseapp.com",
-  projectId: "trackmyipo97",
-  storageBucket: "trackmyipo97.appspot.com",
-  messagingSenderId: "647720748444",
-  appId: "1:647720748444:web:1c06d5d5734364d3917459",
-};
+// Use explicit import paths to avoid build errors in some environments
+import { getAuth, GoogleAuthProvider } from "firebase/auth/dist/index.esm.js";
+import { getFirestore } from "firebase/firestore/dist/index.esm.js";
+
+// The firebase configuration details are provided by the canvas environment
+// and automatically loaded at runtime.
+const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// Initialize services and export them
+// Get a reference to the Auth and Firestore services
 const auth = getAuth(app);
-const db = getFirestore(app); // <-- Added Firestore instance
+const db = getFirestore(app);
+
+// Create an instance of the Google Auth Provider
 const provider = new GoogleAuthProvider();
 
-export { auth, provider, db }; // <-- Exporting db as well
+// Export the services for use in other components
+export { auth, db, provider };

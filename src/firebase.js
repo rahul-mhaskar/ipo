@@ -1,8 +1,8 @@
 import { initializeApp } from "firebase/app";
 
-// Use explicit import paths to avoid build errors in some environments
-import { getAuth, GoogleAuthProvider } from "firebase/auth/dist/index.esm.js";
-import { getFirestore } from "firebase/firestore/dist/index.esm.js";
+// Use the standard, canonical import paths for Firebase services
+import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
 
 // The firebase configuration details are provided by the canvas environment
 // and automatically loaded at runtime.

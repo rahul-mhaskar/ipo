@@ -2,16 +2,14 @@ import React, { useEffect, useState, useMemo, useRef, useCallback } from "react"
 import Papa from "papaparse";
 import websiteLogo from './Track my IPO_3D_Logo.png';
 import * as config from './config';
-
 // ----------------------------------------------------
 // UPDATED: Now importing configured services from firebase.js
 // ----------------------------------------------------
 import { auth, provider, db } from './firebase.js';
-
-// Specific Firebase functions needed for actions (not initialization)
-import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
-import { collection, addDoc, serverTimestamp, doc, setDoc } from 'firebase/firestore';
-
+// ----------------------------------------------------
+// UPDATED: Now importing Firestore functions from the compatibility library
+// ----------------------------------------------------
+import { collection, addDoc, serverTimestamp, doc, setDoc } from '@firebase/firestore/dist/index.cjs.js';
 const App = () => {
   const [ipoData, setIpoData] = useState([]);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
@@ -47,13 +45,8 @@ const App = () => {
   const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedIpoDetails, setSelectedIpoDetails] = useState(null);
-
-  // ----------------------------------------------------
-  // ADDED: State for Firebase User and Auth Loading
-  // ----------------------------------------------------
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
-
   useEffect(() => {
     if (typeof window.gtag === 'function') {
       window.gtag('event', 'page_view', {
@@ -63,7 +56,6 @@ const App = () => {
       });
     }
   }, []);
-
   useEffect(() => {
     const startCollapseTimeout = () => {
       if (footerTimeoutRef.current) {
@@ -104,41 +96,30 @@ const App = () => {
       }
     };
   }, [isFooterExpanded]);
-
-  // ----------------------------------------------------
-  // ADDED: Firebase Authentication Effect
-  // ----------------------------------------------------
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = auth.onAuthStateChanged((currentUser) => {
       setUser(currentUser);
       setAuthLoading(false);
     });
-
     return () => unsubscribe();
   }, []);
-
-  // ----------------------------------------------------
-  // ADDED: Firebase Auth Functions
-  // ----------------------------------------------------
   const signInWithGoogle = useCallback(async () => {
     try {
-      await signInWithPopup(auth, provider);
+      await auth.signInWithPopup(provider);
     } catch (error) {
       console.error("Error signing in with Google:", error);
       showMessage("Failed to sign in. Please try again.");
     }
   }, [showMessage]);
-
   const handleSignOut = useCallback(async () => {
     try {
-      await signOut(auth);
+      await auth.signOut();
       showMessage("You have been signed out.");
     } catch (error) {
       console.error("Error signing out:", error);
       showMessage("Failed to sign out. Please try again.");
     }
   }, [showMessage]);
-
   const bounceAnimationCss = `
     @keyframes bounce-once {
       0%, 100% {
@@ -647,9 +628,6 @@ const App = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.836 3.582a4.5 4.5 0 01-1.314 3.424m-10.74 0a4.5 4.5 0 01-1.314-3.424M5.582 9h.582m0 0a5.952 5.952 0 01-.027-.678C6.184 6.84 8.01 5 10.25 5H18m0 0c-3.111 0-5.64 2.53-5.64 5.64M12 20c-3.111 0-5.64-2.53-5.64-5.64m0 0a5.952 5.952 0 01-.027-.678M18 10.64a5.952 5.952 0 01.027.678" />
               </svg>
             </button>
-            {/* ----------------------------------------------------
-                ADDED: Conditional rendering for auth buttons
-            ---------------------------------------------------- */}
             {user ? (
               <>
                 <span className="text-white text-sm font-semibold">{user.displayName || user.email}</span>
@@ -712,9 +690,6 @@ const App = () => {
           >
             Contact Us
           </button>
-          {/* ----------------------------------------------------
-              ADDED: Conditional rendering for mobile auth buttons
-          ---------------------------------------------------- */}
           <div className="border-t border-gray-700 pt-4 mt-4">
             {user ? (
               <div className="flex flex-col space-y-2">

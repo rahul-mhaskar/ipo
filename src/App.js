@@ -558,7 +558,7 @@ const App = () => {
   return (
     <div className="min-h-screen bg-gray-100 font-sans flex flex-col">
       <style>{bounceAnimationCss}</style>
-      {isLoading || authLoading && (
+      {(isLoading || authLoading) && (
         <div className="fixed inset-0 bg-gradient-to-br from-blue-600 to-purple-700 text-white flex flex-col items-center justify-center z-50 transition-opacity duration-500 opacity-100">
           <svg className="animate-spin h-16 w-16 text-white mb-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>

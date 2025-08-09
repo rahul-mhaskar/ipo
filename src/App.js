@@ -9,7 +9,8 @@ import * as config from './config';
 import { auth, provider, db } from './firebase.js';
 
 // Specific Firebase functions needed for actions (not initialization)
-import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
+// UPDATED: Removed direct imports for firebase/auth functions.
+// We will now use the 'auth' object imported from firebase.js.
 import { collection, addDoc, serverTimestamp, doc, setDoc } from 'firebase/firestore';
 
 const App = () => {
@@ -107,9 +108,10 @@ const App = () => {
 
   // ----------------------------------------------------
   // ADDED: Firebase Authentication Effect
+  // UPDATED: Now uses 'auth.onAuthStateChanged'
   // ----------------------------------------------------
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = auth.onAuthStateChanged((currentUser) => {
       setUser(currentUser);
       setAuthLoading(false);
     });
@@ -119,10 +121,11 @@ const App = () => {
 
   // ----------------------------------------------------
   // ADDED: Firebase Auth Functions
+  // UPDATED: Now uses 'auth.signInWithPopup' and 'auth.signOut'
   // ----------------------------------------------------
   const signInWithGoogle = useCallback(async () => {
     try {
-      await signInWithPopup(auth, provider);
+      await auth.signInWithPopup(provider);
     } catch (error) {
       console.error("Error signing in with Google:", error);
       showMessage("Failed to sign in. Please try again.");
@@ -131,7 +134,7 @@ const App = () => {
 
   const handleSignOut = useCallback(async () => {
     try {
-      await signOut(auth);
+      await auth.signOut();
       showMessage("You have been signed out.");
     } catch (error) {
       console.error("Error signing out:", error);

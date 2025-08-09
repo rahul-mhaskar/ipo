@@ -555,6 +555,9 @@ const App = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+console.log("isLoading:", isLoading);
+console.log("authLoading:", authLoading);
+console.log("user:", user);
   return (
     <div className="min-h-screen bg-gray-100 font-sans flex flex-col">
       <style>{bounceAnimationCss}</style>

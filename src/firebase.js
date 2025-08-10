@@ -2,21 +2,24 @@ import firebase from "firebase/compat/app";
 import "firebase/compat/auth";
 import "firebase/compat/firestore";
 
-// The firebase configuration details are provided by the canvas environment
-// and automatically loaded at runtime.
-const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+// Replace with your actual config or make sure __firebase_config is injected and valid
+const firebaseConfig = {
+  apiKey: "AIzaSyAK0-ANrV8MOXRKshWbCNQbie-cNFcTgRQ",
+  authDomain: "trackmyipo97.firebaseapp.com",
+  projectId: "trackmyipo97",
+  storageBucket: "trackmyipo97.appspot.com",
+  messagingSenderId: "647720748444",
+  appId: "1:647720748444:web:1c06d5d5734364d3917459",
+  measurementId: "G-B951CLTSHE"
+};
 
-// Check if a Firebase app is already initialized before initializing.
+// Only initialize if not already initialized
 if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
 }
 
-// Get a reference to the Auth and Firestore services
 const auth = firebase.auth();
 const db = firebase.firestore();
-
-// Create an instance of the Google Auth Provider
 const provider = new firebase.auth.GoogleAuthProvider();
 
-// Export the services for use in other components
 export { auth, db, provider };

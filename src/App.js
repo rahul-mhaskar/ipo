@@ -54,6 +54,16 @@ const App = () => {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
 
+  // Moved showMessage above any function that uses it
+  const showMessage = useCallback((msg) => {
+    setMessage(msg);
+    setShowMessageBox(true);
+    setTimeout(() => {
+      setShowMessageBox(false);
+      setMessage("");
+    }, 500);
+  }, []);
+
   useEffect(() => {
     if (typeof window.gtag === 'function') {
       window.gtag('event', 'page_view', {
@@ -152,14 +162,6 @@ const App = () => {
       animation: bounce-once 0.5s ease-in-out;
     }
   `;
-  const showMessage = useCallback((msg) => {
-    setMessage(msg);
-    setShowMessageBox(true);
-    setTimeout(() => {
-      setShowMessageBox(false);
-      setMessage("");
-    }, 500);
-  }, []);
   const monthMap = {
     "jan": 0, "feb": 1, "mar": 2, "apr": 3, "may": 4, "jun": 5,
     "jul": 6, "aug": 7, "sep": 8, "oct": 9, "nov": 10, "dec": 11
@@ -558,7 +560,7 @@ const App = () => {
   return (
     <div className="min-h-screen bg-gray-100 font-sans flex flex-col">
       <style>{bounceAnimationCss}</style>
-      {isLoading || authLoading && (
+      {(isLoading || authLoading) && (
         <div className="fixed inset-0 bg-gradient-to-br from-blue-600 to-purple-700 text-white flex flex-col items-center justify-center z-50 transition-opacity duration-500 opacity-100">
           <svg className="animate-spin h-16 w-16 text-white mb-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -575,6 +577,8 @@ const App = () => {
           <p className="text-lg font-semibold">{loadingProgress}%</p>
         </div>
       )}
+
+          
       <header className="fixed top-0 w-full z-50 bg-gradient-to-r from-blue-600 to-purple-700 text-white p-1 sm:p-2 shadow-lg rounded-b-xl">
         <div className="container mx-auto flex flex-col sm:flex-row justify-between items-center">
           <div className="flex w-full sm:w-auto justify-between items-center sm:mb-0">

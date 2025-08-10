@@ -3,12 +3,7 @@ import Papa from "papaparse";
 import websiteLogo from './Track my IPO_3D_Logo.png';
 import * as config from './config';
 
-// ----------------------------------------------------
-// UPDATED: Now importing configured services from firebase.js
-// ----------------------------------------------------
 import { auth, provider, db } from './firebase.js';
-
-// Specific Firebase functions needed for actions (not initialization)
 import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
 import { collection, addDoc, serverTimestamp, doc, setDoc } from 'firebase/firestore';
 
@@ -48,13 +43,11 @@ const App = () => {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedIpoDetails, setSelectedIpoDetails] = useState(null);
 
-  // ----------------------------------------------------
-  // ADDED: State for Firebase User and Auth Loading
-  // ----------------------------------------------------
+  // Firebase User and Auth Loading
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
 
-  // Moved showMessage above any function that uses it
+  // --- showMessage must be defined before usage! ---
   const showMessage = useCallback((msg) => {
     setMessage(msg);
     setShowMessageBox(true);
@@ -76,17 +69,11 @@ const App = () => {
 
   useEffect(() => {
     const startCollapseTimeout = () => {
-      if (footerTimeoutRef.current) {
-        clearTimeout(footerTimeoutRef.current);
-      }
-      footerTimeoutRef.current = setTimeout(() => {
-        setIsFooterExpanded(false);
-      }, 3000);
+      if (footerTimeoutRef.current) clearTimeout(footerTimeoutRef.current);
+      footerTimeoutRef.current = setTimeout(() => setIsFooterExpanded(false), 3000);
     };
     const startBounceAnimation = () => {
-      if (bounceIntervalRef.current) {
-        clearInterval(bounceIntervalRef.current);
-      }
+      if (bounceIntervalRef.current) clearInterval(bounceIntervalRef.current);
       bounceIntervalRef.current = setInterval(() => {
         const footerElement = document.getElementById('broker-section');
         if (footerElement) {
@@ -99,37 +86,24 @@ const App = () => {
     };
     if (isFooterExpanded) {
       startCollapseTimeout();
-      if (bounceIntervalRef.current) {
-        clearInterval(bounceIntervalRef.current);
-      }
+      if (bounceIntervalRef.current) clearInterval(bounceIntervalRef.current);
     } else {
       startBounceAnimation();
     }
     return () => {
-      if (footerTimeoutRef.current) {
-        clearTimeout(footerTimeoutRef.current);
-      }
-      if (bounceIntervalRef.current) {
-        clearInterval(bounceIntervalRef.current);
-      }
+      if (footerTimeoutRef.current) clearTimeout(footerTimeoutRef.current);
+      if (bounceIntervalRef.current) clearInterval(bounceIntervalRef.current);
     };
   }, [isFooterExpanded]);
 
-  // ----------------------------------------------------
-  // ADDED: Firebase Authentication Effect
-  // ----------------------------------------------------
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setAuthLoading(false);
     });
-
     return () => unsubscribe();
   }, []);
 
-  // ----------------------------------------------------
-  // ADDED: Firebase Auth Functions
-  // ----------------------------------------------------
   const signInWithGoogle = useCallback(async () => {
     try {
       await signInWithPopup(auth, provider);
@@ -170,9 +144,7 @@ const App = () => {
     if (!dateString || typeof dateString !== 'string') return null;
     const cleanedDateString = dateString.trim();
     const fullDate = new Date(cleanedDateString);
-    if (!isNaN(fullDate.getTime())) {
-      return fullDate;
-    }
+    if (!isNaN(fullDate.getTime())) return fullDate;
     const parts = cleanedDateString.split(' ');
     if (parts.length >= 2) {
       const day = parseInt(parts[0], 10);
@@ -186,13 +158,12 @@ const App = () => {
           yearToUse = currentYear + 1;
         }
         const parsedDate = new Date(yearToUse, month, day);
-        if (!isNaN(parsedDate.getTime())) {
-          return parsedDate;
-        }
+        if (!isNaN(parsedDate.getTime())) return parsedDate;
       }
     }
     return null;
   };
+
   useEffect(() => {
     let progressInterval;
     let currentProgress = 0;
@@ -201,13 +172,9 @@ const App = () => {
       progressInterval = setInterval(() => {
         currentProgress = Math.min(currentProgress + Math.random() * 10, 95);
         setLoadingProgress(Math.floor(currentProgress));
-        if (currentProgress < 30) {
-          setLoadingText("Connecting to data source...");
-        } else if (currentProgress < 70) {
-          setLoadingText("Fetching IPO records...");
-        } else {
-          setLoadingText("Processing data...");
-        }
+        if (currentProgress < 30) setLoadingText("Connecting to data source...");
+        else if (currentProgress < 70) setLoadingText("Fetching IPO records...");
+        else setLoadingText("Processing data...");
       }, 200);
     };
     setIsLoading(true);
@@ -243,14 +210,14 @@ const App = () => {
       clearInterval(progressInterval);
     };
   }, [refreshTrigger, showMessage]);
+
   const sortBy = (key) => {
     let direction = "asc";
-    if (sortConfig.key === key && sortConfig.direction === "asc") {
-      direction = "desc";
-    }
+    if (sortConfig.key === key && sortConfig.direction === "asc") direction = "desc";
     setSortConfig({ key, direction });
   };
-  const { upcomingIpos, currentIpos, listedIpos, totalIposCount, currentMainboardCount, currentSmeCount } = useMemo(() => {
+
+  const { upcomingIpos, currentIpos, listedIpos } = useMemo(() => {
     let sortableItems = [...ipoData];
     if (searchTerm) {
       sortableItems = sortableItems.filter(ipo =>
@@ -275,9 +242,7 @@ const App = () => {
         if (numericKeys.includes(sortConfig.key)) {
           const numA = parseFloat(String(aVal).replace(/[^0-9.-]+/g, ""));
           const numB = parseFloat(String(bVal).replace(/[^0-9.-]+/g, ""));
-          if (sortConfig.direction === "asc") {
-            return numA - numB;
-          }
+          if (sortConfig.direction === "asc") return numA - numB;
           return numB - numA;
         }
         const dateKeys = ["Open", "Close", "BoA Dt", "Listing"];
@@ -287,14 +252,10 @@ const App = () => {
           if (dateA === null && dateB === null) return 0;
           if (dateA === null) return sortConfig.direction === "asc" ? 1 : -1;
           if (dateB === null) return sortConfig.direction === "asc" ? -1 : 1;
-          if (sortConfig.direction === "asc") {
-            return dateA.getTime() - dateB.getTime();
-          }
+          if (sortConfig.direction === "asc") return dateA.getTime() - dateB.getTime();
           return dateB.getTime() - dateA.getTime();
         }
-        if (sortConfig.direction === "asc") {
-          return String(aVal).localeCompare(String(bVal), undefined, { numeric: true });
-        }
+        if (sortConfig.direction === "asc") return String(aVal).localeCompare(String(bVal), undefined, { numeric: true });
         return String(bVal).localeCompare(String(aVal), undefined, { numeric: true });
       });
     }
@@ -303,32 +264,13 @@ const App = () => {
     const listed = [];
     sortableItems.forEach(ipo => {
       const status = ipo.Status ? String(ipo.Status).toLowerCase() : '';
-      if (status.includes("upcoming") || status.includes("pre-open")) {
-        upcoming.push(ipo);
-      } else if (status.includes("apply") || status.includes("open") || status.includes("pending") || status.includes("allotment")) {
-        current.push(ipo);
-      } else if (status.includes("listed") || status.includes("closed")) {
-        listed.push(ipo);
-      }
+      if (status.includes("upcoming") || status.includes("pre-open")) upcoming.push(ipo);
+      else if (status.includes("apply") || status.includes("open") || status.includes("pending") || status.includes("allotment")) current.push(ipo);
+      else if (status.includes("listed") || status.includes("closed")) listed.push(ipo);
     });
-    let currentMainboard = 0;
-    let currentSme = 0;
-    current.forEach(ipo => {
-      if (ipo.Type && ipo.Type.toLowerCase().includes("main board")) {
-        currentMainboard++;
-      } else if (ipo.Type && ipo.Type.toLowerCase().includes("sme")) {
-        currentSme++;
-      }
-    });
-    return {
-      upcomingIpos: upcoming,
-      currentIpos: current,
-      listedIpos: listed,
-      totalIposCount: sortableItems.length,
-      currentMainboardCount: currentMainboard,
-      currentSmeCount: currentSme
-    };
+    return { upcomingIpos: upcoming, currentIpos: current, listedIpos: listed };
   }, [ipoData, sortConfig, searchTerm, ipoTypeFilter]);
+
   const displayedIpoData = useMemo(() => {
     let filteredAndSortedItems = [...ipoData];
     if (searchTerm) {

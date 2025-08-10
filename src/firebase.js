@@ -1,22 +1,43 @@
-import firebase from "firebase/compat/app";
-import "firebase/compat/auth";
-import "firebase/compat/firestore";
+import { initializeApp } from 'firebase/app';
+import { getAuth, signInWithCustomToken, signInAnonymously } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
 
-// The firebase configuration details are provided by the canvas environment
-// and automatically loaded at runtime.
+// --- Canvas-specific global variables ---
+// These variables are provided by the canvas environment at runtime.
+// We check for their existence and provide fallbacks for local development.
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
-// Check if a Firebase app is already initialized before initializing.
-if (!firebase.apps.length) {
-  firebase.initializeApp(firebaseConfig);
-}
+// Initialize Firebase only if the configuration exists.
+const app = initializeApp(firebaseConfig);
 
-// Get a reference to the Auth and Firestore services
-const auth = firebase.auth();
-const db = firebase.firestore();
+// Get a reference to the Auth and Firestore services.
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-// Create an instance of the Google Auth Provider
-const provider = new firebase.auth.GoogleAuthProvider();
+// Asynchronous function to handle user authentication.
+// It uses the custom token from the canvas environment.
+const setupAuth = async () => {
+  try {
+    if (initialAuthToken) {
+      // If a custom token is provided, sign in with it.
+      await signInWithCustomToken(auth, initialAuthToken);
+      console.log("Successfully signed in with custom token!");
+    } else {
+      // If no custom token is available, sign in anonymously.
+      // This is a good fallback for cases where the user is not authenticated.
+      await signInAnonymously(auth);
+      console.log("Successfully signed in anonymously!");
+    }
+  } catch (error) {
+    console.error("Authentication failed:", error);
+  }
+};
 
-// Export the services for use in other components
-export { auth, db, provider };
+// Immediately call the setupAuth function to authenticate the user
+// when the app starts.
+setupAuth();
+
+// Export the initialized services for use in other components.
+export { auth, db };

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import Papa from "papaparse";
-import websiteLogo from './Track my IPO_3D_Logo.png';
+import websiteLogo from './Trackmyipologo.png';
 import * as config from './config';
 
 import { auth, provider, db } from './firebase.js';

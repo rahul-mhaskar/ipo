@@ -1,4 +1,4 @@
-export const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlsMurbsXT2UBQ2ADbyoiQtLUTznQU4vNzw3nS02_StSrFV9pkrnXOrNAjV_Yj-Byc_zw72z_rM0tQ/pub?output=csv";
+export const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTCw-Ud37kMnynd_LQvSIFSWGYpXPQmjRyzluK4cjVAguBe4GbeP3pKkD39Grebe9GV77w9e6dqthA5/pub?output=csv";
 
 export const BROKER_LINKS = [
   {

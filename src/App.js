@@ -898,7 +898,7 @@ const App = () => {
               </button>
             </div>
             <p className="text-gray-600 mb-4">
-              Please open a Demat account with one of our trusted partners to apply for IPOs.
+              Please open a Demat account with one of trusted brokers to apply for IPOs.
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               {config.BROKER_LINKS.map((broker, idx) => (
@@ -915,7 +915,7 @@ const App = () => {
               ))}
             </div>
             <p className="mt-4 text-xs text-gray-400">
-              Note: Clicking a link will take you to an external site to open an account.
+              Note: Clicking a link will take you to an external site.
             </p>
           </div>
         </div>

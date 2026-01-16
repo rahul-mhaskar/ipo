@@ -2,6 +2,9 @@ import React, { useEffect, useState, useMemo, useRef, useCallback } from "react"
 import Papa from "papaparse";
 import websiteLogo from './Track my IPO_3D_Logo.png';
 import * as config from './config';
+import GoogleLogin from "./GoogleLogin";
+import ContactUs from "./ContactUs";
+
 
 import { auth, provider, db } from './firebase.js';
 import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
